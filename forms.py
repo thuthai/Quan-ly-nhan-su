@@ -52,7 +52,7 @@ class EmployeeForm(FlaskForm):
     phone_number = StringField('Số điện thoại', validators=[Optional()])
     email = StringField('Email', validators=[DataRequired(message='Vui lòng nhập email'), Email(message='Email không hợp lệ')])
     department_id = SelectField('Phòng ban', coerce=int, validators=[DataRequired(message='Vui lòng chọn phòng ban')])
-    position = SelectField('Chức vụ', choices=[(p.name, p.value) for p in Position], validators=[Optional()])
+    position = SelectField('Chức vụ', validators=[Optional()])
     join_date = DateField('Ngày vào công ty', validators=[DataRequired(message='Vui lòng nhập ngày vào công ty')])
     salary_grade = StringField('Bậc lương', validators=[Optional()])
     salary_coefficient = FloatField('Hệ số lương', validators=[Optional()])
@@ -67,6 +67,15 @@ class EmployeeForm(FlaskForm):
         super(EmployeeForm, self).__init__(*args, **kwargs)
         self.department_id.choices = [(d.id, d.name) for d in Department.query.all()]
         self.home_town.choices = [('', '-- Chọn quê quán --')] + [(province, province) for province in VIETNAM_PROVINCES]
+        
+        # Lấy danh sách vị trí mặc định từ enum Position
+        default_positions = [(pos.value, pos.value) for pos in Position]
+        
+        # Lấy danh sách vị trí tùy chỉnh từ database
+        custom_positions = [(pos.name, pos.name) for pos in CustomPosition.query.all()]
+        
+        # Kết hợp và gán cho choices của trường position
+        self.position.choices = [('', '-- Chọn chức vụ --')] + default_positions + custom_positions
 
     def validate_employee_code(self, employee_code):
         employee = Employee.query.filter_by(employee_code=employee_code.data).first()

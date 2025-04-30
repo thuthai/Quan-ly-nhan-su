@@ -125,7 +125,7 @@ class Employee(db.Model):
     phone_number = db.Column(db.String(20))
     email = db.Column(db.String(120), unique=True, nullable=False)
     department_id = db.Column(db.Integer, db.ForeignKey('department.id'), nullable=False)
-    position = db.Column(db.Enum(Position), default=Position.STAFF)
+    position = db.Column(db.String(100), default="Nhân viên")
     join_date = db.Column(db.Date, nullable=False)
     salary_grade = db.Column(db.String(20))
     salary_coefficient = db.Column(db.Float)
