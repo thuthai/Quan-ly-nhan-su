@@ -36,6 +36,18 @@ class LeaveType(enum.Enum):
     OTHER = "Khác"
 
 
+class EducationLevel(enum.Enum):
+    """Trình độ học vấn"""
+    SECONDARY = "Trung học cơ sở"
+    HIGH_SCHOOL = "Trung học phổ thông" 
+    VOCATIONAL = "Trung cấp nghề"
+    COLLEGE = "Cao đẳng"
+    UNIVERSITY = "Đại học"
+    MASTER = "Thạc sĩ"
+    DOCTORATE = "Tiến sĩ"
+    OTHER = "Khác"
+
+
 class LeaveStatus(enum.Enum):
     PENDING = "Đang chờ xét duyệt"
     APPROVED = "Đã duyệt"
@@ -97,7 +109,7 @@ class Employee(db.Model):
     salary_coefficient = db.Column(db.Float)
     contract_start_date = db.Column(db.Date)
     contract_end_date = db.Column(db.Date)
-    education_level = db.Column(db.String(100))
+    education_level = db.Column(db.Enum(EducationLevel), default=EducationLevel.OTHER)
     skills = db.Column(db.Text)
     profile_image = db.Column(db.String(255), default='https://images.unsplash.com/photo-1522071820081-009f0129c71c')
     status = db.Column(db.Enum(EmployeeStatus), default=EmployeeStatus.ACTIVE)
