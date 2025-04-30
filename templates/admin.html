@@ -16,7 +16,7 @@
 <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-4 mb-4">
     <!-- Quản lý người dùng -->
     <div class="col">
-        <div class="card h-100">
+        <div class="card h-100 admin-card">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">
                     <i class="bi bi-people-fill me-2"></i>Quản lý người dùng
@@ -54,7 +54,7 @@
 
     <!-- Cấu hình hệ thống -->
     <div class="col">
-        <div class="card h-100">
+        <div class="card h-100 admin-card">
             <div class="card-header bg-info text-white">
                 <h5 class="mb-0">
                     <i class="bi bi-sliders me-2"></i>Cấu hình hệ thống
@@ -89,7 +89,7 @@
 
     <!-- Sao lưu & Phục hồi -->
     <div class="col">
-        <div class="card h-100">
+        <div class="card h-100 admin-card">
             <div class="card-header bg-success text-white">
                 <h5 class="mb-0">
                     <i class="bi bi-cloud-arrow-up-fill me-2"></i>Sao lưu & Phục hồi
@@ -127,7 +127,7 @@
 
     <!-- Nhật ký hệ thống -->
     <div class="col">
-        <div class="card h-100">
+        <div class="card h-100 admin-card">
             <div class="card-header bg-warning">
                 <h5 class="mb-0 text-white" style="text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); font-weight: 700;">
                     <i class="bi bi-journal-text me-2"></i>Nhật ký hệ thống
@@ -167,7 +167,7 @@
 <!-- Dashboard Quản trị -->
 <div class="row mb-4">
     <div class="col-12">
-        <div class="card">
+        <div class="card admin-card">
             <div class="card-header bg-dark text-white">
                 <h5 class="mb-0">
                     <i class="bi bi-graph-up me-2"></i>Thống kê chung
@@ -176,13 +176,15 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-8">
-                        <canvas id="systemUsageChart" height="250"></canvas>
+                        <div style="position: relative; height: 250px;">
+                            <canvas id="systemUsageChart" height="250"></canvas>
+                        </div>
                     </div>
                     <div class="col-md-4">
                         <div class="list-group">
                             <div class="list-group-item">
                                 <div class="d-flex w-100 justify-content-between">
-                                    <h5 class="mb-1">Tài nguyên hệ thống</h5>
+                                    <h5 class="mb-1" style="color: #333333; font-weight: 600;">Tài nguyên hệ thống</h5>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label d-flex justify-content-between">
@@ -230,7 +232,7 @@
 </div>
 
 <!-- Bộ công cụ quản trị -->
-<div class="card">
+<div class="card admin-card">
     <div class="card-header bg-secondary text-white">
         <h5 class="mb-0">
             <i class="bi bi-tools me-2"></i>Công cụ quản trị

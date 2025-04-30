@@ -242,7 +242,15 @@ body {
     font-weight: 700 !important;
 }
 
-/* Xóa style này vì đã được hợp nhất với style ở trên */
+/* Style cho admin card */
+.admin-card .card-body {
+    background-color: white !important;
+}
+
+.admin-card .card-text {
+    color: #333333 !important;
+    font-weight: 500 !important;
+}
 
 .dashboard-card::before {
     content: '';
