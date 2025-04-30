@@ -100,7 +100,19 @@ function createAgeChart(ageGroups) {
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        precision: 0
+                        precision: 0,
+                        color: '#333333',
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#333333',
+                        font: {
+                            weight: 'bold'
+                        }
                     }
                 }
             },
