@@ -75,9 +75,10 @@ function renderDepartmentChart(chartElement) {
         title: {
           display: true,
           text: 'Phân bố nhân viên theo phòng ban',
-          color: 'white',
+          color: '#000000',
           font: {
-            size: 16
+            size: 16,
+            weight: 'bold'
           }
         }
       }
@@ -127,9 +128,10 @@ function renderGenderChart(chartElement) {
         title: {
           display: true,
           text: 'Phân bố giới tính',
-          color: 'white',
+          color: '#000000',
           font: {
-            size: 16
+            size: 16,
+            weight: 'bold'
           }
         }
       }
@@ -176,9 +178,10 @@ function renderAttendanceChart(chartElement) {
         title: {
           display: true,
           text: 'Biểu đồ chấm công trong 30 ngày gần đây',
-          color: 'white',
+          color: '#000000',
           font: {
-            size: 16
+            size: 16,
+            weight: 'bold'
           }
         }
       }
