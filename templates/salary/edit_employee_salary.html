@@ -1,0 +1,201 @@
+{% extends 'layout.html' %}
+
+{% block title %}Chỉnh sửa bậc lương nhân viên - Hệ thống quản lý nhân sự{% endblock %}
+
+{% block header %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="display-6 mb-3">
+            <i class="bi bi-currency-exchange me-2"></i>Chỉnh sửa bậc lương nhân viên
+        </h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('salary_grades') }}">Quản lý bậc lương</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Chỉnh sửa bậc lương nhân viên</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">Thông tin nhân viên</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <img src="{{ employee_salary.employee.profile_image }}" alt="{{ employee_salary.employee.full_name }}" class="rounded-circle img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
+                    </div>
+                    <div class="col-md-9">
+                        <h5>{{ employee_salary.employee.full_name }}</h5>
+                        <p class="mb-1"><strong>Mã nhân viên:</strong> {{ employee_salary.employee.employee_code }}</p>
+                        <p class="mb-1"><strong>Phòng ban:</strong> {{ employee_salary.employee.department.name }}</p>
+                        <p class="mb-0"><strong>Chức vụ:</strong> {{ employee_salary.employee.position or "Chưa cập nhật" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">Thông tin bậc lương</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('edit_employee_salary', id=employee_salary.id) }}">
+                    {{ form.hidden_tag() }}
+                    {{ form.salary_id() }}
+                    {{ form.employee_id() }}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.salary_grade_id.label(class="form-label") }}
+                                {{ form.salary_grade_id(class="form-select " + ('is-invalid' if form.salary_grade_id.errors else '')) }}
+                                {% for error in form.salary_grade_id.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.additional_coefficient.label(class="form-label") }}
+                                {{ form.additional_coefficient(class="form-control " + ('is-invalid' if form.additional_coefficient.errors else '')) }}
+                                {% for error in form.additional_coefficient.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                                <small class="form-text text-muted">Ví dụ: 0.5 (phụ cấp 50%), 0.75 (phụ cấp 75%)</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.effective_date.label(class="form-label") }}
+                                {{ form.effective_date(class="form-control date-picker " + ('is-invalid' if form.effective_date.errors else '')) }}
+                                {% for error in form.effective_date.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                                <small class="form-text text-muted">Ngày áp dụng bậc lương</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.end_date.label(class="form-label") }}
+                                {{ form.end_date(class="form-control date-picker " + ('is-invalid' if form.end_date.errors else '')) }}
+                                {% for error in form.end_date.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                                <small class="form-text text-muted">Để trống nếu không có ngày kết thúc</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        {{ form.decision_number.label(class="form-label") }}
+                        {{ form.decision_number(class="form-control " + ('is-invalid' if form.decision_number.errors else '')) }}
+                        {% for error in form.decision_number.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                        <small class="form-text text-muted">Số quyết định bổ nhiệm lương</small>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        {{ form.reason.label(class="form-label") }}
+                        {{ form.reason(class="form-control " + ('is-invalid' if form.reason.errors else ''), rows=3) }}
+                        {% for error in form.reason.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                        <small class="form-text text-muted">Lý do thay đổi</small>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{{ url_for('salary_grades') }}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-x-circle me-1"></i> Hủy
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-1"></i> Cập nhật
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">Thông tin hiện tại</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6>Bậc lương hiện tại:</h6>
+                    <p class="mb-1"><strong>Tên bậc lương:</strong> {{ employee_salary.salary_grade.name }}</p>
+                    <p class="mb-1"><strong>Mã bậc lương:</strong> {{ employee_salary.salary_grade.code }}</p>
+                    <p class="mb-1"><strong>Hệ số cơ bản:</strong> {{ employee_salary.salary_grade.base_coefficient }}</p>
+                    <p class="mb-1"><strong>Hệ số phụ cấp:</strong> {{ employee_salary.additional_coefficient }}</p>
+                    <p class="mb-1"><strong>Tổng hệ số:</strong> {{ employee_salary.total_coefficient }}</p>
+                    <p class="mb-0"><strong>Lương cơ sở:</strong> {{ "{:,}".format(employee_salary.salary_grade.base_salary) }} VNĐ</p>
+                </div>
+                
+                <div class="alert alert-primary">
+                    <h6 class="mb-1">Lương tính toán:</h6>
+                    <h4 class="text-center">{{ "{:,}".format(employee_salary.calculated_salary) }} VNĐ</h4>
+                </div>
+                
+                <div class="mb-0">
+                    <p class="mb-1"><strong>Ngày hiệu lực:</strong> {{ employee_salary.effective_date.strftime('%d/%m/%Y') }}</p>
+                    {% if employee_salary.end_date %}
+                        <p class="mb-1"><strong>Ngày kết thúc:</strong> {{ employee_salary.end_date.strftime('%d/%m/%Y') }}</p>
+                    {% else %}
+                        <p class="mb-1"><strong>Ngày kết thúc:</strong> <span class="text-muted">Không có</span></p>
+                    {% endif %}
+                    <p class="mb-1"><strong>Số quyết định:</strong> {{ employee_salary.decision_number or "Không có" }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">Lịch sử thay đổi</h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <p class="mb-1"><strong>{{ employee_salary.created_at.strftime('%d/%m/%Y') }}</strong></p>
+                        <p class="mb-1">Thiết lập bậc lương {{ employee_salary.salary_grade.name }}</p>
+                        <p class="mb-0 small text-muted">{{ employee_salary.reason or "Không có lý do" }}</p>
+                    </div>
+                    {% for history in salary_history %}
+                        <div class="timeline-item">
+                            <p class="mb-1"><strong>{{ history.created_at.strftime('%d/%m/%Y') }}</strong></p>
+                            <p class="mb-1">{{ history.action }}</p>
+                            <p class="mb-0 small text-muted">{{ history.details }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                {% if not salary_history %}
+                    <p class="text-muted small">Chưa có lịch sử thay đổi.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Khởi tạo date picker
+        flatpickr('.date-picker', {
+            dateFormat: 'd/m/Y',
+            locale: 'vn'
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,174 @@
+{% extends 'layout.html' %}
+
+{% block title %}Lịch sử thay đổi lương - Hệ thống quản lý nhân sự{% endblock %}
+
+{% block header %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="display-6 mb-3">
+            <i class="bi bi-clock-history me-2"></i>Lịch sử thay đổi lương
+        </h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('salary_grades') }}">Quản lý bậc lương</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Lịch sử thay đổi</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header bg-light">
+        <div class="row align-items-center">
+            <div class="col">
+                <h5 class="card-title mb-0">Lọc lịch sử thay đổi</h5>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <form method="get" action="{{ url_for('employee_salary_history') }}" class="row g-3">
+            <div class="col-md-4">
+                <label for="employee_id" class="form-label">Nhân viên</label>
+                <select name="employee_id" id="employee_id" class="form-select">
+                    <option value="">Tất cả nhân viên</option>
+                    {% for employee in employees %}
+                        <option value="{{ employee.id }}" {% if request.args.get('employee_id')|int == employee.id %}selected{% endif %}>
+                            {{ employee.employee_code }} - {{ employee.full_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="from_date" class="form-label">Từ ngày</label>
+                <input type="text" class="form-control date-picker" id="from_date" name="from_date" 
+                    value="{{ request.args.get('from_date') or '' }}" placeholder="dd/mm/yyyy">
+            </div>
+            <div class="col-md-3">
+                <label for="to_date" class="form-label">Đến ngày</label>
+                <input type="text" class="form-control date-picker" id="to_date" name="to_date" 
+                    value="{{ request.args.get('to_date') or '' }}" placeholder="dd/mm/yyyy">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-1"></i> Tìm kiếm
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm mt-4">
+    <div class="card-header bg-light">
+        <h5 class="card-title mb-0">Lịch sử thay đổi lương</h5>
+    </div>
+    <div class="card-body">
+        {% if salary_records %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nhân viên</th>
+                            <th>Bậc lương</th>
+                            <th>Hệ số lương</th>
+                            <th>Hệ số phụ cấp</th>
+                            <th>Lương tính toán</th>
+                            <th>Ngày hiệu lực</th>
+                            <th>Ngày kết thúc</th>
+                            <th>Số quyết định</th>
+                            <th>Ngày tạo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in salary_records %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('view_employee', id=record.employee.id) }}">
+                                        {{ record.employee.employee_code }} - {{ record.employee.full_name }}
+                                    </a>
+                                </td>
+                                <td>{{ record.salary_grade.name }}</td>
+                                <td>{{ record.salary_grade.base_coefficient }}</td>
+                                <td>{{ record.additional_coefficient }}</td>
+                                <td>{{ "{:,}".format(record.calculated_salary) }}</td>
+                                <td>{{ record.effective_date.strftime('%d/%m/%Y') }}</td>
+                                <td>
+                                    {% if record.end_date %}
+                                        {{ record.end_date.strftime('%d/%m/%Y') }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ record.decision_number or "-" }}</td>
+                                <td>{{ record.created_at.strftime('%d/%m/%Y') }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if pagination and pagination.pages > 1 %}
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center mt-4">
+                        {% if pagination.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('employee_salary_history', page=pagination.prev_num, employee_id=request.args.get('employee_id'), from_date=request.args.get('from_date'), to_date=request.args.get('to_date')) }}">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+                            </li>
+                        {% endif %}
+                        
+                        {% for page in pagination.iter_pages() %}
+                            {% if page %}
+                                <li class="page-item {{ 'active' if page == pagination.page else '' }}">
+                                    <a class="page-link" href="{{ url_for('employee_salary_history', page=page, employee_id=request.args.get('employee_id'), from_date=request.args.get('from_date'), to_date=request.args.get('to_date')) }}">
+                                        {{ page }}
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if pagination.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('employee_salary_history', page=pagination.next_num, employee_id=request.args.get('employee_id'), from_date=request.args.get('from_date'), to_date=request.args.get('to_date')) }}">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i> Không tìm thấy lịch sử thay đổi lương nào.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Khởi tạo date picker
+        flatpickr('.date-picker', {
+            dateFormat: 'd/m/Y',
+            locale: 'vn'
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,200 @@
+{% extends 'layout.html' %}
+
+{% block title %}Thiết lập bậc lương cho nhân viên - Hệ thống quản lý nhân sự{% endblock %}
+
+{% block header %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="display-6 mb-3">
+            <i class="bi bi-currency-exchange me-2"></i>Thiết lập bậc lương cho nhân viên
+        </h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('salary_grades') }}">Quản lý bậc lương</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Thiết lập lương</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">Thông tin áp dụng bậc lương</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('create_employee_salary') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.employee_id.label(class="form-label") }}
+                                {{ form.employee_id(class="form-select " + ('is-invalid' if form.employee_id.errors else '')) }}
+                                {% for error in form.employee_id.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.salary_grade_id.label(class="form-label") }}
+                                {{ form.salary_grade_id(class="form-select " + ('is-invalid' if form.salary_grade_id.errors else '')) }}
+                                {% for error in form.salary_grade_id.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.effective_date.label(class="form-label") }}
+                                {{ form.effective_date(class="form-control date-picker " + ('is-invalid' if form.effective_date.errors else '')) }}
+                                {% for error in form.effective_date.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                                <small class="form-text text-muted">Ngày áp dụng bậc lương</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.end_date.label(class="form-label") }}
+                                {{ form.end_date(class="form-control date-picker " + ('is-invalid' if form.end_date.errors else '')) }}
+                                {% for error in form.end_date.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                                <small class="form-text text-muted">Để trống nếu không có ngày kết thúc</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.additional_coefficient.label(class="form-label") }}
+                                {{ form.additional_coefficient(class="form-control " + ('is-invalid' if form.additional_coefficient.errors else '')) }}
+                                {% for error in form.additional_coefficient.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                                <small class="form-text text-muted">Ví dụ: 0.5 (phụ cấp 50%), 0.75 (phụ cấp 75%)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.decision_number.label(class="form-label") }}
+                                {{ form.decision_number(class="form-control " + ('is-invalid' if form.decision_number.errors else '')) }}
+                                {% for error in form.decision_number.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                                <small class="form-text text-muted">Số quyết định bổ nhiệm lương</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        {{ form.reason.label(class="form-label") }}
+                        {{ form.reason(class="form-control " + ('is-invalid' if form.reason.errors else ''), rows=3) }}
+                        {% for error in form.reason.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                        <small class="form-text text-muted">Lý do áp dụng bậc lương này</small>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{{ url_for('salary_grades') }}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-x-circle me-1"></i> Hủy
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-1"></i> Lưu thiết lập lương
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">Hướng dẫn</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Hệ số phụ cấp:</strong> Đây là hệ số bổ sung được cộng thêm vào hệ số cơ bản của bậc lương.</p>
+                <p><strong>Công thức tính lương:</strong><br>Lương = (Hệ số cơ bản + Hệ số phụ cấp) × Lương cơ sở</p>
+                <hr>
+                <p class="mb-0"><strong>Lưu ý:</strong> Nếu nhân viên đã có bậc lương đang áp dụng, thiết lập mới sẽ thay thế hoặc cập nhật thiết lập cũ.</p>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">Thông tin bậc lương</h5>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-0">Thông tin chi tiết về bậc lương sẽ được hiển thị ở đây khi bạn chọn bậc lương từ danh sách.</p>
+                <div id="salary-grade-info" class="d-none mt-3">
+                    <div class="mb-2">
+                        <strong>Tên bậc lương:</strong> <span id="sg-name"></span>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Hệ số cơ bản:</strong> <span id="sg-coefficient"></span>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Lương cơ sở:</strong> <span id="sg-base-salary"></span> VNĐ
+                    </div>
+                    <div class="mb-0">
+                        <strong>Lương tính toán:</strong> <span id="sg-calculated-salary"></span> VNĐ
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Khởi tạo date picker
+        flatpickr('.date-picker', {
+            dateFormat: 'd/m/Y',
+            locale: 'vn'
+        });
+        
+        // Xử lý hiển thị thông tin bậc lương khi chọn
+        const salaryGradeSelect = document.getElementById('salary_grade_id');
+        const salaryGradeInfo = document.getElementById('salary-grade-info');
+        
+        if (salaryGradeSelect && salaryGradeInfo) {
+            // Dữ liệu bậc lương từ server
+            const salaryGrades = {{ salary_grades_json|safe }};
+            
+            salaryGradeSelect.addEventListener('change', function() {
+                const selectedId = parseInt(this.value);
+                const selectedGrade = salaryGrades.find(grade => grade.id === selectedId);
+                
+                if (selectedGrade) {
+                    document.getElementById('sg-name').textContent = selectedGrade.name;
+                    document.getElementById('sg-coefficient').textContent = selectedGrade.base_coefficient;
+                    document.getElementById('sg-base-salary').textContent = selectedGrade.base_salary.toLocaleString('vi-VN');
+                    document.getElementById('sg-calculated-salary').textContent = selectedGrade.calculated_salary.toLocaleString('vi-VN');
+                    
+                    salaryGradeInfo.classList.remove('d-none');
+                } else {
+                    salaryGradeInfo.classList.add('d-none');
+                }
+            });
+            
+            // Kích hoạt sự kiện change nếu đã có giá trị được chọn
+            if (salaryGradeSelect.value) {
+                salaryGradeSelect.dispatchEvent(new Event('change'));
+            }
+        }
+    });
+</script>
+{% endblock %}
