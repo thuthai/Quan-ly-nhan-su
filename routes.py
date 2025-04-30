@@ -6,13 +6,21 @@ import os
 import json
 import pandas as pd
 from sqlalchemy import func, desc
+from wtforms import FloatField, TextAreaField
+from wtforms.validators import Optional
+from flask_wtf import FlaskForm
 
 from app import app, db
-from models import User, Department, Employee, Attendance, LeaveRequest, CareerPath, Gender, EmployeeStatus, UserRole, LeaveStatus, LeaveType, Award, AwardType, SalaryGrade, EmployeeSalary
+from models import (User, Department, Employee, Attendance, LeaveRequest, CareerPath, Gender, 
+                   EmployeeStatus, UserRole, LeaveStatus, LeaveType, Award, AwardType, 
+                   SalaryGrade, EmployeeSalary, PerformanceEvaluationCriteria, PerformanceEvaluation, 
+                   PerformanceEvaluationDetail, PerformanceRatingPeriod, PerformanceRatingStatus)
 from forms import (LoginForm, RegisterForm, DepartmentForm, EmployeeForm, EmployeeEditForm, 
                   LeaveRequestForm, CareerPathForm, AttendanceReportForm, EmployeeImportForm,
                   AwardForm, AwardEditForm, EmployeeFilterForm, 
-                  SalaryGradeForm, SalaryGradeEditForm, EmployeeSalaryForm, EmployeeSalaryEditForm)
+                  SalaryGradeForm, SalaryGradeEditForm, EmployeeSalaryForm, EmployeeSalaryEditForm,
+                  PerformanceCriteriaForm, PerformanceEvaluationForm, PerformanceCriteriaScoreForm,
+                  EmployeePerformanceFeedbackForm, PerformanceApprovalForm, PerformanceFilterForm)
 from utils import save_profile_image, export_employees_to_excel, export_attendance_to_excel, process_employee_import, create_sample_import_file
 
 
@@ -33,6 +41,10 @@ def index():
     if current_user.is_authenticated:
         # Get contract expiring alerts
         expiring_contracts = []
+        pending_requests = []
+        employee = None
+        today_attendance = None
+        
         if current_user.is_admin():
             expiring_contracts = Employee.query.filter(
                 Employee.contract_end_date.isnot(None),
@@ -40,10 +52,8 @@ def index():
                 Employee.contract_end_date <= date.today() + timedelta(days=30),
                 Employee.status == EmployeeStatus.ACTIVE
             ).all()
-        
-        # Get pending leave requests
-        pending_requests = []
-        if current_user.is_admin():
+            
+            # Get pending leave requests
             pending_requests = LeaveRequest.query.filter_by(status=LeaveStatus.PENDING).count()
         else:
             # Get employee ID
@@ -54,18 +64,14 @@ def index():
                     employee_id=employee.id,
                     date=date.today()
                 ).first()
-                
-                return render_template(
-                    'index.html', 
-                    employee=employee,
-                    today_attendance=today_attendance,
-                    today=date.today()
-                )
         
         return render_template(
             'index.html', 
             expiring_contracts=expiring_contracts,
-            pending_requests=pending_requests
+            pending_requests=pending_requests,
+            employee=employee,
+            today_attendance=today_attendance,
+            today=date.today()
         )
     
     return render_template('index.html')
