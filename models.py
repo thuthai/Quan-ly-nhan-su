@@ -48,6 +48,18 @@ class EducationLevel(enum.Enum):
     OTHER = "Khác"
 
 
+class Position(enum.Enum):
+    """Chức vụ"""
+    STAFF = "Nhân viên"
+    TEAM_LEAD = "Trưởng nhóm"
+    SUPERVISOR = "Giám sát"
+    MANAGER = "Quản lý"
+    DEPUTY_DIRECTOR = "Phó giám đốc"
+    DIRECTOR = "Giám đốc"
+    CEO = "Tổng giám đốc"
+    OTHER = "Khác"
+
+
 class LeaveStatus(enum.Enum):
     PENDING = "Đang chờ xét duyệt"
     APPROVED = "Đã duyệt"
