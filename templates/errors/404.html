@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+
+{% block title %}404 - Không tìm thấy trang - Hệ thống Quản lý Nhân sự{% endblock %}
+
+{% block content %}
+<div class="row mt-5">
+    <div class="col-md-6 mx-auto text-center">
+        <div class="error-template">
+            <h1>
+                <i class="bi bi-exclamation-triangle-fill text-warning"></i> 404
+            </h1>
+            <h2>Không tìm thấy trang</h2>
+            <div class="error-details mt-3 mb-4">
+                Rất tiếc, trang bạn đang tìm kiếm không tồn tại hoặc đã được di chuyển.
+            </div>
+            <div class="error-actions">
+                <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-house-fill me-2"></i>Trang chủ
+                </a>
+                <a href="javascript:history.back()" class="btn btn-outline-secondary btn-lg ms-2">
+                    <i class="bi bi-arrow-left me-2"></i>Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

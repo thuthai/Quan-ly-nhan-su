@@ -1,0 +1,182 @@
+{% extends "layout.html" %}
+
+{% block title %}Nhập nhân viên từ file - Hệ thống Quản lý Nhân sự{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="mb-0">
+                <i class="bi bi-file-earmark-arrow-up me-2"></i>Nhập nhân viên từ file
+            </h1>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-7">
+        <!-- Import Form -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Tải lên file dữ liệu</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('import_employees') }}" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-4">
+                        <label for="import_file" class="form-label">{{ form.import_file.label }} <span class="text-danger">*</span></label>
+                        {{ form.import_file(class="form-control", id="import_file") }}
+                        <div class="form-text">Chỉ chấp nhận file Excel (.xlsx, .xls) hoặc CSV (.csv)</div>
+                        {% for error in form.import_file.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="form-check">
+                            {{ form.skip_header(class="form-check-input", id="skip_header") }}
+                            <label class="form-check-label" for="skip_header">
+                                {{ form.skip_header.label }}
+                            </label>
+                            <div class="form-text">Chọn tùy chọn này nếu dòng đầu tiên của file chứa tên cột</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="form-check">
+                            {{ form.update_existing(class="form-check-input", id="update_existing") }}
+                            <label class="form-check-label" for="update_existing">
+                                {{ form.update_existing.label }}
+                            </label>
+                            <div class="form-text">Cập nhật thông tin cho nhân viên đã tồn tại (dựa vào mã nhân viên)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="department_id" class="form-label">{{ form.department_id.label }}</label>
+                        {{ form.department_id(class="form-select", id="department_id") }}
+                        <div class="form-text">Phòng ban mặc định cho nhân viên mới (nếu không có trong file)</div>
+                        {% for error in form.department_id.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('employees') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Quay lại
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-upload me-1"></i>Tải lên và xử lý
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Result display (if any) -->
+        {% if import_results %}
+            <div class="card mt-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Kết quả nhập liệu</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        Đã xử lý {{ import_results.total }} bản ghi.
+                    </div>
+                    
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Nhân viên mới được thêm
+                            <span class="badge bg-success rounded-pill">{{ import_results.added }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Nhân viên đã cập nhật
+                            <span class="badge bg-warning rounded-pill">{{ import_results.updated }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Bản ghi bị bỏ qua (lỗi)
+                            <span class="badge bg-danger rounded-pill">{{ import_results.skipped }}</span>
+                        </li>
+                    </ul>
+                    
+                    {% if import_results.errors %}
+                        <div class="mt-3">
+                            <h6>Lỗi nhập liệu:</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Dòng</th>
+                                            <th>Mô tả lỗi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for error in import_results.errors %}
+                                            <tr>
+                                                <td>{{ error.row }}</td>
+                                                <td>{{ error.message }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-5">
+        <!-- Instructions & Sample -->
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Hướng dẫn nhập liệu</h5>
+            </div>
+            <div class="card-body">
+                <h6>Định dạng file:</h6>
+                <ul>
+                    <li>File Excel (.xlsx, .xls) hoặc CSV (.csv)</li>
+                    <li>Dòng đầu tiên nên chứa tên cột (và chọn "Bỏ qua dòng đầu tiên")</li>
+                </ul>
+                
+                <h6>Các cột bắt buộc:</h6>
+                <ul>
+                    <li><strong>employee_code</strong>: Mã nhân viên (định danh duy nhất)</li>
+                    <li><strong>full_name</strong>: Họ và tên nhân viên</li>
+                    <li><strong>email</strong>: Địa chỉ email</li>
+                    <li><strong>gender</strong>: Giới tính (Nam, Nữ, Khác)</li>
+                    <li><strong>date_of_birth</strong>: Ngày sinh (định dạng YYYY-MM-DD)</li>
+                    <li><strong>join_date</strong>: Ngày vào công ty (định dạng YYYY-MM-DD)</li>
+                </ul>
+                
+                <h6>Các cột tùy chọn:</h6>
+                <ul>
+                    <li><strong>department_id</strong>: ID phòng ban (nếu không có sẽ dùng mặc định)</li>
+                    <li><strong>position</strong>: Chức vụ</li>
+                    <li><strong>home_town</strong>: Quê quán</li>
+                    <li><strong>address</strong>: Địa chỉ</li>
+                    <li><strong>phone_number</strong>: Số điện thoại</li>
+                    <li><strong>contract_start_date</strong>: Ngày bắt đầu hợp đồng (YYYY-MM-DD)</li>
+                    <li><strong>contract_end_date</strong>: Ngày kết thúc hợp đồng (YYYY-MM-DD)</li>
+                    <li><strong>education_level</strong>: Trình độ học vấn</li>
+                    <li><strong>skills</strong>: Kỹ năng</li>
+                </ul>
+                
+                <div class="alert alert-warning mt-3">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Lưu ý:</strong> Quá trình nhập liệu có thể mất nhiều thời gian tùy thuộc vào kích thước file. Vui lòng không tải lại trang trong quá trình xử lý.
+                </div>
+                
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('download_sample_import') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-download me-1"></i>Tải xuống file mẫu
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

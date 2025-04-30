@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SelectField, DateField, TextAreaField, FloatField, FileField, HiddenField
+from wtforms import StringField, PasswordField, SelectField, DateField, TextAreaField, FloatField, FileField, HiddenField, BooleanField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, ValidationError
 from models import Gender, EmployeeStatus, LeaveType, Department, User, Employee
 from flask_wtf.file import FileAllowed
@@ -126,3 +126,17 @@ class AttendanceReportForm(FlaskForm):
                 self.end_date.errors.append('Ngày kết thúc phải sau ngày bắt đầu.')
                 return False
         return True
+
+
+class EmployeeImportForm(FlaskForm):
+    import_file = FileField('File dữ liệu (.xlsx, .xls, .csv)', validators=[
+        DataRequired(message='Vui lòng chọn file để tải lên'),
+        FileAllowed(['xlsx', 'xls', 'csv'], 'Chỉ chấp nhận file Excel hoặc CSV')
+    ])
+    skip_header = BooleanField('Bỏ qua dòng đầu tiên (tiêu đề)', default=True)
+    update_existing = BooleanField('Cập nhật nhân viên đã tồn tại', default=True)
+    department_id = SelectField('Phòng ban mặc định', coerce=int, validators=[Optional()])
+    
+    def __init__(self, *args, **kwargs):
+        super(EmployeeImportForm, self).__init__(*args, **kwargs)
+        self.department_id.choices = [(0, 'Không chọn')] + [(d.id, d.name) for d in Department.query.all()]

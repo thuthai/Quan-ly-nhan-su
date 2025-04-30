@@ -1,0 +1,124 @@
+{% extends "layout.html" %}
+
+{% block title %}Quản lý người dùng - Hệ thống Quản lý Nhân sự{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="mb-0">
+                <i class="bi bi-people-fill me-2"></i>Quản lý người dùng
+            </h1>
+            <a href="{{ url_for('register') }}" class="btn btn-primary">
+                <i class="bi bi-person-plus-fill me-1"></i>Thêm người dùng
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Danh sách người dùng</h5>
+    </div>
+    <div class="card-body">
+        {% if users %}
+            <div class="table-responsive">
+                <table class="table table-hover datatable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên đăng nhập</th>
+                            <th>Email</th>
+                            <th>Vai trò</th>
+                            <th>Nhân viên</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                            <tr>
+                                <td>{{ user.id }}</td>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    <span class="badge {% if user.role.name == 'ADMIN' %}bg-danger{% else %}bg-success{% endif %}">
+                                        {{ user.role.value }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if user.employee %}
+                                        <a href="{{ url_for('view_employee', id=user.employee.id) }}">
+                                            {{ user.employee.full_name }}
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">Không có</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex">
+                                        <!-- Edit user button (not implemented yet) -->
+                                        <button class="btn btn-sm btn-outline-warning me-1" disabled>
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        
+                                        <!-- Delete user button (not implemented yet) -->
+                                        <button class="btn btn-sm btn-outline-danger" disabled>
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle-fill me-2"></i>Chưa có người dùng nào trong hệ thống.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-info-circle me-2"></i>Hướng dẫn quản lý người dùng
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Vai trò người dùng:</h6>
+                <ul>
+                    <li><strong>Admin:</strong> Có quyền truy cập toàn bộ hệ thống, quản lý nhân viên, phòng ban và cấu hình.</li>
+                    <li><strong>Nhân viên:</strong> Chỉ có quyền truy cập thông tin cá nhân, chấm công và đơn xin nghỉ phép.</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6>Hướng dẫn:</h6>
+                <ul>
+                    <li>Thêm người dùng mới: Nhấn "Thêm người dùng" và điền thông tin</li>
+                    <li>Người dùng mặc định được tạo với vai trò "Nhân viên"</li>
+                    <li>Liên kết với nhân viên: Admin cần tạo thông tin nhân viên sau khi tạo tài khoản</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize DataTable
+        new DataTable('.datatable', {
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.1/i18n/vi.json'
+            },
+            order: [[0, 'asc']], // Sort by ID asc
+            pageLength: 10
+        });
+    });
+</script>
+{% endblock %}
