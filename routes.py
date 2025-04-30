@@ -387,14 +387,16 @@ def employees():
     # 1. Thống kê theo giới tính
     gender_stats = {}
     for g in Gender:
-        gender_stats[g.value] = len([e for e in employees if e.gender == g])
+        gender_stats[str(g.value)] = len([e for e in employees if e.gender == g])
     
     # 2. Thống kê theo trình độ học vấn
     education_stats = {}
     all_education_levels = db.session.query(Employee.education_level).distinct().all()
     for level in all_education_levels:
         if level[0]:  # Kiểm tra không phải None hoặc chuỗi rỗng
-            education_stats[level[0]] = len([e for e in employees if e.education_level == level[0]])
+            # Chuyển enum thành chuỗi để tương thích với JSON
+            level_key = level[0].name if hasattr(level[0], 'name') else str(level[0])
+            education_stats[level_key] = len([e for e in employees if e.education_level == level[0]])
     
     # 3. Thống kê theo độ tuổi
     age_groups = {
