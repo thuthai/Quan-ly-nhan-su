@@ -48,7 +48,11 @@ function createGenderChart(genderStats) {
                     position: 'bottom',
                     labels: {
                         usePointStyle: true,
-                        padding: 20
+                        padding: 20,
+                        color: '#333333',
+                        font: {
+                            weight: 'bold'
+                        }
                     }
                 },
                 tooltip: {
@@ -147,8 +151,10 @@ function createEducationChart(educationStats) {
                     labels: {
                         usePointStyle: true,
                         padding: 10,
+                        color: '#333333',
                         font: {
-                            size: 10
+                            size: 11,
+                            weight: 'bold'
                         }
                     }
                 },
