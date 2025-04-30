@@ -1154,7 +1154,7 @@ def employee_salaries():
         desc(EmployeeSalary.effective_date)
     ).all()
     
-    return render_template('employee_salaries/index.html', salaries=salaries)
+    return render_template('salary/employee_salary.html', salaries=salaries)
 
 
 @app.route('/employee-salaries/create', methods=['GET', 'POST'])
@@ -1194,7 +1194,7 @@ def create_employee_salary():
             db.session.rollback()
             flash(f'Lỗi khi tạo thông tin lương: {str(e)}', 'danger')
     
-    return render_template('employee_salaries/create.html', form=form)
+    return render_template('salary/create.html', form=form)
 
 
 @app.route('/employee-salaries/<int:id>/edit', methods=['GET', 'POST'])
@@ -1220,7 +1220,7 @@ def edit_employee_salary(id):
             db.session.rollback()
             flash(f'Lỗi khi cập nhật thông tin lương: {str(e)}', 'danger')
     
-    return render_template('employee_salaries/edit.html', form=form, employee_salary=employee_salary)
+    return render_template('salary/edit_employee_salary.html', form=form, employee_salary=employee_salary)
 
 
 @app.route('/employee-salaries/<int:id>/delete', methods=['POST'])
