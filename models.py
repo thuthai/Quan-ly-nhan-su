@@ -108,6 +108,7 @@ class Employee(db.Model):
     attendances = db.relationship('Attendance', backref='employee', lazy=True)
     leave_requests = db.relationship('LeaveRequest', backref='employee', lazy=True)
     career_paths = db.relationship('CareerPath', backref='employee', lazy=True)
+    awards = db.relationship('Award', backref='employee', lazy=True)
     
     def is_contract_expiring_soon(self):
         if not self.contract_end_date:
@@ -170,3 +171,28 @@ class CareerPath(db.Model):
     
     def __repr__(self):
         return f'<CareerPath {self.employee_id} - {self.position}>'
+
+
+class AwardType(enum.Enum):
+    INDIVIDUAL = "Danh hiệu cá nhân"
+    COLLECTIVE = "Danh hiệu tập thể"
+    CERTIFICATE = "Giấy chứng nhận"
+    COMPETITION = "Giải thưởng cuộc thi"
+    OTHER = "Khác"
+
+
+class Award(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
+    name = db.Column(db.String(200), nullable=False)
+    award_type = db.Column(db.Enum(AwardType), default=AwardType.INDIVIDUAL, nullable=False)
+    year = db.Column(db.Integer, nullable=False)
+    date_received = db.Column(db.Date)
+    description = db.Column(db.Text)
+    certificate_number = db.Column(db.String(100))
+    issued_by = db.Column(db.String(200))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<Award {self.name} - {self.year}>'
