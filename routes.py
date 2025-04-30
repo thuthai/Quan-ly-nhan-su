@@ -1065,7 +1065,7 @@ def dashboard_stats():
 @admin_required
 def salary_grades():
     grades = SalaryGrade.query.order_by(SalaryGrade.code).all()
-    return render_template('salary/index.html', grades=grades)
+    return render_template('salary_grades/index.html', grades=grades)
 
 
 @app.route('/salary-grades/create', methods=['GET', 'POST'])
@@ -1112,7 +1112,7 @@ def edit_salary_grade(id):
             db.session.rollback()
             flash(f'Lỗi khi cập nhật bậc lương: {str(e)}', 'danger')
     
-    return render_template('salary/edit.html', form=form, salary_grade=salary_grade)
+    return render_template('salary_grades/edit.html', form=form, salary_grade=salary_grade)
 
 
 @app.route('/salary-grades/<int:id>/delete', methods=['POST'])
