@@ -38,7 +38,7 @@ body {
 
 /* Profile page styles */
 .profile-header {
-    background-color: var(--bs-dark);
+    background-color: var(--bs-primary);
     color: white;
     padding: 2rem 0;
     margin-bottom: 2rem;
@@ -115,10 +115,11 @@ body {
 
 /* Search form */
 .search-form {
-    background-color: var(--bs-dark);
+    background-color: var(--bs-light);
     padding: 1rem;
     border-radius: 0.5rem;
     margin-bottom: 1.5rem;
+    border: 1px solid var(--bs-border-color);
 }
 
 /* Career path timeline */
@@ -164,5 +165,6 @@ body {
     margin: 0 auto;
     padding: 2rem;
     border-radius: 10px;
-    background-color: var(--bs-dark);
+    background-color: var(--bs-light);
+    border: 1px solid var(--bs-border-color);
 }
