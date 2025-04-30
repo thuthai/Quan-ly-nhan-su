@@ -1,39 +1,87 @@
 <!DOCTYPE html>
-<html lang="vi" data-bs-theme="light" style="background-color: #ffffff;">
+<html lang="vi" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Hệ thống quản lý nhân sự{% endblock %}</title>
     
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- Bootstrap CSS - Using Replit theme -->
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
     
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Bootstrap Icons - Latest -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
-    <!-- Flatpickr Date Picker -->
+    <!-- jQuery (needed for Bootstrap plugins and DataTables) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
+    <!-- Flatpickr Date Picker - With better theme -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/light.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
     
-    <!-- DataTables CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.4.0/css/responsive.bootstrap5.min.css">
+    <!-- DataTables CSS - Updated -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
     
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js - Deferred loading -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
     
+    <!-- Google Fonts - Roboto -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Animate.css for subtle animations -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    
     {% block head %}{% endblock %}
+    
+    <style>
+        :root {
+            --primary-color: #3f51b5;
+            --secondary-color: #f50057;
+            --primary-light: #757de8;
+            --primary-dark: #002984;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --danger-color: #f44336;
+            --info-color: #2196f3;
+            --background-color: #f5f5f7;
+            --card-bg-color: #ffffff;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            color: #333;
+        }
+        
+        .navbar {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+        }
+    </style>
 </head>
-<body style="background-color: #ffffff;">
+<body class="animate__animated animate__fadeIn">
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+    <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
-                <i class="bi bi-people-fill me-2"></i>
-                <span>HRM</span>
+                <i class="bi bi-buildings-fill fs-4 me-2 text-primary"></i>
+                <span class="fw-bold">HR Manager</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -41,61 +89,111 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}">Trang chủ</a>
+                        <a class="nav-link rounded-pill px-3" href="{{ url_for('index') }}">
+                            <i class="bi bi-house-fill me-1"></i> Trang chủ
+                        </a>
                     </li>
                     {% if current_user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('dashboard') }}">Thống kê</a>
+                            <a class="nav-link rounded-pill px-3" href="{{ url_for('dashboard') }}">
+                                <i class="bi bi-graph-up me-1"></i> Thống kê
+                            </a>
                         </li>
                         {% if current_user.is_admin() %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('employees') }}">Nhân viên</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('departments') }}">Phòng ban</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('admin') }}">Quản trị</a>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle rounded-pill px-3" href="#" id="navbarAdminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-gear-fill me-1"></i> Quản trị
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-animated animate__animated animate__fadeIn" aria-labelledby="navbarAdminDropdown">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('employees') }}">
+                                            <i class="bi bi-people-fill me-2 text-primary"></i> Quản lý nhân viên
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('departments') }}">
+                                            <i class="bi bi-diagram-3-fill me-2 text-success"></i> Quản lý phòng ban
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('position_list') }}">
+                                            <i class="bi bi-briefcase-fill me-2 text-info"></i> Quản lý chức vụ
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('admin') }}">
+                                            <i class="bi bi-tools me-2 text-warning"></i> Bảng điều khiển quản trị
+                                        </a>
+                                    </li>
+                                </ul>
                             </li>
                         {% endif %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('attendance') }}">Chấm công</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('leave_requests') }}">Nghỉ phép</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle rounded-pill px-3" href="#" id="navbarFeatureDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-clipboard2-data-fill me-1"></i> Tính năng
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-animated animate__animated animate__fadeIn" aria-labelledby="navbarFeatureDropdown">
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('attendance') }}">
+                                        <i class="bi bi-calendar2-check-fill me-2 text-primary"></i> Chấm công
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('leave_requests') }}">
+                                        <i class="bi bi-calendar-x-fill me-2 text-danger"></i> Nghỉ phép
+                                    </a>
+                                </li>
+                                {% if current_user.is_admin() %}
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('salary_grades') }}">
+                                        <i class="bi bi-currency-exchange me-2 text-success"></i> Quản lý lương
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('performance_evaluations') }}">
+                                        <i class="bi bi-graph-up-arrow me-2 text-info"></i> Đánh giá KPI
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
                         </li>
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     {% if current_user.is_authenticated %}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle rounded-pill px-3 user-profile-dropdown" href="#" id="navbarUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 {% if current_user.is_admin() %}
-                                    <i class="bi bi-shield-lock-fill me-1"></i>
+                                    <i class="bi bi-shield-lock-fill me-1 text-primary"></i>
                                 {% else %}
                                     <i class="bi bi-person-circle me-1"></i>
                                 {% endif %}
-                                {{ current_user.username }}
+                                <span>{{ current_user.username }}</span>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-animated animate__animated animate__fadeIn" aria-labelledby="navbarUserDropdown">
                                 {% if current_user.employee %}
                                     <li>
-                                        <a class="dropdown-item" href="{{ url_for('view_employee', id=current_user.employee.id) }}">
-                                            <i class="bi bi-person me-2"></i>Hồ sơ cá nhân
+                                        <a class="dropdown-item d-flex align-items-center" href="{{ url_for('view_employee', id=current_user.employee.id) }}">
+                                            <i class="bi bi-person-badge-fill me-2 text-primary"></i>
+                                            <div>
+                                                <span>Hồ sơ cá nhân</span>
+                                                <div class="small text-muted">Xem và cập nhật thông tin</div>
+                                            </div>
                                         </a>
                                     </li>
                                     <li><hr class="dropdown-divider"></li>
                                 {% endif %}
                                 <li>
                                     <a class="dropdown-item" href="{{ url_for('logout') }}">
-                                        <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
+                                        <i class="bi bi-box-arrow-right me-2 text-danger"></i>Đăng xuất
                                     </a>
                                 </li>
                             </ul>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('login') }}">
+                            <a class="nav-link btn btn-primary rounded-pill px-3 py-1 text-white" href="{{ url_for('login') }}">
                                 <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập
                             </a>
                         </li>
@@ -106,17 +204,28 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="content py-4">
-        <div class="container">
+    <main class="content py-5">
+        <div class="container pt-3">
             <!-- Flash Messages -->
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
+                    <div class="alert-container animate__animated animate__fadeInDown">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+                                {% if category == 'success' %}
+                                    <i class="bi bi-check-circle-fill me-2"></i>
+                                {% elif category == 'danger' %}
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                {% elif category == 'warning' %}
+                                    <i class="bi bi-exclamation-circle-fill me-2"></i>
+                                {% elif category == 'info' %}
+                                    <i class="bi bi-info-circle-fill me-2"></i>
+                                {% endif %}
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
                 {% endif %}
             {% endwith %}
             
@@ -124,19 +233,34 @@
             {% block header %}{% endblock %}
             
             <!-- Page Content -->
-            {% block content %}{% endblock %}
+            <div class="main-content-wrapper">
+                {% block content %}{% endblock %}
+            </div>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="footer bg-light py-3 border-top">
+    <footer class="footer py-4 border-top mt-auto">
         <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <p class="mb-0 text-dark">&copy; 2023 Hệ thống Quản lý Nhân sự</p>
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center mb-3 mb-md-0">
+                        <i class="bi bi-buildings-fill fs-4 me-2 text-primary"></i>
+                        <span class="fw-bold">HR Manager</span>
+                    </div>
                 </div>
-                <div class="col-md-6 text-md-end">
-                    <p class="mb-0 text-dark">Version 1.0</p>
+                <div class="col-md-4 text-center">
+                    <div class="text-muted">
+                        <p class="mb-0">&copy; 2025 Hệ thống Quản lý Nhân sự</p>
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <div class="d-flex justify-content-md-end">
+                        <span class="badge bg-primary me-2">Version 1.0</span>
+                        <a href="#" class="text-decoration-none me-2" title="Facebook"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="text-decoration-none me-2" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                        <a href="#" class="text-decoration-none" title="GitHub"><i class="bi bi-github"></i></a>
+                    </div>
                 </div>
             </div>
         </div>
