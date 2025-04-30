@@ -570,11 +570,17 @@ input[type="datetime-local"] {
     height: 38px !important;
     line-height: 38px !important;
     transition: all 0.2s ease !important;
+    font-weight: 500 !important;
+    color: #333 !important;
+    background-color: transparent !important;
+    text-align: center !important;
+    font-size: 14px !important;
 }
 
 .flatpickr-day:hover {
     background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
     border-color: transparent !important;
+    color: var(--bs-primary) !important;
 }
 
 .flatpickr-day.selected,
@@ -668,6 +674,8 @@ input[type="datetime-local"] {
 [data-bs-theme=dark] .flatpickr-day {
     color: var(--bs-light) !important;
     border-color: transparent !important;
+    font-weight: 500 !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
 }
 
 [data-bs-theme=dark] .flatpickr-day:hover {
