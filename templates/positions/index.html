@@ -17,203 +17,125 @@
         </div>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">
-                <i class="bi bi-list-ul me-2"></i>Danh sách chức vụ
-            </h5>
-        </div>
-        <div class="card-body">
-            <ul class="nav nav-tabs mb-4" id="positionTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-positions" type="button" role="tab" aria-controls="all-positions" aria-selected="true">
-                        <i class="bi bi-grid me-1"></i>Tất cả
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="default-tab" data-bs-toggle="tab" data-bs-target="#default-positions" type="button" role="tab" aria-controls="default-positions" aria-selected="false">
-                        <i class="bi bi-bookmark-check me-1"></i>Mặc định
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="custom-tab" data-bs-toggle="tab" data-bs-target="#custom-positions" type="button" role="tab" aria-controls="custom-positions" aria-selected="false">
-                        <i class="bi bi-pencil-square me-1"></i>Tùy chỉnh
-                    </button>
-                </li>
-            </ul>
-
-            <div class="tab-content" id="positionTabsContent">
-                <!-- Tab tất cả -->
-                <div class="tab-pane fade show active" id="all-positions" role="tabpanel" aria-labelledby="all-tab">
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-check me-2"></i>Danh sách chức vụ mặc định
+                    </h5>
+                </div>
+                <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover align-middle">
-                            <thead class="table-light">
+                        <table class="table table-striped table-hover">
+                            <thead>
                                 <tr>
-                                    <th scope="col" width="50">#</th>
+                                    <th scope="col">#</th>
                                     <th scope="col">Tên chức vụ</th>
-                                    <th scope="col">Loại</th>
-                                    <th scope="col">Mô tả</th>
-                                    <th scope="col" width="120">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for position in default_positions %}
                                 <tr>
                                     <td>{{ loop.index }}</td>
-                                    <td>{{ position.name }}</td>
-                                    <td><span class="badge bg-info">{{ position.type }}</span></td>
-                                    <td>Chức vụ mặc định của hệ thống</td>
-                                    <td>
-                                        <span class="text-muted">Không thể chỉnh sửa</span>
-                                    </td>
+                                    <td>{{ position }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="2" class="text-center">Không có dữ liệu</td>
                                 </tr>
                                 {% endfor %}
-                                
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="alert alert-info mb-0">
+                        <h6 class="alert-heading"><i class="bi bi-info-circle me-2"></i>Lưu ý</h6>
+                        <p class="mb-0">Danh sách chức vụ mặc định không thể chỉnh sửa hoặc xóa.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-pencil-square me-2"></i>Danh sách chức vụ tùy chỉnh
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">Tên chức vụ</th>
+                                    <th scope="col">Mô tả</th>
+                                    <th scope="col">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
                                 {% for position in custom_positions %}
                                 <tr>
-                                    <td>{{ loop.index + default_positions|length }}</td>
+                                    <td>{{ loop.index }}</td>
                                     <td>{{ position.name }}</td>
-                                    <td><span class="badge bg-success">Tùy chỉnh</span></td>
-                                    <td>{{ position.description or 'Không có mô tả' }}</td>
+                                    <td>{{ position.description }}</td>
                                     <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <a href="{{ url_for('edit_custom_position', id=position.id) }}" class="btn btn-outline-primary">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{{ url_for('edit_custom_position', position_id=position.id) }}" class="btn btn-outline-primary" title="Chỉnh sửa">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                             <button type="button" class="btn btn-outline-danger" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#deletePositionModal" 
-                                                    data-position-id="{{ position.id }}"
-                                                    data-position-name="{{ position.name }}">
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#deletePositionModal" 
+                                                data-position-id="{{ position.id }}"
+                                                data-position-name="{{ position.name }}"
+                                                title="Xóa">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
-                                {% endfor %}
-                                
-                                {% if not default_positions and not custom_positions %}
-                                <tr>
-                                    <td colspan="5" class="text-center">Không có dữ liệu</td>
-                                </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                
-                <!-- Tab mặc định -->
-                <div class="tab-pane fade" id="default-positions" role="tabpanel" aria-labelledby="default-tab">
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th scope="col" width="50">#</th>
-                                    <th scope="col">Tên chức vụ</th>
-                                    <th scope="col">Loại</th>
-                                    <th scope="col">Mô tả</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for position in default_positions %}
-                                <tr>
-                                    <td>{{ loop.index }}</td>
-                                    <td>{{ position.name }}</td>
-                                    <td><span class="badge bg-info">{{ position.type }}</span></td>
-                                    <td>Chức vụ mặc định của hệ thống</td>
-                                </tr>
-                                {% endfor %}
-                                
-                                {% if not default_positions %}
+                                {% else %}
                                 <tr>
                                     <td colspan="4" class="text-center">Không có dữ liệu</td>
                                 </tr>
-                                {% endif %}
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div>
                 </div>
-                
-                <!-- Tab tùy chỉnh -->
-                <div class="tab-pane fade" id="custom-positions" role="tabpanel" aria-labelledby="custom-tab">
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th scope="col" width="50">#</th>
-                                    <th scope="col">Tên chức vụ</th>
-                                    <th scope="col">Mô tả</th>
-                                    <th scope="col">Ngày tạo</th>
-                                    <th scope="col" width="120">Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for position in custom_positions %}
-                                <tr>
-                                    <td>{{ loop.index }}</td>
-                                    <td>{{ position.name }}</td>
-                                    <td>{{ position.description or 'Không có mô tả' }}</td>
-                                    <td>{{ position.created_at.strftime('%d/%m/%Y') }}</td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <a href="{{ url_for('edit_custom_position', id=position.id) }}" class="btn btn-outline-primary">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-outline-danger" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#deletePositionModal" 
-                                                    data-position-id="{{ position.id }}"
-                                                    data-position-name="{{ position.name }}">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                                
-                                {% if not custom_positions %}
-                                <tr>
-                                    <td colspan="5" class="text-center">Không có dữ liệu. <a href="{{ url_for('create_custom_position') }}">Thêm chức vụ mới</a></td>
-                                </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
+                <div class="card-footer bg-light">
+                    <div class="alert alert-info mb-0">
+                        <h6 class="alert-heading"><i class="bi bi-info-circle me-2"></i>Lưu ý</h6>
+                        <p class="mb-0">Các chức vụ tùy chỉnh sẽ được hiển thị trong danh sách chức vụ khi thêm mới hoặc chỉnh sửa nhân viên.</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="alert alert-info">
-        <h4 class="alert-heading"><i class="bi bi-info-circle me-2"></i>Thông tin chức vụ</h4>
-        <p>Chức vụ <b>mặc định</b> là các chức vụ được cung cấp sẵn trong hệ thống và không thể chỉnh sửa.</p>
-        <p>Chức vụ <b>tùy chỉnh</b> là các chức vụ do bạn tạo ra và có thể chỉnh sửa hoặc xóa.</p>
-        <p class="mb-0">Cả hai loại chức vụ đều có thể được sử dụng khi tạo hoặc chỉnh sửa thông tin nhân viên.</p>
-    </div>
 </div>
 
-<!-- Modal xác nhận xóa -->
+<!-- Modal Delete Position -->
 <div class="modal fade" id="deletePositionModal" tabindex="-1" aria-labelledby="deletePositionModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
                 <h5 class="modal-title" id="deletePositionModalLabel">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Xác nhận xóa
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Xác nhận xóa chức vụ
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <p>Bạn có chắc chắn muốn xóa chức vụ <strong id="positionNameToDelete"></strong>?</p>
-                <p>Hành động này <strong>không thể hoàn tác</strong>.</p>
+                <p class="text-danger"><i class="bi bi-exclamation-circle me-2"></i>Lưu ý: Hành động này không thể hoàn tác.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="bi bi-x-circle me-1"></i>Hủy bỏ
-                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
                 <form id="deletePositionForm" method="POST" action="">
-                    <button type="submit" class="btn btn-danger">
-                        <i class="bi bi-trash me-1"></i>Xóa
-                    </button>
+                    <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
                 </form>
             </div>
         </div>
@@ -223,22 +145,23 @@
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Xử lý modal xóa chức vụ
-    const deleteModal = document.getElementById('deletePositionModal');
-    if (deleteModal) {
-        deleteModal.addEventListener('show.bs.modal', function(event) {
-            const button = event.relatedTarget;
-            const positionId = button.getAttribute('data-position-id');
-            const positionName = button.getAttribute('data-position-name');
-            
-            const positionNameElement = document.getElementById('positionNameToDelete');
-            if (positionNameElement) positionNameElement.textContent = positionName;
-            
-            const form = document.getElementById('deletePositionForm');
-            if (form) form.action = `/positions/delete/${positionId}`;
-        });
-    }
-});
+    document.addEventListener('DOMContentLoaded', function() {
+        // Cấu hình modal xóa chức vụ
+        const deletePositionModal = document.getElementById('deletePositionModal');
+        if (deletePositionModal) {
+            deletePositionModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const positionId = button.getAttribute('data-position-id');
+                const positionName = button.getAttribute('data-position-name');
+                
+                // Cập nhật thông tin modal
+                document.getElementById('positionNameToDelete').textContent = positionName;
+                
+                // Cập nhật action của form
+                const deleteForm = document.getElementById('deletePositionForm');
+                deleteForm.action = `/positions/delete/${positionId}`;
+            });
+        }
+    });
 </script>
 {% endblock %}
