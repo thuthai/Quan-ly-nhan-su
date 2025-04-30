@@ -50,7 +50,7 @@ class EmployeeForm(FlaskForm):
     salary_coefficient = FloatField('Hệ số lương', validators=[Optional()])
     contract_start_date = DateField('Ngày bắt đầu hợp đồng', validators=[Optional()])
     contract_end_date = DateField('Ngày kết thúc hợp đồng', validators=[Optional()])
-    education_level = StringField('Trình độ học vấn', validators=[Optional()])
+    education_level = SelectField('Trình độ học vấn', choices=[(e.name, e.value) for e in EducationLevel], validators=[Optional()])
     skills = TextAreaField('Kỹ năng', validators=[Optional()])
     profile_image = FileField('Ảnh đại diện', validators=[Optional(), FileAllowed(['jpg', 'png', 'jpeg'], 'Chỉ chấp nhận file hình ảnh')])
     status = SelectField('Trạng thái', choices=[(s.name, s.value) for s in EmployeeStatus], validators=[DataRequired(message='Vui lòng chọn trạng thái')])
@@ -177,7 +177,7 @@ class EmployeeFilterForm(FlaskForm):
     age_max = StringField('Đến', validators=[Optional()])
     join_date_from = DateField('Ngày vào làm từ', validators=[Optional()])
     join_date_to = DateField('Đến ngày', validators=[Optional()])
-    education_level = StringField('Trình độ học vấn', validators=[Optional()])
+    education_level = SelectField('Trình độ học vấn', validators=[Optional()])
     
     def __init__(self, *args, **kwargs):
         super(EmployeeFilterForm, self).__init__(*args, **kwargs)
@@ -185,6 +185,7 @@ class EmployeeFilterForm(FlaskForm):
         self.gender.choices = [('', 'Tất cả')] + [(g.name, g.value) for g in Gender]
         self.status.choices = [('', 'Tất cả')] + [(s.name, s.value) for s in EmployeeStatus]
         self.home_town.choices = [('', 'Tất cả tỉnh thành')] + [(province, province) for province in VIETNAM_PROVINCES]
+        self.education_level.choices = [('', 'Tất cả')] + [(e.name, e.value) for e in EducationLevel]
         
     def validate_age_min(self, age_min):
         if age_min.data:
