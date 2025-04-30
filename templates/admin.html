@@ -326,48 +326,102 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Hệ thống sử dụng biểu đồ
-        const ctxSystem = document.getElementById('systemUsageChart').getContext('2d');
-        const systemUsageChart = new Chart(ctxSystem, {
-            type: 'line',
-            data: {
-                labels: ['1/4', '2/4', '3/4', '4/4', '5/4', '6/4', '7/4', '8/4', '9/4', '10/4', '11/4', '12/4', '13/4', '14/4'],
-                datasets: [{
-                    label: 'Đăng nhập',
-                    data: [12, 15, 18, 14, 11, 3, 4, 13, 15, 17, 19, 15, 14, 18],
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }, {
-                    label: 'Hoạt động',
-                    data: [65, 59, 80, 81, 56, 20, 25, 70, 76, 80, 84, 75, 72, 79],
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    backgroundColor: 'rgba(255, 99, 132, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }, {
-                    label: 'Tài nguyên sử dụng',
-                    data: [28, 32, 40, 38, 36, 35, 35, 37, 42, 44, 42, 40, 39, 41],
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
+        // Chờ một khoảng thời gian ngắn để đảm bảo Canvas đã được render
+        setTimeout(function() {
+            try {
+                // Hệ thống sử dụng biểu đồ
+                const systemCanvas = document.getElementById('systemUsageChart');
+                if (systemCanvas) {
+                    const ctxSystem = systemCanvas.getContext('2d');
+                    
+                    const systemUsageChart = new Chart(ctxSystem, {
+                        type: 'line',
+                        data: {
+                            labels: ['1/4', '2/4', '3/4', '4/4', '5/4', '6/4', '7/4', '8/4', '9/4', '10/4', '11/4', '12/4', '13/4', '14/4'],
+                            datasets: [{
+                                label: 'Đăng nhập',
+                                data: [12, 15, 18, 14, 11, 3, 4, 13, 15, 17, 19, 15, 14, 18],
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            }, {
+                                label: 'Hoạt động',
+                                data: [65, 59, 80, 81, 56, 20, 25, 70, 76, 80, 84, 75, 72, 79],
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            }, {
+                                label: 'Tài nguyên sử dụng',
+                                data: [28, 32, 40, 38, 36, 35, 35, 37, 42, 44, 42, 40, 39, 41],
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            interaction: {
+                                mode: 'index',
+                                intersect: false,
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                    labels: {
+                                        color: '#333333',
+                                        font: {
+                                            weight: 'bold'
+                                        }
+                                    }
+                                },
+                                tooltip: {
+                                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                    titleColor: 'white',
+                                    bodyColor: 'white',
+                                    borderColor: 'white',
+                                    borderWidth: 1
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        color: '#333333',
+                                        font: {
+                                            weight: '500'
+                                        }
+                                    },
+                                    grid: {
+                                        color: 'rgba(0, 0, 0, 0.1)'
+                                    }
+                                },
+                                x: {
+                                    ticks: {
+                                        color: '#333333',
+                                        font: {
+                                            weight: '500'
+                                        }
+                                    },
+                                    grid: {
+                                        color: 'rgba(0, 0, 0, 0.05)'
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    console.log('Chart initialized successfully');
+                } else {
+                    console.error('Canvas element not found!');
                 }
+            } catch (error) {
+                console.error('Error initializing chart:', error);
             }
-        });
+        }, 100);
     });
 </script>
 {% endblock %}

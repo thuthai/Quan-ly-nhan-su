@@ -243,6 +243,10 @@ body {
 }
 
 /* Style cho admin card */
+.admin-card {
+    overflow: visible !important;
+}
+
 .admin-card .card-body {
     background-color: white !important;
 }
@@ -250,6 +254,23 @@ body {
 .admin-card .card-text {
     color: #333333 !important;
     font-weight: 500 !important;
+}
+
+.admin-card label,
+.admin-card li,
+.admin-card p,
+.admin-card span,
+.admin-card a,
+.admin-card div {
+    color: #333333 !important;
+}
+
+.admin-card ul.list-group-flush li {
+    border-color: rgba(0, 0, 0, 0.125) !important;
+}
+
+.admin-card canvas {
+    background-color: white !important;
 }
 
 .dashboard-card::before {
@@ -338,6 +359,11 @@ body {
 .dashboard-chart {
     height: 280px;
     margin-top: 1rem;
+    position: relative;
+}
+
+canvas {
+    max-width: 100%;
 }
 
 /* Button styles */
