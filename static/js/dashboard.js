@@ -122,7 +122,10 @@ function renderGenderChart(chartElement) {
         legend: {
           position: 'bottom',
           labels: {
-            color: 'white'
+            color: '#000000',
+            font: {
+              weight: 'bold'
+            }
           }
         },
         title: {

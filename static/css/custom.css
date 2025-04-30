@@ -202,6 +202,19 @@ body {
     z-index: 1;
 }
 
+/* Style theo mẫu tham khảo */
+.col-md-3 .dashboard-card {
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+    overflow: visible;
+}
+
+.col-md-3 .dashboard-card .card-body {
+    background-color: transparent;
+    padding: 1.25rem;
+}
+
 /* Đảm bảo chữ trong các thẻ thống kê có màu đen */
 .dashboard-card h5.card-title,
 .dashboard-card .card-text,
@@ -214,21 +227,22 @@ body {
 
 .bg-primary .card-title,
 .bg-primary .card-text,
+.bg-primary .dashboard-number,
 .bg-success .card-title,
 .bg-success .card-text,
+.bg-success .dashboard-number,
 .bg-danger .card-title,
-.bg-danger .card-text {
+.bg-danger .card-text,
+.bg-danger .dashboard-number,
+.bg-warning .card-title,
+.bg-warning .card-text,
+.bg-warning .dashboard-number {
     color: white !important;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
-    font-weight: 600 !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
+    font-weight: 700 !important;
 }
 
-.bg-warning .card-title,
-.bg-warning .card-text {
-    color: var(--text-dark) !important;
-    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) !important;
-    font-weight: 600 !important;
-}
+/* Xóa style này vì đã được hợp nhất với style ở trên */
 
 .dashboard-card::before {
     content: '';
