@@ -1,0 +1,113 @@
+{% extends 'layout.html' %}
+
+{% block title %}Thêm bậc lương mới - Hệ thống quản lý nhân sự{% endblock %}
+
+{% block header %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="display-6 mb-3">
+            <i class="bi bi-currency-exchange me-2"></i>Thêm bậc lương mới
+        </h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('salary_grades') }}">Quản lý bậc lương</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Thêm mới</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">Thông tin bậc lương</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('create_salary_grade') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.code.label(class="form-label") }}
+                                {{ form.code(class="form-control " + ('is-invalid' if form.code.errors else '')) }}
+                                {% for error in form.code.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                                <small class="form-text text-muted">Ví dụ: B1, B2, B3, ...</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.name.label(class="form-label") }}
+                                {{ form.name(class="form-control " + ('is-invalid' if form.name.errors else '')) }}
+                                {% for error in form.name.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.base_coefficient.label(class="form-label") }}
+                                {{ form.base_coefficient(class="form-control " + ('is-invalid' if form.base_coefficient.errors else '')) }}
+                                {% for error in form.base_coefficient.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                                <small class="form-text text-muted">Ví dụ: 2.34, 3.0, 4.15, ...</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.base_salary.label(class="form-label") }}
+                                {{ form.base_salary(class="form-control " + ('is-invalid' if form.base_salary.errors else '')) }}
+                                {% for error in form.base_salary.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                                <small class="form-text text-muted">Mặc định: 1,490,000 VNĐ</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control " + ('is-invalid' if form.description.errors else ''), rows=3) }}
+                        {% for error in form.description.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{{ url_for('salary_grades') }}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-x-circle me-1"></i> Hủy
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-1"></i> Lưu bậc lương
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">Hướng dẫn</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Mã bậc lương:</strong> Mã bậc lương phải là duy nhất trong hệ thống, thường dùng để phân loại và tham chiếu nhanh.</p>
+                <p><strong>Hệ số lương:</strong> Đây là hệ số nhân với lương cơ sở để tính ra mức lương cuối cùng. Hệ số lương nên là số thập phân dương.</p>
+                <p><strong>Lương cơ sở:</strong> Giá trị lương cơ bản được nhân với hệ số để tính toán mức lương. Mặc định là 1,490,000 VNĐ.</p>
+                <hr>
+                <p class="mb-0"><strong>Công thức tính lương:</strong><br>Lương = Hệ số × Lương cơ sở</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

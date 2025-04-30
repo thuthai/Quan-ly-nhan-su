@@ -1,0 +1,140 @@
+{% extends 'layout.html' %}
+
+{% block title %}Cập nhật lương nhân viên - Hệ thống quản lý nhân sự{% endblock %}
+
+{% block header %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="display-6 mb-3">
+            <i class="bi bi-currency-exchange me-2"></i>Cập nhật lương nhân viên
+        </h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('employee_salaries') }}">Quản lý lương nhân viên</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Cập nhật lương</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">Thông tin lương</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('edit_employee_salary', id=employee_salary.id) }}">
+                    {{ form.hidden_tag() }}
+                    {{ form.salary_id }}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="form-group mb-3">
+                                {{ form.employee_id.label(class="form-label") }}
+                                {{ form.employee_id(class="form-select " + ('is-invalid' if form.employee_id.errors else '')) }}
+                                {% for error in form.employee_id.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="form-group mb-3">
+                                {{ form.salary_grade_id.label(class="form-label") }}
+                                {{ form.salary_grade_id(class="form-select " + ('is-invalid' if form.salary_grade_id.errors else '')) }}
+                                {% for error in form.salary_grade_id.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.effective_date.label(class="form-label") }}
+                                {{ form.effective_date(class="form-control " + ('is-invalid' if form.effective_date.errors else ''), type="date") }}
+                                {% for error in form.effective_date.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                                <small class="form-text text-muted">Ngày bắt đầu áp dụng bậc lương này</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.end_date.label(class="form-label") }}
+                                {{ form.end_date(class="form-control " + ('is-invalid' if form.end_date.errors else ''), type="date") }}
+                                {% for error in form.end_date.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                                <small class="form-text text-muted">Để trống nếu không có ngày kết thúc</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.additional_coefficient.label(class="form-label") }}
+                                {{ form.additional_coefficient(class="form-control " + ('is-invalid' if form.additional_coefficient.errors else '')) }}
+                                {% for error in form.additional_coefficient.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                                <small class="form-text text-muted">Hệ số phụ cấp thêm ngoài hệ số cơ bản</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.decision_number.label(class="form-label") }}
+                                {{ form.decision_number(class="form-control " + ('is-invalid' if form.decision_number.errors else '')) }}
+                                {% for error in form.decision_number.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                                <small class="form-text text-muted">Số quyết định áp dụng</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        {{ form.reason.label(class="form-label") }}
+                        {{ form.reason(class="form-control " + ('is-invalid' if form.reason.errors else ''), rows=3) }}
+                        {% for error in form.reason.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{{ url_for('employee_salaries') }}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-x-circle me-1"></i> Hủy
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-1"></i> Cập nhật thông tin lương
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">Hướng dẫn</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Bậc lương:</strong> Chọn bậc lương phù hợp với vị trí và thâm niên của nhân viên.</p>
+                <p><strong>Hệ số phụ cấp:</strong> Là phụ cấp thêm ngoài hệ số cơ bản, có thể bao gồm phụ cấp chức vụ, phụ cấp trách nhiệm, v.v.</p>
+                <p><strong>Ngày hiệu lực:</strong> Ngày bắt đầu áp dụng bậc lương này.</p>
+                <p><strong>Ngày kết thúc:</strong> Ngày ngừng áp dụng bậc lương này. Nếu để trống, bậc lương sẽ áp dụng cho đến khi có bậc lương mới thay thế.</p>
+                <hr>
+                <p class="mb-0"><strong>Công thức tính lương:</strong><br>Lương = (Hệ số cơ bản + Hệ số phụ cấp) × Lương cơ sở</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
