@@ -13,7 +13,7 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background-color: var(--background-color);
+    background-color: #f1f5f9;
     font-family: 'Roboto', sans-serif;
     color: #333;
 }
@@ -27,13 +27,13 @@ body {
 .footer {
     margin-top: auto;
     padding: 1.5rem 0;
-    background-color: var(--card-bg-color);
+    background-color: #ffffff;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
 }
 
 /* Navbar styling */
 .navbar {
-    background-color: var(--card-bg-color);
+    background-color: #ffffff;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     padding: 0.8rem 0;
 }
@@ -100,7 +100,7 @@ body {
     overflow: hidden;
     transition: var(--transition-normal);
     margin-bottom: 1.5rem;
-    background-color: var(--card-bg-color);
+    background-color: #ffffff;
 }
 
 .card:hover {
@@ -277,7 +277,7 @@ body, p, span, div, a, li, td, th, label, input, select, textarea, button, h1, h
 }
 
 .admin-card .card-body {
-    background-color: white !important;
+    background-color: #f8faff !important;
 }
 
 .admin-card .card-text {
