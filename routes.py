@@ -1250,3 +1250,432 @@ def not_found_error(error):
 def internal_error(error):
     db.session.rollback()
     return render_template('errors/500.html'), 500
+
+
+# Quản lý tiêu chí đánh giá hiệu suất
+@app.route('/performance/criteria')
+@login_required
+def performance_criteria():
+    if not current_user.is_admin:
+        flash('Bạn không có quyền truy cập trang này.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    criterias = PerformanceEvaluationCriteria.query.all()
+    return render_template('performance/criteria_index.html', criterias=criterias)
+
+
+@app.route('/performance/criteria/create', methods=['GET', 'POST'])
+@login_required
+def create_performance_criteria():
+    if not current_user.is_admin:
+        flash('Bạn không có quyền truy cập trang này.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    form = PerformanceCriteriaForm()
+    
+    if form.validate_on_submit():
+        criteria = PerformanceEvaluationCriteria(
+            name=form.name.data,
+            description=form.description.data,
+            max_score=int(form.max_score.data),
+            weight=form.weight.data,
+            is_active=form.is_active.data,
+            created_by=current_user.id
+        )
+        
+        if form.department_id.data != 0:  # 0 means "All departments"
+            criteria.department_id = form.department_id.data
+        
+        db.session.add(criteria)
+        db.session.commit()
+        
+        flash('Tiêu chí đánh giá đã được tạo thành công.', 'success')
+        return redirect(url_for('performance_criteria'))
+    
+    return render_template('performance/criteria_create.html', form=form)
+
+
+@app.route('/performance/criteria/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_performance_criteria(id):
+    if not current_user.is_admin:
+        flash('Bạn không có quyền truy cập trang này.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    criteria = PerformanceEvaluationCriteria.query.get_or_404(id)
+    form = PerformanceCriteriaForm(obj=criteria)
+    
+    if form.validate_on_submit():
+        criteria.name = form.name.data
+        criteria.description = form.description.data
+        criteria.max_score = int(form.max_score.data)
+        criteria.weight = form.weight.data
+        criteria.is_active = form.is_active.data
+        
+        if form.department_id.data != 0:  # 0 means "All departments"
+            criteria.department_id = form.department_id.data
+        else:
+            criteria.department_id = None
+            
+        db.session.commit()
+        
+        flash('Tiêu chí đánh giá đã được cập nhật thành công.', 'success')
+        return redirect(url_for('performance_criteria'))
+    
+    # Nếu department_id là None, set form field thành 0 (Tất cả phòng ban)
+    if criteria.department_id is None:
+        form.department_id.data = 0
+        
+    return render_template('performance/criteria_edit.html', form=form, criteria=criteria)
+
+
+@app.route('/performance/criteria/<int:id>/delete')
+@login_required
+def delete_performance_criteria(id):
+    if not current_user.is_admin:
+        flash('Bạn không có quyền thực hiện thao tác này.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    criteria = PerformanceEvaluationCriteria.query.get_or_404(id)
+    
+    # Kiểm tra xem tiêu chí này đã được sử dụng trong đánh giá nào chưa
+    details = PerformanceEvaluationDetail.query.filter_by(criteria_id=id).first()
+    if details:
+        flash('Không thể xóa tiêu chí này vì nó đã được sử dụng trong các đánh giá.', 'danger')
+        return redirect(url_for('performance_criteria'))
+    
+    db.session.delete(criteria)
+    db.session.commit()
+    
+    flash('Tiêu chí đánh giá đã được xóa thành công.', 'success')
+    return redirect(url_for('performance_criteria'))
+
+
+# Quản lý đánh giá hiệu suất
+@app.route('/performance/evaluations')
+@login_required
+def performance_evaluations():
+    filter_form = PerformanceFilterForm(request.args)
+    
+    # Tạo query cơ sở
+    query = PerformanceEvaluation.query
+    
+    # Áp dụng các bộ lọc
+    if request.args.get('employee_id') and int(request.args.get('employee_id')) != 0:
+        query = query.filter(PerformanceEvaluation.employee_id == request.args.get('employee_id'))
+    
+    if request.args.get('evaluation_period'):
+        query = query.filter(PerformanceEvaluation.evaluation_period == request.args.get('evaluation_period'))
+        
+    if request.args.get('status'):
+        query = query.filter(PerformanceEvaluation.status == request.args.get('status'))
+        
+    if request.args.get('start_date'):
+        query = query.filter(PerformanceEvaluation.start_date >= request.args.get('start_date'))
+        
+    if request.args.get('end_date'):
+        query = query.filter(PerformanceEvaluation.end_date <= request.args.get('end_date'))
+    
+    # Nếu không phải admin, chỉ xem đánh giá của mình
+    if not current_user.is_admin:
+        # Kiểm tra xem user có thông tin employee không
+        if hasattr(current_user, 'employee'):
+            query = query.filter(PerformanceEvaluation.employee_id == current_user.employee.id)
+        else:
+            # Nếu không có thông tin employee, không có đánh giá nào được hiển thị
+            evaluations = []
+            return render_template('performance/evaluation_index.html', evaluations=evaluations, filter_form=filter_form)
+    
+    evaluations = query.order_by(PerformanceEvaluation.id.desc()).all()
+    return render_template('performance/evaluation_index.html', evaluations=evaluations, filter_form=filter_form)
+
+
+@app.route('/performance/evaluations/create', methods=['GET', 'POST'])
+@login_required
+def create_performance_evaluation():
+    if not current_user.is_admin and not hasattr(current_user, 'employee'):
+        flash('Bạn không có quyền thực hiện thao tác này.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    form = PerformanceEvaluationForm()
+    
+    if form.validate_on_submit():
+        # Validate dates
+        if not form.validate_dates():
+            return render_template('performance/evaluation_create.html', form=form)
+        
+        evaluation = PerformanceEvaluation(
+            employee_id=form.employee_id.data,
+            evaluator_id=current_user.id,
+            evaluation_period=form.evaluation_period.data,
+            start_date=form.start_date.data,
+            end_date=form.end_date.data,
+            comments=form.comments.data,
+            strengths=form.strengths.data,
+            areas_for_improvement=form.areas_for_improvement.data,
+            goals_for_next_period=form.goals_for_next_period.data,
+            status=PerformanceRatingStatus.DRAFT
+        )
+        
+        db.session.add(evaluation)
+        db.session.commit()
+        
+        # Nếu người dùng nhấp vào nút "Tiếp tục điền điểm"
+        if 'submit' in request.form:
+            flash('Đánh giá hiệu suất đã được tạo. Vui lòng tiếp tục điền điểm đánh giá.', 'success')
+            return redirect(url_for('score_performance_evaluation', id=evaluation.id))
+        else:
+            flash('Đánh giá hiệu suất đã được lưu dưới dạng bản nháp.', 'success')
+            return redirect(url_for('performance_evaluations'))
+        
+    return render_template('performance/evaluation_create.html', form=form)
+
+
+@app.route('/performance/evaluations/<int:id>', methods=['GET'])
+@login_required
+def view_performance_evaluation(id):
+    evaluation = PerformanceEvaluation.query.get_or_404(id)
+    
+    # Kiểm tra quyền truy cập
+    if not current_user.is_admin and (not hasattr(current_user, 'employee') or current_user.employee.id != evaluation.employee_id):
+        flash('Bạn không có quyền xem đánh giá này.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    criteria_scores = PerformanceEvaluationDetail.query.filter_by(evaluation_id=id).all()
+    feedback_form = EmployeePerformanceFeedbackForm()
+    approval_form = PerformanceApprovalForm()
+    
+    return render_template(
+        'performance/evaluation_view.html', 
+        evaluation=evaluation, 
+        criteria_scores=criteria_scores,
+        feedback_form=feedback_form,
+        approval_form=approval_form
+    )
+
+
+@app.route('/performance/evaluations/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_performance_evaluation(id):
+    evaluation = PerformanceEvaluation.query.get_or_404(id)
+    
+    # Kiểm tra quyền truy cập
+    if not current_user.is_admin and (not hasattr(current_user, 'employee') or current_user.employee.id != evaluation.employee_id):
+        flash('Bạn không có quyền chỉnh sửa đánh giá này.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    # Nếu không phải admin và đánh giá không ở trạng thái nháp
+    if not current_user.is_admin and evaluation.status != PerformanceRatingStatus.DRAFT:
+        flash('Đánh giá này không thể chỉnh sửa vì đã được gửi đi.', 'danger')
+        return redirect(url_for('view_performance_evaluation', id=evaluation.id))
+    
+    form = PerformanceEvaluationForm(obj=evaluation)
+    
+    if form.validate_on_submit():
+        # Validate dates
+        if not form.validate_dates():
+            return render_template('performance/evaluation_create.html', form=form)
+        
+        evaluation.employee_id = form.employee_id.data
+        evaluation.evaluation_period = form.evaluation_period.data
+        evaluation.start_date = form.start_date.data
+        evaluation.end_date = form.end_date.data
+        evaluation.comments = form.comments.data
+        evaluation.strengths = form.strengths.data
+        evaluation.areas_for_improvement = form.areas_for_improvement.data
+        evaluation.goals_for_next_period = form.goals_for_next_period.data
+        
+        db.session.commit()
+        
+        # Nếu người dùng nhấp vào nút "Tiếp tục điền điểm"
+        if 'submit' in request.form:
+            flash('Đánh giá hiệu suất đã được cập nhật. Vui lòng tiếp tục điền điểm đánh giá.', 'success')
+            return redirect(url_for('score_performance_evaluation', id=evaluation.id))
+        else:
+            flash('Đánh giá hiệu suất đã được cập nhật thành công.', 'success')
+            return redirect(url_for('view_performance_evaluation', id=evaluation.id))
+    
+    return render_template('performance/evaluation_create.html', form=form, evaluation=evaluation)
+
+
+@app.route('/performance/evaluations/<int:id>/score', methods=['GET', 'POST'])
+@login_required
+def score_performance_evaluation(id):
+    evaluation = PerformanceEvaluation.query.get_or_404(id)
+    
+    # Kiểm tra quyền truy cập
+    if not current_user.is_admin and (not hasattr(current_user, 'employee') or current_user.id != evaluation.evaluator_id):
+        flash('Bạn không có quyền điền điểm cho đánh giá này.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    # Kiểm tra trạng thái
+    if not current_user.is_admin and evaluation.status != PerformanceRatingStatus.DRAFT:
+        flash('Đánh giá này không thể điều chỉnh điểm vì đã được gửi đi.', 'danger')
+        return redirect(url_for('view_performance_evaluation', id=evaluation.id))
+    
+    # Lấy danh sách các tiêu chí đánh giá
+    criteria_list = PerformanceEvaluationCriteria.query.filter_by(is_active=True).all()
+    
+    # Tạo form với các trường động cho từng tiêu chí
+    class CriteriaScoreForm(FlaskForm):
+        pass
+    
+    for i, criteria in enumerate(criteria_list):
+        setattr(CriteriaScoreForm, f'criteria_{i}_score', FloatField(f'Điểm ({criteria.name})', validators=[Optional()]))
+        setattr(CriteriaScoreForm, f'criteria_{i}_comments', TextAreaField(f'Nhận xét ({criteria.name})', validators=[Optional()]))
+    
+    form = FlaskForm()
+    form.criteria_forms = []
+    
+    # Lấy các điểm đánh giá hiện có
+    existing_scores = {}
+    for detail in PerformanceEvaluationDetail.query.filter_by(evaluation_id=id).all():
+        existing_scores[detail.criteria_id] = {
+            'score': detail.score,
+            'comments': detail.comments
+        }
+    
+    # Tạo form cho từng tiêu chí
+    for criteria in criteria_list:
+        criteria_form = PerformanceCriteriaScoreForm(criteria=criteria)
+        
+        # Nếu đã có điểm, hiển thị thông tin
+        if criteria.id in existing_scores:
+            criteria_form.score.data = existing_scores[criteria.id]['score']
+            criteria_form.comments.data = existing_scores[criteria.id]['comments']
+            
+        form.criteria_forms.append(criteria_form)
+    
+    if request.method == 'POST':
+        # Xử lý dữ liệu gửi lên
+        for i, criteria in enumerate(criteria_list):
+            score_value = request.form.get(f'criteria_forms-{i}-score', '')
+            comments_value = request.form.get(f'criteria_forms-{i}-comments', '')
+            
+            # Tìm hoặc tạo mới chi tiết đánh giá
+            detail = PerformanceEvaluationDetail.query.filter_by(
+                evaluation_id=id, 
+                criteria_id=criteria.id
+            ).first()
+            
+            if not detail:
+                detail = PerformanceEvaluationDetail(
+                    evaluation_id=id,
+                    criteria_id=criteria.id
+                )
+                db.session.add(detail)
+            
+            # Cập nhật giá trị
+            if score_value.strip():
+                try:
+                    score_float = float(score_value)
+                    if 0 <= score_float <= criteria.max_score:
+                        detail.score = score_float
+                    else:
+                        flash(f'Điểm cho tiêu chí "{criteria.name}" phải từ 0 đến {criteria.max_score}.', 'danger')
+                        return redirect(url_for('score_performance_evaluation', id=id))
+                except ValueError:
+                    flash(f'Điểm cho tiêu chí "{criteria.name}" phải là số.', 'danger')
+                    return redirect(url_for('score_performance_evaluation', id=id))
+            else:
+                detail.score = None
+                
+            detail.comments = comments_value
+        
+        # Tính toán điểm tổng hợp
+        evaluation.overall_score = evaluation.calculate_overall_score()
+        
+        # Cập nhật trạng thái nếu người dùng nhấp vào nút "Hoàn thành đánh giá"
+        if 'submit' in request.form:
+            evaluation.status = PerformanceRatingStatus.SUBMITTED
+            db.session.commit()
+            flash('Đánh giá hiệu suất đã được hoàn thành và gửi đi.', 'success')
+        else:
+            db.session.commit()
+            flash('Điểm đánh giá đã được lưu thành công.', 'success')
+            
+        return redirect(url_for('view_performance_evaluation', id=id))
+    
+    return render_template(
+        'performance/evaluation_score.html',
+        form=form,
+        evaluation=evaluation,
+        criteria_list=criteria_list,
+        enumerate=enumerate
+    )
+
+
+@app.route('/performance/evaluations/<int:id>/feedback', methods=['POST'])
+@login_required
+def employee_feedback_evaluation(id):
+    evaluation = PerformanceEvaluation.query.get_or_404(id)
+    
+    # Chỉ nhân viên được đánh giá mới có thể gửi phản hồi
+    if not hasattr(current_user, 'employee') or current_user.employee.id != evaluation.employee_id:
+        flash('Bạn không có quyền gửi phản hồi cho đánh giá này.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    # Đánh giá phải không phải ở trạng thái nháp
+    if evaluation.status == PerformanceRatingStatus.DRAFT:
+        flash('Bạn không thể gửi phản hồi cho đánh giá ở trạng thái nháp.', 'danger')
+        return redirect(url_for('view_performance_evaluation', id=id))
+    
+    form = EmployeePerformanceFeedbackForm()
+    
+    if form.validate_on_submit():
+        evaluation.employee_comments = form.employee_comments.data
+        db.session.commit()
+        
+        flash('Phản hồi của bạn đã được gửi thành công.', 'success')
+        
+    return redirect(url_for('view_performance_evaluation', id=id))
+
+
+@app.route('/performance/evaluations/<int:id>/approve', methods=['POST'])
+@login_required
+def approve_performance_evaluation(id):
+    if not current_user.is_admin:
+        flash('Bạn không có quyền thực hiện thao tác này.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    evaluation = PerformanceEvaluation.query.get_or_404(id)
+    form = PerformanceApprovalForm()
+    
+    if form.validate_on_submit():
+        evaluation.status = form.status.data
+        
+        if form.comments.data:
+            if evaluation.comments:
+                evaluation.comments += f"\n\nNhận xét của quản lý ({current_user.username}) - {datetime.now().strftime('%d/%m/%Y %H:%M')}:\n{form.comments.data}"
+            else:
+                evaluation.comments = f"Nhận xét của quản lý ({current_user.username}) - {datetime.now().strftime('%d/%m/%Y %H:%M')}:\n{form.comments.data}"
+        
+        evaluation.approved_by = current_user.id
+        evaluation.approved_at = datetime.now()
+        
+        db.session.commit()
+        
+        flash('Trạng thái đánh giá đã được cập nhật thành công.', 'success')
+        
+    return redirect(url_for('view_performance_evaluation', id=id))
+
+
+@app.route('/performance/evaluations/<int:id>/delete')
+@login_required
+def delete_performance_evaluation(id):
+    if not current_user.is_admin:
+        flash('Bạn không có quyền thực hiện thao tác này.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    evaluation = PerformanceEvaluation.query.get_or_404(id)
+    
+    # Xóa các chi tiết đánh giá liên quan
+    details = PerformanceEvaluationDetail.query.filter_by(evaluation_id=id).all()
+    for detail in details:
+        db.session.delete(detail)
+    
+    db.session.delete(evaluation)
+    db.session.commit()
+    
+    flash('Đánh giá hiệu suất đã được xóa thành công.', 'success')
+    return redirect(url_for('performance_evaluations'))
