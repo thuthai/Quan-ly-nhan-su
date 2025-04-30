@@ -121,11 +121,12 @@ body {
 
 /* Làm rõ chữ trong card thống kê trên dashboard */
 .stats-card .card-title,
-.stats-card .stats-number {
-    color: #000;
-    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
-    font-weight: 700 !important;
-    letter-spacing: 0.2px;
+.stats-card .stats-number,
+.stats-card .card-text {
+    color: #000000;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7), 0px 0px 2px rgba(0, 0, 0, 0.3);
+    font-weight: 900 !important;
+    letter-spacing: 0.3px;
 }
 
 .stats-card {
@@ -199,6 +200,16 @@ body {
     padding: 0.5rem;
     position: relative;
     z-index: 1;
+}
+
+/* Đảm bảo chữ trong các thẻ thống kê có màu đen */
+.dashboard-card h5.card-title,
+.dashboard-card .card-text,
+.dashboard-card .stats-number,
+.dashboard-card .card-body {
+    color: #000000 !important;
+    font-weight: 600;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .bg-primary .card-title,
