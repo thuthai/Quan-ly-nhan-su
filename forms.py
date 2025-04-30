@@ -1,9 +1,9 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SelectField, DateField, DateTimeField, TextAreaField, FloatField, FileField, HiddenField, BooleanField, SelectMultipleField
+from wtforms import StringField, PasswordField, SelectField, DateField, DateTimeField, TextAreaField, FloatField, FileField, HiddenField, BooleanField, SelectMultipleField, SubmitField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, ValidationError
 from models import (Gender, EmployeeStatus, LeaveType, Department, User, Employee, 
               AwardType, EducationLevel, Position, VIETNAM_PROVINCES, SalaryGrade, WorkScheduleType, WorkScheduleStatus,
-              PerformanceRatingPeriod, PerformanceRatingStatus, PerformanceEvaluationCriteria)
+              PerformanceRatingPeriod, PerformanceRatingStatus, PerformanceEvaluationCriteria, CustomPosition)
 from flask_wtf.file import FileAllowed
 from datetime import date, datetime, timedelta
 
@@ -460,3 +460,47 @@ class PerformanceFilterForm(FlaskForm):
                 self.end_date.errors.append('Ngày kết thúc phải sau ngày bắt đầu.')
                 return False
         return True
+
+class CustomPositionForm(FlaskForm):
+    """Form cho việc thêm chức vụ tùy chỉnh"""
+    name = StringField('Tên chức vụ', validators=[DataRequired(), Length(min=2, max=100)])
+    description = TextAreaField('Mô tả', validators=[Optional()])
+    submit = SubmitField('Lưu chức vụ')
+    
+    def validate_name(self, name):
+        """Xác nhận tên chức vụ không trùng lặp"""
+        # Kiểm tra xem tên chức vụ đã tồn tại trong các chức vụ mặc định hay chưa
+        for pos in Position:
+            if pos.value == name.data:
+                raise ValidationError('Tên chức vụ này đã tồn tại trong danh sách mặc định.')
+        
+        # Kiểm tra xem tên chức vụ đã tồn tại trong các chức vụ tùy chỉnh hay chưa
+        position = CustomPosition.query.filter_by(name=name.data).first()
+        if position:
+            raise ValidationError('Tên chức vụ này đã tồn tại trong danh sách tùy chỉnh.')
+
+
+class CustomPositionEditForm(FlaskForm):
+    """Form cho việc chỉnh sửa chức vụ tùy chỉnh"""
+    name = StringField('Tên chức vụ', validators=[DataRequired(), Length(min=2, max=100)])
+    description = TextAreaField('Mô tả', validators=[Optional()])
+    submit = SubmitField('Cập nhật chức vụ')
+    
+    def __init__(self, *args, **kwargs):
+        super(CustomPositionEditForm, self).__init__(*args, **kwargs)
+        self.original_name = None
+        
+    def validate_name(self, name):
+        """Xác nhận tên chức vụ không trùng lặp, trừ trường hợp tên không thay đổi"""
+        if self.original_name and self.original_name == name.data:
+            return
+            
+        # Kiểm tra xem tên chức vụ đã tồn tại trong các chức vụ mặc định hay chưa
+        for pos in Position:
+            if pos.value == name.data:
+                raise ValidationError('Tên chức vụ này đã tồn tại trong danh sách mặc định.')
+        
+        # Kiểm tra xem tên chức vụ đã tồn tại trong các chức vụ tùy chỉnh hay chưa
+        position = CustomPosition.query.filter_by(name=name.data).first()
+        if position:
+            raise ValidationError('Tên chức vụ này đã tồn tại trong danh sách tùy chỉnh.')

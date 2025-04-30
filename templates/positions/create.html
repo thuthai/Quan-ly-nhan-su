@@ -3,49 +3,70 @@
 {% block title %}Thêm chức vụ mới - Hệ thống Quản lý Nhân sự{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="mb-0">
                     <i class="bi bi-briefcase-fill me-2"></i>Thêm chức vụ mới
-                </h4>
-            </div>
-            <div class="card-body">
-                <form method="POST" action="{{ url_for('create_position') }}" novalidate>
-                    {{ form.hidden_tag() }}
-                    
-                    <div class="mb-3">
-                        <label for="name" class="form-label">{{ form.name.label }} <span class="text-danger">*</span></label>
-                        {{ form.name(class="form-control", id="name", placeholder="Nhập tên chức vụ") }}
-                        {% for error in form.name.errors %}
-                            <div class="text-danger mt-1">{{ error }}</div>
-                        {% endfor %}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="description" class="form-label">{{ form.description.label }}</label>
-                        {{ form.description(class="form-control", id="description", placeholder="Nhập mô tả (không bắt buộc)", rows=3) }}
-                        {% for error in form.description.errors %}
-                            <div class="text-danger mt-1">{{ error }}</div>
-                        {% endfor %}
-                    </div>
-                    
-                    <div class="d-flex justify-content-between mt-4">
-                        <a href="{{ url_for('positions') }}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left me-1"></i>Quay lại
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-save me-1"></i>Lưu
-                        </button>
-                    </div>
-                </form>
+                </h1>
+                <a href="{{ url_for('position_list') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Quay lại danh sách
+                </a>
             </div>
         </div>
-        
-        <div class="alert alert-info mt-4">
-            <i class="bi bi-info-circle-fill me-2"></i>
-            <strong>Lưu ý:</strong> Tên chức vụ phải là duy nhất và không trùng với chức vụ mặc định hoặc tùy chỉnh nào khác trong hệ thống.
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 col-lg-6 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-plus-circle me-2"></i>Thông tin chức vụ
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('create_custom_position') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                            {% if form.name.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.name.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">Nhập tên chức vụ, ví dụ: "Kỹ sư hệ thống", "Trưởng nhóm phát triển", v.v.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows="4") }}
+                            {% if form.description.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.description.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">Mô tả chi tiết về vai trò và trách nhiệm của chức vụ này.</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="alert alert-info mb-0">
+                        <h6 class="alert-heading"><i class="bi bi-info-circle me-2"></i>Lưu ý</h6>
+                        <p class="mb-0">Chức vụ tùy chỉnh sẽ bổ sung vào danh sách chức vụ có sẵn và có thể được sử dụng khi thêm hoặc chỉnh sửa thông tin nhân viên.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
