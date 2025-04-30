@@ -242,6 +242,35 @@ body {
     font-weight: 700 !important;
 }
 
+/* Style cho admin card và text trên toàn hệ thống */
+
+/* Đảm bảo mọi văn bản đều có màu đậm trên toàn hệ thống */
+body, p, span, div, a, li, td, th, label, input, select, textarea, button, h1, h2, h3, h4, h5, h6, .card-title, 
+.card-text, .card-header, .card-footer, .list-group-item, .nav-link, .form-label, .form-control, strong {
+    color: #000000 !important;
+    font-weight: 600 !important;
+}
+
+/* Ngoại lệ cho các phần tử có background đặc biệt cần text màu trắng */
+.bg-primary h1, .bg-primary h2, .bg-primary h3, .bg-primary h4, .bg-primary h5, .bg-primary h6, 
+.bg-primary p, .bg-primary span, .bg-primary div, .bg-primary a, .bg-primary label,
+.bg-secondary h1, .bg-secondary h2, .bg-secondary h3, .bg-secondary h4, .bg-secondary h5, .bg-secondary h6,
+.bg-secondary p, .bg-secondary span, .bg-secondary div, .bg-secondary a, .bg-secondary label,
+.bg-success h1, .bg-success h2, .bg-success h3, .bg-success h4, .bg-success h5, .bg-success h6,
+.bg-success p, .bg-success span, .bg-success div, .bg-success a, .bg-success label,
+.bg-danger h1, .bg-danger h2, .bg-danger h3, .bg-danger h4, .bg-danger h5, .bg-danger h6,
+.bg-danger p, .bg-danger span, .bg-danger div, .bg-danger a, .bg-danger label,
+.bg-warning h1, .bg-warning h2, .bg-warning h3, .bg-warning h4, .bg-warning h5, .bg-warning h6,
+.bg-warning p, .bg-warning span, .bg-warning div, .bg-warning a, .bg-warning label,
+.bg-info h1, .bg-info h2, .bg-info h3, .bg-info h4, .bg-info h5, .bg-info h6,
+.bg-info p, .bg-info span, .bg-info div, .bg-info a, .bg-info label,
+.bg-dark h1, .bg-dark h2, .bg-dark h3, .bg-dark h4, .bg-dark h5, .bg-dark h6,
+.bg-dark p, .bg-dark span, .bg-dark div, .bg-dark a, .bg-dark label,
+.btn-primary, .btn-secondary, .btn-success, .btn-danger, .btn-warning, .btn-info, .btn-dark {
+    color: white !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
 /* Style cho admin card */
 .admin-card {
     overflow: visible !important;
@@ -252,17 +281,35 @@ body {
 }
 
 .admin-card .card-text {
-    color: #333333 !important;
-    font-weight: 500 !important;
+    color: #000000 !important;
+    font-weight: 700 !important;
 }
 
 .admin-card label,
 .admin-card li,
-.admin-card p,
+.admin-card p, 
 .admin-card span,
-.admin-card a,
-.admin-card div {
-    color: #333333 !important;
+.admin-card a:not(.btn),
+.admin-card div:not(.card-header):not(.bg-primary):not(.bg-secondary):not(.bg-success):not(.bg-danger):not(.bg-warning):not(.bg-info):not(.bg-dark),
+.admin-card strong {
+    color: #000000 !important;
+    font-weight: 700 !important;
+}
+
+.admin-card .card-header {
+    font-weight: 700 !important;
+}
+
+.admin-card h5, 
+.admin-card h6 {
+    color: #000000 !important;
+    font-weight: 700 !important;
+}
+
+.admin-card .list-group-item, 
+.admin-card .list-group-item span {
+    color: #000000 !important;
+    font-weight: 700 !important;
 }
 
 .admin-card ul.list-group-flush li {
