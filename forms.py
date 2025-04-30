@@ -57,6 +57,7 @@ class EmployeeForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super(EmployeeForm, self).__init__(*args, **kwargs)
         self.department_id.choices = [(d.id, d.name) for d in Department.query.all()]
+        self.home_town.choices = [('', '-- Chọn quê quán --')] + [(province, province) for province in VIETNAM_PROVINCES]
 
     def validate_employee_code(self, employee_code):
         employee = Employee.query.filter_by(employee_code=employee_code.data).first()

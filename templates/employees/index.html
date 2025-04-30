@@ -133,6 +133,58 @@
     </div>
 </div>
 
+<!-- Thống kê nhân viên -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-bar-chart-line me-2"></i>Thống kê nhân viên
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Thống kê theo giới tính -->
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h6 class="mb-0">Theo giới tính</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="genderChart" width="100%" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Thống kê theo độ tuổi -->
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h6 class="mb-0">Theo độ tuổi</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="ageChart" width="100%" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Thống kê theo trình độ học vấn -->
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h6 class="mb-0">Theo trình độ học vấn</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="educationChart" width="100%" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Employee List -->
 {% if employees %}
 <div class="row row-cols-1 row-cols-md-3 g-4">
@@ -200,6 +252,19 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/export.js') }}"></script>
+<script src="{{ url_for('static', filename='js/employee-stats.js') }}"></script>
+
+<!-- Dữ liệu thống kê (ẩn) -->
+<script id="gender-stats-data" type="application/json">
+    {{ gender_stats | tojson }}
+</script>
+<script id="age-groups-data" type="application/json">
+    {{ age_groups | tojson }}
+</script>
+<script id="education-stats-data" type="application/json">
+    {{ education_stats | tojson }}
+</script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         handleSearch('employeeSearchForm');
