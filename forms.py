@@ -18,6 +18,13 @@ class RegisterForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(message='Vui lòng nhập email'), Email(message='Email không hợp lệ')])
     password = PasswordField('Mật khẩu', validators=[DataRequired(message='Vui lòng nhập mật khẩu'), Length(min=6, message='Mật khẩu phải có ít nhất 6 ký tự')])
     confirm_password = PasswordField('Xác nhận mật khẩu', validators=[DataRequired(message='Vui lòng xác nhận mật khẩu'), EqualTo('password', message='Mật khẩu xác nhận không khớp')])
+    employee_id = SelectField('Liên kết với nhân viên', coerce=int, validators=[Optional()])
+    
+    def __init__(self, *args, **kwargs):
+        super(RegisterForm, self).__init__(*args, **kwargs)
+        # Lấy danh sách nhân viên chưa có tài khoản
+        unlinked_employees = Employee.query.filter(Employee.user_id.is_(None)).all()
+        self.employee_id.choices = [(0, '-- Không liên kết --')] + [(e.id, f"{e.employee_code} - {e.full_name}") for e in unlinked_employees]
 
     def validate_username(self, username):
         user = User.query.filter_by(username=username.data).first()
@@ -241,6 +248,28 @@ class SalaryGradeForm(FlaskForm):
 
 class SalaryGradeEditForm(SalaryGradeForm):
     salary_grade_id = HiddenField('ID')
+
+
+class CustomPositionForm(FlaskForm):
+    """Form để thêm mới vị trí/chức vụ tùy chỉnh"""
+    name = StringField('Tên vị trí/chức vụ', validators=[DataRequired(message='Vui lòng nhập tên vị trí')])
+    description = TextAreaField('Mô tả', validators=[Optional()])
+    
+    def validate_name(self, name):
+        # Kiểm tra nếu tên vị trí đã tồn tại
+        custom_position = CustomPosition.query.filter_by(name=name.data).first()
+        if custom_position and (not hasattr(self, 'custom_position_id') or custom_position.id != self.custom_position_id.data):
+            raise ValidationError('Tên vị trí này đã tồn tại.')
+            
+        # Kiểm tra xem tên vị trí có trùng với Position enum không
+        for pos in Position:
+            if pos.value == name.data:
+                raise ValidationError('Tên vị trí này đã tồn tại trong danh sách vị trí mặc định.')
+
+
+class CustomPositionEditForm(CustomPositionForm):
+    """Form để chỉnh sửa vị trí/chức vụ tùy chỉnh"""
+    custom_position_id = HiddenField('ID')
 
 
 class EmployeeSalaryForm(FlaskForm):

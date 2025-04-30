@@ -120,6 +120,15 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
+        
+        # Liên kết với nhân viên nếu có
+        if form.employee_id.data and form.employee_id.data > 0:
+            employee = Employee.query.get(form.employee_id.data)
+            if employee:
+                employee.user_id = user.id
+                db.session.commit()
+                flash(f'Tài khoản đã được liên kết với nhân viên {employee.full_name}!', 'success')
+        
         flash('Tài khoản đã được tạo thành công!', 'success')
         return redirect(url_for('users'))
     
@@ -149,6 +158,78 @@ def admin():
         error_count=error_count,
         today=date.today()
     )
+
+
+# Quản lý vị trí/chức vụ tùy chỉnh
+@app.route('/positions')
+@admin_required
+def positions():
+    """Hiển thị danh sách vị trí/chức vụ"""
+    # Lấy danh sách vị trí mặc định (enum)
+    default_positions = [(pos.name, pos.value) for pos in Position]
+    
+    # Lấy danh sách vị trí tùy chỉnh (từ database)
+    custom_positions = CustomPosition.query.all()
+    
+    return render_template(
+        'positions/index.html',
+        default_positions=default_positions,
+        custom_positions=custom_positions
+    )
+
+
+@app.route('/positions/create', methods=['GET', 'POST'])
+@admin_required
+def create_position():
+    """Tạo mới vị trí/chức vụ tùy chỉnh"""
+    form = CustomPositionForm()
+    
+    if form.validate_on_submit():
+        position = CustomPosition(
+            name=form.name.data,
+            description=form.description.data
+        )
+        db.session.add(position)
+        db.session.commit()
+        flash('Vị trí mới đã được tạo thành công!', 'success')
+        return redirect(url_for('positions'))
+    
+    return render_template('positions/create.html', form=form)
+
+
+@app.route('/positions/<int:id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_position(id):
+    """Chỉnh sửa vị trí/chức vụ tùy chỉnh"""
+    position = CustomPosition.query.get_or_404(id)
+    form = CustomPositionEditForm(obj=position)
+    
+    if form.validate_on_submit():
+        position.name = form.name.data
+        position.description = form.description.data
+        db.session.commit()
+        flash('Vị trí đã được cập nhật thành công!', 'success')
+        return redirect(url_for('positions'))
+    
+    return render_template('positions/edit.html', form=form, position=position)
+
+
+@app.route('/positions/<int:id>/delete', methods=['POST'])
+@admin_required
+def delete_position(id):
+    """Xóa vị trí/chức vụ tùy chỉnh"""
+    position = CustomPosition.query.get_or_404(id)
+    
+    # Kiểm tra xem vị trí này có đang được sử dụng không
+    employees_using = Employee.query.filter_by(position=position.name).count()
+    if employees_using > 0:
+        flash('Không thể xóa vị trí này vì đang được sử dụng bởi nhân viên.', 'danger')
+        return redirect(url_for('positions'))
+    
+    db.session.delete(position)
+    db.session.commit()
+    flash('Vị trí đã được xóa thành công!', 'success')
+    return redirect(url_for('positions'))
 
 @app.route('/users')
 @admin_required

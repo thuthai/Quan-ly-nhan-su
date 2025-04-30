@@ -50,13 +50,14 @@ class EducationLevel(enum.Enum):
 
 class Position(enum.Enum):
     """Chức vụ"""
-    STAFF = "Nhân viên"
-    TEAM_LEAD = "Trưởng nhóm"
-    SUPERVISOR = "Giám sát"
-    MANAGER = "Quản lý"
-    DEPUTY_DIRECTOR = "Phó giám đốc"
+    BOARD_CHAIRMAN = "Chủ tịch HĐQT"
+    BOARD_MEMBER = "Thành viên HĐQT"
     DIRECTOR = "Giám đốc"
-    CEO = "Tổng giám đốc"
+    DEPUTY_DIRECTOR = "Phó giám đốc"
+    HEAD_DEPARTMENT = "Trưởng phòng"
+    DEPUTY_HEAD_DEPARTMENT = "Phó phòng"
+    TEAM_LEAD = "Trưởng nhóm"
+    STAFF = "Nhân viên"
     OTHER = "Khác"
 
 
@@ -229,6 +230,17 @@ VIETNAM_PROVINCES = [
     "Thừa Thiên Huế", "Tiền Giang", "TP Hồ Chí Minh", "Trà Vinh", "Tuyên Quang",
     "Vĩnh Long", "Vĩnh Phúc", "Yên Bái"
 ]
+
+
+class CustomPosition(db.Model):
+    """Quản lý vị trí/chức vụ tùy chỉnh ngoài enum Position"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    description = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<CustomPosition {self.name}>'
 
 
 class Award(db.Model):

@@ -170,3 +170,30 @@ body {
     background-color: var(--bs-light);
     border: 1px solid var(--bs-border-color);
 }
+
+/* Fix for date picker */
+input[type="date"], 
+input[type="datetime-local"] {
+    color: #212529 !important;
+    background-color: #fff !important;
+}
+
+.datepicker-dropdown,
+.ui-datepicker {
+    color: #212529 !important;
+    background-color: #ffffff !important;
+}
+
+.datepicker table tr td,
+.datepicker table tr th,
+.ui-datepicker-calendar td a,
+.ui-datepicker-calendar th {
+    color: #212529 !important;
+}
+
+.datepicker table tr td.active,
+.datepicker table tr td.active:hover,
+.ui-datepicker-calendar td a.ui-state-active {
+    color: #ffffff !important;
+    background-color: var(--bs-primary) !important;
+}
