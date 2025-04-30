@@ -116,6 +116,20 @@ body {
     padding: 1.5rem;
 }
 
+/* Làm rõ chữ trong card thống kê trên dashboard */
+.stats-card .card-title,
+.stats-card .stats-number {
+    color: #000;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+    font-weight: 700 !important;
+    letter-spacing: 0.2px;
+}
+
+.stats-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5ff 100%);
+    border: none;
+}
+
 .card-footer {
     background-color: transparent;
     border-top: 1px solid rgba(0,0,0,0.05);
@@ -176,7 +190,7 @@ body {
     border-radius: 16px;
     overflow: hidden;
     transition: all 0.3s;
-    background-color: var(--card-bg-color);
+    background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);
     border: none;
     box-shadow: var(--card-shadow);
     padding: 0.5rem;
@@ -235,10 +249,10 @@ body {
 }
 
 .dashboard-title {
-    font-size: 1rem;
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-    color: var(--bs-gray-600);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #333;
 }
 
 .dashboard-number {
@@ -247,11 +261,8 @@ body {
     letter-spacing: -1px;
     margin-bottom: 0.5rem;
     line-height: 1;
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-fill-color: transparent;
+    color: #333;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .dashboard-trend {
@@ -368,7 +379,7 @@ body {
     border-radius: 8px;
     padding: 0.6rem 1rem;
     border: 1px solid rgba(0,0,0,0.1);
-    background-color: var(--bs-body-bg);
+    background-color: #f8faff;
     transition: all 0.3s;
 }
 
