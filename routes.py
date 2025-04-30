@@ -1766,3 +1766,79 @@ def delete_performance_evaluation(id):
     
     flash('Đánh giá hiệu suất đã được xóa thành công.', 'success')
     return redirect(url_for('performance_evaluations'))
+
+
+#
+# Quản lý chức vụ
+#
+@app.route('/positions')
+@login_required
+@admin_required
+def position_list():
+    """Danh sách các chức vụ tùy chỉnh"""
+    # Lấy danh sách vị trí mặc định từ enum Position
+    default_positions = [{'name': pos.value, 'type': 'Mặc định'} for pos in Position]
+    
+    # Lấy danh sách vị trí tùy chỉnh từ database
+    custom_positions = CustomPosition.query.all()
+    
+    return render_template('positions/index.html', 
+                          default_positions=default_positions,
+                          custom_positions=custom_positions)
+
+@app.route('/positions/create', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def create_custom_position():
+    """Thêm mới chức vụ tùy chỉnh"""
+    form = CustomPositionForm()
+    
+    if form.validate_on_submit():
+        position = CustomPosition(
+            name=form.name.data,
+            description=form.description.data
+        )
+        db.session.add(position)
+        db.session.commit()
+        
+        flash('Đã thêm chức vụ thành công!', 'success')
+        return redirect(url_for('position_list'))
+    
+    return render_template('positions/create.html', form=form)
+
+@app.route('/positions/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_custom_position(id):
+    """Chỉnh sửa chức vụ tùy chỉnh"""
+    position = CustomPosition.query.get_or_404(id)
+    form = CustomPositionEditForm(obj=position)
+    
+    if form.validate_on_submit():
+        position.name = form.name.data
+        position.description = form.description.data
+        db.session.commit()
+        
+        flash('Đã cập nhật chức vụ thành công!', 'success')
+        return redirect(url_for('position_list'))
+    
+    return render_template('positions/edit.html', form=form, position=position)
+
+@app.route('/positions/delete/<int:id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_custom_position(id):
+    """Xóa chức vụ tùy chỉnh"""
+    position = CustomPosition.query.get_or_404(id)
+    
+    # Kiểm tra xem chức vụ có đang được sử dụng không
+    employees_using = Employee.query.filter_by(position=position.name).count()
+    if employees_using > 0:
+        flash(f'Không thể xóa chức vụ này vì đang được sử dụng bởi {employees_using} nhân viên.', 'danger')
+        return redirect(url_for('position_list'))
+    
+    db.session.delete(position)
+    db.session.commit()
+    
+    flash('Đã xóa chức vụ thành công!', 'success')
+    return redirect(url_for('position_list'))
