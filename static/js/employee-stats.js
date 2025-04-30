@@ -49,7 +49,7 @@ function createGenderChart(genderStats) {
                     labels: {
                         usePointStyle: true,
                         padding: 20,
-                        color: '#333333',
+                        color: '#000000',
                         font: {
                             weight: 'bold'
                         }
@@ -101,7 +101,7 @@ function createAgeChart(ageGroups) {
                     beginAtZero: true,
                     ticks: {
                         precision: 0,
-                        color: '#333333',
+                        color: '#000000',
                         font: {
                             weight: 'bold'
                         }
@@ -109,7 +109,7 @@ function createAgeChart(ageGroups) {
                 },
                 x: {
                     ticks: {
-                        color: '#333333',
+                        color: '#000000',
                         font: {
                             weight: 'bold'
                         }
@@ -163,7 +163,7 @@ function createEducationChart(educationStats) {
                     labels: {
                         usePointStyle: true,
                         padding: 10,
-                        color: '#333333',
+                        color: '#000000',
                         font: {
                             size: 11,
                             weight: 'bold'

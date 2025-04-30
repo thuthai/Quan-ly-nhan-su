@@ -3,9 +3,9 @@
     --primary-gradient: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
     --card-shadow: 0 8px 24px rgba(0,0,0,0.1);
     --transition-normal: all 0.3s ease;
-    --text-dark: #222;
-    --text-medium: #444;
-    --text-light: #666;
+    --text-dark: #000;
+    --text-medium: #000;
+    --text-light: #000;
 }
 
 body {
