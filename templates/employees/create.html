@@ -265,23 +265,39 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize flatpickr datepickers with enhanced UI
-        flatpickr('.datepicker', {
-            dateFormat: 'Y-m-d',
-            locale: 'vn',
-            altInput: true,
-            altFormat: 'd/m/Y',
-            allowInput: true,
-            disableMobile: true,
-            monthSelectorType: 'static',
-            animate: true,
-            showMonths: 1,
-            static: true,
-            position: "auto center",
-            wrap: true,
-            nextArrow: '<i class="bi bi-arrow-right-circle-fill"></i>',
-            prevArrow: '<i class="bi bi-arrow-left-circle-fill"></i>'
-        });
+        // Đảm bảo rằng flatpickr đã được load hoàn toàn
+        if (typeof flatpickr === 'undefined') {
+            console.error('Flatpickr not loaded');
+            return;
+        }
+
+        try {
+            // Check và load Vietnamese locale nếu chưa có
+            if (!flatpickr.l10ns.vn) {
+                flatpickr.localize(flatpickr.l10ns.vn);
+            }
+            
+            // Initialize flatpickr datepickers với cấu hình cải tiến
+            const datepickers = document.querySelectorAll('.datepicker');
+            datepickers.forEach(input => {
+                const instance = flatpickr(input, {
+                    dateFormat: 'Y-m-d',
+                    locale: 'vn',
+                    altInput: true,
+                    altFormat: 'd/m/Y',
+                    allowInput: true,
+                    disableMobile: true,
+                    monthSelectorType: 'dropdown',
+                    animate: true,
+                    showMonths: 1,
+                    position: "auto center",
+                    nextArrow: '<i class="bi bi-arrow-right-circle-fill"></i>',
+                    prevArrow: '<i class="bi bi-arrow-left-circle-fill"></i>'
+                });
+            });
+        } catch(error) {
+            console.error('Error initializing datepicker:', error);
+        }
         
         // Xử lý thêm chức vụ mới
         const saveNewPositionBtn = document.getElementById('saveNewPosition');
