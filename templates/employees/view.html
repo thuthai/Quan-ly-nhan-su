@@ -1,0 +1,282 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ employee.full_name }} - Hệ thống Quản lý Nhân sự{% endblock %}
+
+{% block content %}
+<!-- Profile Header -->
+<div class="profile-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-3 text-center text-md-start">
+                <img src="{{ url_for('static', filename=employee.profile_image) if '/' in employee.profile_image else employee.profile_image }}" 
+                     alt="{{ employee.full_name }}" class="rounded-circle profile-img">
+            </div>
+            <div class="col-md-6">
+                <h2>{{ employee.full_name }}</h2>
+                <p class="lead mb-0">{{ employee.position }}</p>
+                <p>{{ employee.department.name }}</p>
+                
+                <div class="mb-2">
+                    <span class="badge bg-primary">{{ employee.employee_code }}</span>
+                    <span class="badge {% if employee.status.name == 'ACTIVE' %}bg-success
+                          {% elif employee.status.name == 'LEAVE' %}bg-danger
+                          {% else %}bg-warning{% endif %}">
+                        {{ employee.status.value }}
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-3 text-md-end mt-3 mt-md-0">
+                {% if current_user.is_admin() %}
+                    <a href="{{ url_for('edit_employee', id=employee.id) }}" class="btn btn-warning mb-2">
+                        <i class="bi bi-pencil-square me-1"></i>Chỉnh sửa
+                    </a>
+                    <button type="button" class="btn btn-danger mb-2" data-bs-toggle="modal" data-bs-target="#deleteEmployeeModal">
+                        <i class="bi bi-person-x me-1"></i>Xóa
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if employee.is_contract_expiring_soon() %}
+    <div class="container mb-4">
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Cảnh báo:</strong> Hợp đồng của nhân viên này sẽ hết hạn sau {{ employee.contract_days_remaining() }} ngày 
+            ({{ employee.contract_end_date.strftime('%d/%m/%Y') }}).
+        </div>
+    </div>
+{% endif %}
+
+<div class="container">
+    <div class="row">
+        <!-- Left Column: Personal Information -->
+        <div class="col-lg-4 mb-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-badge me-2"></i>Thông tin cá nhân
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <strong><i class="bi bi-gender-ambiguous me-2"></i>Giới tính:</strong>
+                            <span class="float-end">{{ employee.gender.value }}</span>
+                        </li>
+                        <li class="list-group-item">
+                            <strong><i class="bi bi-calendar3 me-2"></i>Ngày sinh:</strong>
+                            <span class="float-end">{{ employee.date_of_birth.strftime('%d/%m/%Y') }}</span>
+                        </li>
+                        <li class="list-group-item">
+                            <strong><i class="bi bi-house me-2"></i>Quê quán:</strong>
+                            <span class="float-end">{{ employee.home_town or 'Chưa cập nhật' }}</span>
+                        </li>
+                        <li class="list-group-item">
+                            <strong><i class="bi bi-geo-alt me-2"></i>Địa chỉ:</strong>
+                            <span class="float-end">{{ employee.address or 'Chưa cập nhật' }}</span>
+                        </li>
+                        <li class="list-group-item">
+                            <strong><i class="bi bi-envelope me-2"></i>Email:</strong>
+                            <span class="float-end">{{ employee.email }}</span>
+                        </li>
+                        <li class="list-group-item">
+                            <strong><i class="bi bi-telephone me-2"></i>Điện thoại:</strong>
+                            <span class="float-end">{{ employee.phone_number or 'Chưa cập nhật' }}</span>
+                        </li>
+                        <li class="list-group-item">
+                            <strong><i class="bi bi-book me-2"></i>Trình độ học vấn:</strong>
+                            <span class="float-end">{{ employee.education_level or 'Chưa cập nhật' }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-briefcase me-2"></i>Thông tin công việc
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <strong><i class="bi bi-calendar-check me-2"></i>Ngày vào công ty:</strong>
+                            <span class="float-end">{{ employee.join_date.strftime('%d/%m/%Y') }}</span>
+                        </li>
+                        <li class="list-group-item">
+                            <strong><i class="bi bi-building me-2"></i>Phòng ban:</strong>
+                            <span class="float-end">{{ employee.department.name }}</span>
+                        </li>
+                        <li class="list-group-item">
+                            <strong><i class="bi bi-person-vcard me-2"></i>Chức vụ:</strong>
+                            <span class="float-end">{{ employee.position or 'Chưa cập nhật' }}</span>
+                        </li>
+                        <li class="list-group-item">
+                            <strong><i class="bi bi-cash-stack me-2"></i>Bậc lương:</strong>
+                            <span class="float-end">{{ employee.salary_grade or 'Chưa cập nhật' }}</span>
+                        </li>
+                        <li class="list-group-item">
+                            <strong><i class="bi bi-calculator me-2"></i>Hệ số lương:</strong>
+                            <span class="float-end">{{ employee.salary_coefficient or 'Chưa cập nhật' }}</span>
+                        </li>
+                        <li class="list-group-item">
+                            <strong><i class="bi bi-calendar2-range me-2"></i>Thời hạn hợp đồng:</strong>
+                            <span class="float-end">
+                                {% if employee.contract_start_date and employee.contract_end_date %}
+                                    {{ employee.contract_start_date.strftime('%d/%m/%Y') }} - {{ employee.contract_end_date.strftime('%d/%m/%Y') }}
+                                {% else %}
+                                    Chưa cập nhật
+                                {% endif %}
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Column: Career Path and Skills -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-diagram-3 me-2"></i>Lộ trình công danh
+                    </h5>
+                    {% if current_user.is_admin() %}
+                        <a href="{{ url_for('add_career_path', employee_id=employee.id) }}" class="btn btn-sm btn-light">
+                            <i class="bi bi-plus-circle me-1"></i>Thêm
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if career_paths %}
+                        <div class="timeline">
+                            {% for career_path in career_paths %}
+                                <div class="timeline-item">
+                                    <h5>{{ career_path.position }}</h5>
+                                    <p class="text-muted">
+                                        {{ career_path.start_date.strftime('%d/%m/%Y') }} 
+                                        {% if career_path.end_date %}
+                                            - {{ career_path.end_date.strftime('%d/%m/%Y') }}
+                                        {% else %}
+                                            - Hiện tại
+                                        {% endif %}
+                                    </p>
+                                    <p>{{ career_path.description or '' }}</p>
+                                    
+                                    {% if current_user.is_admin() %}
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('edit_career_path', id=career_path.id) }}" class="btn btn-outline-primary">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-outline-danger" 
+                                                    onclick="confirmDelete('Bạn có chắc chắn muốn xóa lộ trình công danh này?', 'delete-career-path-{{ career_path.id }}')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                        <form id="delete-career-path-{{ career_path.id }}" action="{{ url_for('delete_career_path', id=career_path.id) }}" method="post" class="d-none"></form>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Chưa có thông tin lộ trình công danh.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-tools me-2"></i>Kỹ năng và chuyên môn
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if employee.skills %}
+                        <p>{{ employee.skills }}</p>
+                    {% else %}
+                        <p class="text-muted">Chưa có thông tin kỹ năng và chuyên môn.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar2-x me-2"></i>Lịch sử nghỉ phép
+                    </h5>
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('create_leave_request', employee_id=employee.id) }}" class="btn btn-sm btn-dark">
+                            <i class="bi bi-plus-circle me-1"></i>Tạo đơn nghỉ phép
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if leave_requests %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Loại phép</th>
+                                        <th>Từ ngày</th>
+                                        <th>Đến ngày</th>
+                                        <th>Lý do</th>
+                                        <th>Trạng thái</th>
+                                        <th>Ngày tạo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for leave in leave_requests %}
+                                        <tr>
+                                            <td>{{ leave.leave_type.value }}</td>
+                                            <td>{{ leave.start_date.strftime('%d/%m/%Y') }}</td>
+                                            <td>{{ leave.end_date.strftime('%d/%m/%Y') }}</td>
+                                            <td>{{ leave.reason }}</td>
+                                            <td>
+                                                <span class="badge 
+                                                    {% if leave.status.name == 'PENDING' %}bg-warning text-dark
+                                                    {% elif leave.status.name == 'APPROVED' %}bg-success
+                                                    {% else %}bg-danger{% endif %}">
+                                                    {{ leave.status.value }}
+                                                </span>
+                                            </td>
+                                            <td>{{ leave.created_at.strftime('%d/%m/%Y') }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Chưa có lịch sử nghỉ phép.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Employee Modal -->
+{% if current_user.is_admin() %}
+<div class="modal fade" id="deleteEmployeeModal" tabindex="-1" aria-labelledby="deleteEmployeeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteEmployeeModalLabel">Xác nhận xóa nhân viên</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa nhân viên <strong>{{ employee.full_name }}</strong>?</p>
+                <p class="text-muted">Lưu ý: Thao tác này sẽ đổi trạng thái của nhân viên thành "Nghỉ việc" thay vì xóa hoàn toàn khỏi hệ thống.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form action="{{ url_for('delete_employee', id=employee.id) }}" method="post">
+                    <button type="submit" class="btn btn-danger">Xác nhận</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

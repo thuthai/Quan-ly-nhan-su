@@ -1,0 +1,213 @@
+{% extends "layout.html" %}
+
+{% block title %}Quản lý đơn xin nghỉ phép - Hệ thống Quản lý Nhân sự{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="mb-0">
+                <i class="bi bi-calendar-x-fill me-2"></i>Quản lý đơn xin nghỉ phép
+            </h1>
+            <a href="{{ url_for('create_leave_request') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Tạo đơn nghỉ phép
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Requests -->
+<div class="card mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0">
+            <i class="bi bi-hourglass-split me-2"></i>Đơn đang chờ phê duyệt
+            <span class="badge bg-dark ms-2">{{ pending_requests|length }}</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if pending_requests %}
+            <div class="table-responsive">
+                <table class="table table-hover datatable-pending">
+                    <thead>
+                        <tr>
+                            <th>Mã NV</th>
+                            <th>Họ và tên</th>
+                            <th>Loại phép</th>
+                            <th>Từ ngày</th>
+                            <th>Đến ngày</th>
+                            <th>Lý do</th>
+                            <th>Ngày tạo</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for leave in pending_requests %}
+                            <tr>
+                                <td>{{ leave.employee.employee_code }}</td>
+                                <td>
+                                    <a href="{{ url_for('view_employee', id=leave.employee.id) }}">
+                                        {{ leave.employee.full_name }}
+                                    </a>
+                                </td>
+                                <td>{{ leave.leave_type.value }}</td>
+                                <td>{{ leave.start_date.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ leave.end_date.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ leave.reason }}</td>
+                                <td>{{ leave.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <form action="{{ url_for('approve_leave_request', id=leave.id) }}" method="post" class="d-inline">
+                                            <button type="button" class="btn btn-success btn-approve-leave" title="Phê duyệt">
+                                                <i class="bi bi-check-circle"></i>
+                                            </button>
+                                        </form>
+                                        <form action="{{ url_for('reject_leave_request', id=leave.id) }}" method="post" class="d-inline">
+                                            <button type="button" class="btn btn-danger btn-reject-leave" title="Từ chối">
+                                                <i class="bi bi-x-circle"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                Không có đơn xin nghỉ phép nào đang chờ phê duyệt.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Other Requests -->
+<div class="card">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-list-check me-2"></i>Lịch sử đơn xin nghỉ phép
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if other_requests %}
+            <div class="table-responsive">
+                <table class="table table-hover datatable-history">
+                    <thead>
+                        <tr>
+                            <th>Mã NV</th>
+                            <th>Họ và tên</th>
+                            <th>Loại phép</th>
+                            <th>Từ ngày</th>
+                            <th>Đến ngày</th>
+                            <th>Lý do</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày tạo</th>
+                            <th>Ngày duyệt</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for leave in other_requests %}
+                            <tr>
+                                <td>{{ leave.employee.employee_code }}</td>
+                                <td>
+                                    <a href="{{ url_for('view_employee', id=leave.employee.id) }}">
+                                        {{ leave.employee.full_name }}
+                                    </a>
+                                </td>
+                                <td>{{ leave.leave_type.value }}</td>
+                                <td>{{ leave.start_date.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ leave.end_date.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ leave.reason }}</td>
+                                <td>
+                                    <span class="badge {% if leave.status.name == 'APPROVED' %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ leave.status.value }}
+                                    </span>
+                                </td>
+                                <td>{{ leave.created_at.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ leave.reviewed_at.strftime('%d/%m/%Y') if leave.reviewed_at else 'N/A' }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                Không có lịch sử đơn xin nghỉ phép nào.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Statistics Card -->
+{% if pending_requests or other_requests %}
+<div class="card mt-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-graph-up me-2"></i>Thống kê đơn xin nghỉ phép
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3 mb-3 mb-md-0">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h2>{{ pending_requests|length }}</h2>
+                        <p class="mb-0">Đơn đang chờ duyệt</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3 mb-md-0">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h2>{{ other_requests|selectattr('status.name', 'equalto', 'APPROVED')|list|length }}</h2>
+                        <p class="mb-0">Đơn đã duyệt</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3 mb-md-0">
+                <div class="card bg-danger text-white">
+                    <div class="card-body text-center">
+                        <h2>{{ other_requests|selectattr('status.name', 'equalto', 'REJECTED')|list|length }}</h2>
+                        <p class="mb-0">Đơn bị từ chối</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-dark text-white">
+                    <div class="card-body text-center">
+                        <h2>{{ pending_requests|length + other_requests|length }}</h2>
+                        <p class="mb-0">Tổng số đơn</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/leave.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize DataTables
+        new DataTable('.datatable-pending', {
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.1/i18n/vi.json'
+            },
+            order: [[6, 'asc']], // Sort by created date (oldest first)
+            pageLength: 10
+        });
+        
+        new DataTable('.datatable-history', {
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.1/i18n/vi.json'
+            },
+            order: [[7, 'desc']], // Sort by created date (newest first)
+            pageLength: 10
+        });
+    });
+</script>
+{% endblock %}

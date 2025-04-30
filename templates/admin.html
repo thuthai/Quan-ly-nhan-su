@@ -1,0 +1,350 @@
+{% extends "layout.html" %}
+
+{% block title %}Quản trị hệ thống - Hệ thống Quản lý Nhân sự{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="mb-0">
+                <i class="bi bi-gear-fill me-2"></i>Quản trị hệ thống
+            </h1>
+        </div>
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-4 mb-4">
+    <!-- Quản lý người dùng -->
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-people-fill me-2"></i>Quản lý người dùng
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Quản lý tài khoản người dùng, phân quyền và cấp phép truy cập hệ thống.</p>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Tổng số người dùng:</span>
+                        <span><strong>{{ user_count }}</strong></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Người dùng Admin:</span>
+                        <span><strong>{{ admin_count }}</strong></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Người dùng nhân viên:</span>
+                        <span><strong>{{ employee_user_count }}</strong></span>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-footer bg-transparent">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('users') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-list me-1"></i>Danh sách người dùng
+                    </a>
+                    <a href="{{ url_for('register') }}" class="btn btn-outline-success">
+                        <i class="bi bi-person-plus me-1"></i>Thêm người dùng mới
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cấu hình hệ thống -->
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-sliders me-2"></i>Cấu hình hệ thống
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Thiết lập các thông số cấu hình hệ thống, thời gian cảnh báo, và chức năng nâng cao.</p>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Cảnh báo hợp đồng (ngày):</span>
+                        <span><strong>30</strong></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Giới hạn đăng nhập sai:</span>
+                        <span><strong>5</strong></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Phiên bản hệ thống:</span>
+                        <span><strong>1.0.0</strong></span>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-footer bg-transparent">
+                <div class="d-grid">
+                    <button class="btn btn-outline-info" disabled>
+                        <i class="bi bi-gear me-1"></i>Thiết lập cấu hình
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sao lưu & Phục hồi -->
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-cloud-arrow-up-fill me-2"></i>Sao lưu & Phục hồi
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Quản lý việc sao lưu và phục hồi dữ liệu hệ thống, lịch trình sao lưu tự động.</p>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Sao lưu gần nhất:</span>
+                        <span><strong>{{ today.strftime('%d/%m/%Y') }}</strong></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Chu kỳ sao lưu:</span>
+                        <span><strong>Hàng ngày</strong></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Bản sao lưu hiện có:</span>
+                        <span><strong>7</strong></span>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-footer bg-transparent">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-success" disabled>
+                        <i class="bi bi-cloud-download me-1"></i>Sao lưu ngay
+                    </button>
+                    <button class="btn btn-outline-secondary" disabled>
+                        <i class="bi bi-clock-history me-1"></i>Lịch sử sao lưu
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nhật ký hệ thống -->
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="bi bi-journal-text me-2"></i>Nhật ký hệ thống
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Xem lịch sử hoạt động, nhật ký lỗi và hành động của người dùng trên hệ thống.</p>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Đăng nhập hôm nay:</span>
+                        <span><strong>{{ login_count }}</strong></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Thao tác gần đây:</span>
+                        <span><strong>{{ action_count }}</strong></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Cảnh báo lỗi:</span>
+                        <span><strong>{{ error_count }}</strong></span>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-footer bg-transparent">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-warning" disabled>
+                        <i class="bi bi-eye me-1"></i>Xem nhật ký
+                    </button>
+                    <button class="btn btn-outline-danger" disabled>
+                        <i class="bi bi-exclamation-triangle me-1"></i>Cảnh báo hệ thống
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dashboard Quản trị -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up me-2"></i>Thống kê chung
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <canvas id="systemUsageChart" height="250"></canvas>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="list-group">
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">Tài nguyên hệ thống</h5>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label d-flex justify-content-between">
+                                        <span>CPU:</span>
+                                        <span>32%</span>
+                                    </label>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: 32%" aria-valuenow="32" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label d-flex justify-content-between">
+                                        <span>Bộ nhớ:</span>
+                                        <span>65%</span>
+                                    </label>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-warning" role="progressbar" style="width: 65%" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label d-flex justify-content-between">
+                                        <span>Lưu trữ:</span>
+                                        <span>45%</span>
+                                    </label>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-info" role="progressbar" style="width: 45%" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-0">
+                                    <label class="form-label d-flex justify-content-between">
+                                        <span>Database:</span>
+                                        <span>28%</span>
+                                    </label>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: 28%" aria-valuenow="28" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bộ công cụ quản trị -->
+<div class="card">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-tools me-2"></i>Công cụ quản trị
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="d-grid">
+                    <a href="{{ url_for('departments') }}" class="btn btn-lg btn-outline-primary">
+                        <i class="bi bi-building me-2"></i>Quản lý phòng ban
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-grid">
+                    <a href="{{ url_for('employees') }}" class="btn btn-lg btn-outline-success">
+                        <i class="bi bi-people me-2"></i>Quản lý nhân viên
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-grid">
+                    <a href="{{ url_for('attendance_report') }}" class="btn btn-lg btn-outline-info">
+                        <i class="bi bi-calendar2-check me-2"></i>Báo cáo chấm công
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-grid">
+                    <a href="{{ url_for('leave_requests') }}" class="btn btn-lg btn-outline-warning">
+                        <i class="bi bi-calendar-x me-2"></i>Đơn xin nghỉ phép
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-grid">
+                    <a href="{{ url_for('export_employees') }}" class="btn btn-lg btn-outline-danger">
+                        <i class="bi bi-file-earmark-excel me-2"></i>Xuất dữ liệu
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-grid">
+                    <button class="btn btn-lg btn-outline-dark" disabled>
+                        <i class="bi bi-envelope me-2"></i>Gửi thông báo
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-grid">
+                    <button class="btn btn-lg btn-outline-secondary" disabled>
+                        <i class="bi bi-shield-lock me-2"></i>Phân quyền
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-grid">
+                    <button class="btn btn-lg btn-outline-dark" disabled>
+                        <i class="bi bi-terminal me-2"></i>Công cụ nâng cao
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Hệ thống sử dụng biểu đồ
+        const ctxSystem = document.getElementById('systemUsageChart').getContext('2d');
+        const systemUsageChart = new Chart(ctxSystem, {
+            type: 'line',
+            data: {
+                labels: ['1/4', '2/4', '3/4', '4/4', '5/4', '6/4', '7/4', '8/4', '9/4', '10/4', '11/4', '12/4', '13/4', '14/4'],
+                datasets: [{
+                    label: 'Đăng nhập',
+                    data: [12, 15, 18, 14, 11, 3, 4, 13, 15, 17, 19, 15, 14, 18],
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }, {
+                    label: 'Hoạt động',
+                    data: [65, 59, 80, 81, 56, 20, 25, 70, 76, 80, 84, 75, 72, 79],
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }, {
+                    label: 'Tài nguyên sử dụng',
+                    data: [28, 32, 40, 38, 36, 35, 35, 37, 42, 44, 42, 40, 39, 41],
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

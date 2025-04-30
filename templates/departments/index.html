@@ -1,0 +1,97 @@
+{% extends "layout.html" %}
+
+{% block title %}Quản lý phòng ban - Hệ thống Quản lý Nhân sự{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="mb-0">
+                <i class="bi bi-building-fill me-2"></i>Quản lý phòng ban
+            </h1>
+            {% if current_user.is_admin() %}
+            <a href="{{ url_for('create_department') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Thêm phòng ban
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if departments %}
+    <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+        {% for department in departments %}
+            <div class="col">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">{{ department.name }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">{{ department.description or 'Không có mô tả' }}</p>
+                        <p class="card-text">
+                            <i class="bi bi-people-fill me-2"></i>
+                            <strong>Số nhân viên:</strong> {{ department.employees|length }}
+                        </p>
+                        <p class="card-text">
+                            <i class="bi bi-calendar-check me-2"></i>
+                            <strong>Ngày tạo:</strong> {{ department.created_at.strftime('%d/%m/%Y') }}
+                        </p>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('employees', department=department.id) }}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-people me-1"></i>Xem nhân viên
+                            </a>
+                            {% if current_user.is_admin() %}
+                                <div>
+                                    <a href="{{ url_for('edit_department', id=department.id) }}" class="btn btn-outline-warning btn-sm">
+                                        <i class="bi bi-pencil me-1"></i>Sửa
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" 
+                                            onclick="confirmDelete('Bạn có chắc chắn muốn xóa phòng ban này?', 'delete-department-{{ department.id }}')">
+                                        <i class="bi bi-trash me-1"></i>Xóa
+                                    </button>
+                                    <form id="delete-department-{{ department.id }}" action="{{ url_for('delete_department', id=department.id) }}" method="post" class="d-none"></form>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle-fill me-2"></i>Chưa có phòng ban nào trong hệ thống.
+    </div>
+{% endif %}
+
+<div class="card">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-info-circle me-2"></i>Thông tin phòng ban
+        </h5>
+    </div>
+    <div class="card-body">
+        <p>Phòng ban là đơn vị tổ chức cơ bản trong công ty, giúp phân chia và quản lý nhân sự theo chức năng, nhiệm vụ.</p>
+        <p>Mỗi nhân viên sẽ được phân về một phòng ban phù hợp với kỹ năng và chuyên môn.</p>
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Lưu ý:</strong> Không thể xóa phòng ban khi còn nhân viên thuộc phòng ban đó. Vui lòng chuyển hoặc xóa tất cả nhân viên trước khi xóa phòng ban.
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Confirm delete department
+        window.confirmDelete = function(message, formId) {
+            if (confirm(message)) {
+                document.getElementById(formId).submit();
+            }
+        };
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends "layout.html" %}
+
+{% block title %}Quản lý nhân viên - Hệ thống Quản lý Nhân sự{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="mb-0">
+                <i class="bi bi-people-fill me-2"></i>Quản lý nhân viên
+            </h1>
+            {% if current_user.is_admin() %}
+            <div>
+                <a href="{{ url_for('create_employee') }}" class="btn btn-primary">
+                    <i class="bi bi-person-plus-fill me-1"></i>Thêm nhân viên
+                </a>
+                <button class="btn btn-outline-info ms-2 btn-export" data-export-target="employees">
+                    <i class="bi bi-file-earmark-excel me-1"></i>Xuất Excel
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter Form -->
+<div class="card search-form mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('employees') }}" id="employeeSearchForm">
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" name="search" value="{{ search }}" placeholder="Tìm theo tên, mã nhân viên">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select name="department" class="form-select">
+                        <option value="">Tất cả phòng ban</option>
+                        {% for department in departments %}
+                        <option value="{{ department.id }}" {% if department_id == department.id %}selected{% endif %}>
+                            {{ department.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="status" class="form-select">
+                        <option value="">Tất cả trạng thái</option>
+                        {% for status_key, status_value in statuses %}
+                        <option value="{{ status_key }}" {% if status == status_key %}selected{% endif %}>
+                            {{ status_value }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-filter me-1"></i>Lọc
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-clear-search">
+                            <i class="bi bi-x-circle me-1"></i>Xóa
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Employee List -->
+{% if employees %}
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for employee in employees %}
+    <div class="col">
+        <div class="card employee-card h-100">
+            <div class="position-relative">
+                <img src="{{ url_for('static', filename=employee.profile_image) if '/' in employee.profile_image else employee.profile_image }}" 
+                     class="card-img-top employee-img" alt="{{ employee.full_name }}">
+                <span class="position-absolute top-0 end-0 m-2 badge rounded-pill 
+                    {% if employee.status.name == 'ACTIVE' %}bg-success
+                    {% elif employee.status.name == 'LEAVE' %}bg-danger
+                    {% else %}bg-warning{% endif %}">
+                    {{ employee.status.value }}
+                </span>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">{{ employee.full_name }}</h5>
+                <p class="card-text text-muted mb-2">{{ employee.employee_code }}</p>
+                
+                <div class="mb-3">
+                    <span class="badge bg-primary department-badge">{{ employee.department.name }}</span>
+                    <span class="badge bg-secondary department-badge">{{ employee.position }}</span>
+                </div>
+                
+                <p class="card-text mb-1">
+                    <i class="bi bi-envelope me-2"></i>{{ employee.email }}
+                </p>
+                <p class="card-text mb-1">
+                    <i class="bi bi-telephone me-2"></i>{{ employee.phone_number or "Chưa cập nhật" }}
+                </p>
+                <p class="card-text">
+                    <i class="bi bi-calendar-date me-2"></i>Ngày vào: {{ employee.join_date.strftime('%d/%m/%Y') }}
+                </p>
+                
+                {% if employee.is_contract_expiring_soon() %}
+                <div class="alert alert-warning mt-2 py-2 px-3 mb-0">
+                    <small><i class="bi bi-exclamation-triangle me-1"></i>Hợp đồng sắp hết hạn (còn {{ employee.contract_days_remaining() }} ngày)</small>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-transparent">
+                <a href="{{ url_for('view_employee', id=employee.id) }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-eye me-1"></i>Xem chi tiết
+                </a>
+                {% if current_user.is_admin() %}
+                <a href="{{ url_for('edit_employee', id=employee.id) }}" class="btn btn-outline-warning btn-sm">
+                    <i class="bi bi-pencil me-1"></i>Chỉnh sửa
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Export Form (hidden) -->
+<form id="export-employees-form" action="{{ url_for('export_employees') }}" method="get" style="display: none;"></form>
+{% else %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle-fill me-2"></i>Không tìm thấy nhân viên nào phù hợp với điều kiện tìm kiếm.
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/export.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        handleSearch('employeeSearchForm');
+    });
+</script>
+{% endblock %}

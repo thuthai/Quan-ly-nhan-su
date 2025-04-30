@@ -1,0 +1,156 @@
+{% extends "layout.html" %}
+
+{% block title %}Quản lý chấm công - Hệ thống Quản lý Nhân sự{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="mb-0">
+                <i class="bi bi-calendar2-check-fill me-2"></i>Quản lý chấm công
+            </h1>
+            <div>
+                <a href="{{ url_for('attendance_report') }}" class="btn btn-outline-info">
+                    <i class="bi bi-file-earmark-text me-1"></i>Báo cáo chấm công
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Chấm công ngày {{ today.strftime('%d/%m/%Y') }}</h5>
+    </div>
+    <div class="card-body">
+        <div class="text-center mb-4">
+            <h3 id="current-time">{{ today.strftime('%H:%M:%S') }}</h3>
+        </div>
+        
+        {% if attendances %}
+            <div class="table-responsive">
+                <table class="table table-hover attendance-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã NV</th>
+                            <th>Họ và tên</th>
+                            <th>Phòng ban</th>
+                            <th>Check-in</th>
+                            <th>Check-out</th>
+                            <th>Tổng giờ</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for attendance, employee in attendances %}
+                            <tr>
+                                <td>{{ employee.employee_code }}</td>
+                                <td>
+                                    <a href="{{ url_for('view_employee', id=employee.id) }}">
+                                        {{ employee.full_name }}
+                                    </a>
+                                </td>
+                                <td>{{ employee.department.name }}</td>
+                                <td class="check-time {% if attendance.check_in %}text-success{% endif %}">
+                                    {{ attendance.check_in.strftime('%H:%M:%S') if attendance.check_in else 'Chưa check-in' }}
+                                </td>
+                                <td class="check-time {% if attendance.check_out %}text-danger{% endif %}">
+                                    {{ attendance.check_out.strftime('%H:%M:%S') if attendance.check_out else 'Chưa check-out' }}
+                                </td>
+                                <td>{{ attendance.total_hours|round(2) if attendance.total_hours else '-' }}</td>
+                                <td>
+                                    {% if not attendance.check_in %}
+                                        <form action="{{ url_for('check_in') }}" method="post" class="d-inline">
+                                            <input type="hidden" name="employee_id" value="{{ employee.id }}">
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="bi bi-box-arrow-in-right me-1"></i>Check-in
+                                            </button>
+                                        </form>
+                                    {% elif not attendance.check_out %}
+                                        <form action="{{ url_for('check_out') }}" method="post" class="d-inline">
+                                            <input type="hidden" name="attendance_id" value="{{ attendance.id }}">
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="bi bi-box-arrow-right me-1"></i>Check-out
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <span class="badge bg-success">Hoàn thành</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                Chưa có dữ liệu chấm công cho ngày hôm nay.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0">Nhân viên chưa check-in hôm nay</h5>
+    </div>
+    <div class="card-body">
+        {% if not_checked_in %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã NV</th>
+                            <th>Họ và tên</th>
+                            <th>Phòng ban</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for employee in not_checked_in %}
+                            <tr>
+                                <td>{{ employee.employee_code }}</td>
+                                <td>
+                                    <a href="{{ url_for('view_employee', id=employee.id) }}">
+                                        {{ employee.full_name }}
+                                    </a>
+                                </td>
+                                <td>{{ employee.department.name }}</td>
+                                <td>
+                                    <form action="{{ url_for('check_in') }}" method="post" class="d-inline">
+                                        <input type="hidden" name="employee_id" value="{{ employee.id }}">
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            <i class="bi bi-box-arrow-in-right me-1"></i>Check-in
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-success">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                Tất cả nhân viên đã check-in hôm nay.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/attendance.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize DataTable
+        const table = new DataTable('.attendance-table', {
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.1/i18n/vi.json'
+            },
+            order: [[3, 'asc']] // Sort by check-in time
+        });
+    });
+</script>
+{% endblock %}

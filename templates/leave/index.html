@@ -1,0 +1,148 @@
+{% extends "layout.html" %}
+
+{% block title %}Đơn xin nghỉ phép - Hệ thống Quản lý Nhân sự{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="mb-0">
+                <i class="bi bi-calendar-x-fill me-2"></i>Đơn xin nghỉ phép
+            </h1>
+            <a href="{{ url_for('create_leave_request') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Tạo đơn nghỉ phép
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Thông tin nhân viên</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3 text-center">
+                <img src="{{ url_for('static', filename=employee.profile_image) if '/' in employee.profile_image else employee.profile_image }}" 
+                     alt="{{ employee.full_name }}" class="rounded-circle img-fluid mb-3" style="width: 100px; height: 100px; object-fit: cover;">
+            </div>
+            <div class="col-md-9">
+                <h5>{{ employee.full_name }}</h5>
+                <p class="mb-1"><strong>Mã nhân viên:</strong> {{ employee.employee_code }}</p>
+                <p class="mb-1"><strong>Phòng ban:</strong> {{ employee.department.name }}</p>
+                <p class="mb-1"><strong>Chức vụ:</strong> {{ employee.position }}</p>
+                <p class="mb-0"><strong>Ngày vào công ty:</strong> {{ employee.join_date.strftime('%d/%m/%Y') }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">Lịch sử đơn xin nghỉ phép</h5>
+    </div>
+    <div class="card-body">
+        {% if leave_requests %}
+            <div class="table-responsive">
+                <table class="table table-hover datatable">
+                    <thead>
+                        <tr>
+                            <th width="10%">Loại phép</th>
+                            <th width="12%">Từ ngày</th>
+                            <th width="12%">Đến ngày</th>
+                            <th width="30%">Lý do</th>
+                            <th width="12%">Trạng thái</th>
+                            <th width="12%">Ngày tạo</th>
+                            <th width="12%">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for leave in leave_requests %}
+                            <tr>
+                                <td>{{ leave.leave_type.value }}</td>
+                                <td>{{ leave.start_date.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ leave.end_date.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ leave.reason }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if leave.status.name == 'PENDING' %}bg-warning text-dark
+                                        {% elif leave.status.name == 'APPROVED' %}bg-success
+                                        {% else %}bg-danger{% endif %}">
+                                        {{ leave.status.value }}
+                                    </span>
+                                </td>
+                                <td>{{ leave.created_at.strftime('%d/%m/%Y') }}</td>
+                                <td>
+                                    {% if leave.status.name == 'PENDING' %}
+                                        <form action="{{ url_for('cancel_leave_request', id=leave.id) }}" method="post" class="d-inline">
+                                            <button type="button" class="btn btn-sm btn-outline-danger btn-cancel-leave">
+                                                <i class="bi bi-x-circle"></i> Hủy
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                Bạn chưa có đơn xin nghỉ phép nào.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Guide Section -->
+<div class="card mt-4">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0">Hướng dẫn đăng ký nghỉ phép</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Các loại phép:</h6>
+                <ul>
+                    <li><strong>Nghỉ phép năm:</strong> Mỗi nhân viên được phép nghỉ phép năm theo quy định của công ty.</li>
+                    <li><strong>Nghỉ ốm:</strong> Áp dụng khi nhân viên bị ốm, cần có xác nhận y tế nếu nghỉ từ 3 ngày trở lên.</li>
+                    <li><strong>Nghỉ thai sản:</strong> Áp dụng cho nhân viên nữ nghỉ sinh con theo chế độ.</li>
+                    <li><strong>Nghỉ tang:</strong> Áp dụng khi có người thân mất.</li>
+                    <li><strong>Nghỉ không lương:</strong> Áp dụng khi đã hết ngày phép năm hoặc cần nghỉ dài hạn.</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6>Quy trình đăng ký nghỉ phép:</h6>
+                <ol>
+                    <li>Tạo đơn xin nghỉ phép trên hệ thống.</li>
+                    <li>Chọn loại phép và điền đầy đủ thông tin.</li>
+                    <li>Gửi đơn để chờ phê duyệt.</li>
+                    <li>Quản lý sẽ xem xét và phê duyệt hoặc từ chối đơn.</li>
+                    <li>Bạn sẽ nhận được thông báo về trạng thái đơn.</li>
+                </ol>
+                <div class="alert alert-warning mt-3">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Lưu ý:</strong> Đơn xin nghỉ phép nên được gửi trước ít nhất 3 ngày (trừ trường hợp khẩn cấp).
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/leave.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize DataTable
+        new DataTable('.datatable', {
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.1/i18n/vi.json'
+            },
+            order: [[5, 'desc']], // Sort by created date desc
+            pageLength: 10
+        });
+    });
+</script>
+{% endblock %}

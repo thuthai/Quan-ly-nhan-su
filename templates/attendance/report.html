@@ -1,0 +1,157 @@
+{% extends "layout.html" %}
+
+{% block title %}Báo cáo chấm công - Hệ thống Quản lý Nhân sự{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/vn.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="mb-0">
+                <i class="bi bi-file-earmark-text me-2"></i>Báo cáo chấm công
+            </h1>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Tùy chọn báo cáo</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('attendance_report') }}" id="attendance-report-form">
+            {{ form.hidden_tag() }}
+            
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="start_date" class="form-label">{{ form.start_date.label }} <span class="text-danger">*</span></label>
+                    {{ form.start_date(class="form-control datepicker", id="start_date", placeholder="Chọn ngày bắt đầu") }}
+                    {% for error in form.start_date.errors %}
+                        <div class="text-danger mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-3">
+                    <label for="end_date" class="form-label">{{ form.end_date.label }} <span class="text-danger">*</span></label>
+                    {{ form.end_date(class="form-control datepicker", id="end_date", placeholder="Chọn ngày kết thúc") }}
+                    {% for error in form.end_date.errors %}
+                        <div class="text-danger mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-4">
+                    <label for="employee_id" class="form-label">{{ form.employee_id.label }}</label>
+                    {{ form.employee_id(class="form-select", id="employee_id") }}
+                    {% for error in form.employee_id.errors %}
+                        <div class="text-danger mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-2">
+                    <label class="d-block">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search me-1"></i>Tìm kiếm
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if has_results %}
+    <div class="card">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Kết quả báo cáo</h5>
+            <form id="export-attendance-form" action="{{ url_for('export_attendance') }}" method="post">
+                {{ form.hidden_tag() }}
+                <button type="button" class="btn btn-sm btn-light btn-export" data-export-target="attendance">
+                    <i class="bi bi-file-earmark-excel me-1"></i>Xuất Excel
+                </button>
+            </form>
+        </div>
+        <div class="card-body">
+            {% if attendances %}
+                <div class="table-responsive">
+                    <table class="table table-hover datatable">
+                        <thead>
+                            <tr>
+                                <th>Ngày</th>
+                                <th>Mã NV</th>
+                                <th>Họ và tên</th>
+                                <th>Phòng ban</th>
+                                <th>Check-in</th>
+                                <th>Check-out</th>
+                                <th>Tổng giờ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for attendance, employee, department in attendances %}
+                                <tr>
+                                    <td>{{ attendance.date.strftime('%d/%m/%Y') }}</td>
+                                    <td>{{ employee.employee_code }}</td>
+                                    <td>
+                                        <a href="{{ url_for('view_employee', id=employee.id) }}">
+                                            {{ employee.full_name }}
+                                        </a>
+                                    </td>
+                                    <td>{{ department.name }}</td>
+                                    <td class="check-time {% if attendance.check_in %}text-success{% endif %}">
+                                        {{ attendance.check_in.strftime('%H:%M:%S') if attendance.check_in else 'Chưa check-in' }}
+                                    </td>
+                                    <td class="check-time {% if attendance.check_out %}text-danger{% endif %}">
+                                        {{ attendance.check_out.strftime('%H:%M:%S') if attendance.check_out else 'Chưa check-out' }}
+                                    </td>
+                                    <td>{{ attendance.total_hours|round(2) if attendance.total_hours else '-' }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-4">
+                    <h5>Thống kê:</h5>
+                    <ul>
+                        <li>Tổng số bản ghi: {{ attendances|length }}</li>
+                        <li>Tổng số nhân viên: {{ attendances|map(attribute='1.id')|unique|list|length }}</li>
+                        <li>Khoảng thời gian: {{ form.start_date.data.strftime('%d/%m/%Y') }} - {{ form.end_date.data.strftime('%d/%m/%Y') }}</li>
+                    </ul>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    Không tìm thấy dữ liệu chấm công nào trong khoảng thời gian đã chọn.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/export.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize datepickers
+        flatpickr('.datepicker', {
+            dateFormat: 'Y-m-d',
+            locale: 'vn',
+            altInput: true,
+            altFormat: 'd/m/Y',
+            allowInput: true
+        });
+        
+        // Initialize DataTable if results exist
+        if (document.querySelector('.datatable')) {
+            new DataTable('.datatable', {
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.1/i18n/vi.json'
+                },
+                order: [[0, 'desc'], [2, 'asc']] // Sort by date desc, then by name
+            });
+        }
+    });
+</script>
+{% endblock %}

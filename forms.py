@@ -1,0 +1,128 @@
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SelectField, DateField, TextAreaField, FloatField, FileField, HiddenField
+from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, ValidationError
+from models import Gender, EmployeeStatus, LeaveType, Department, User, Employee
+from flask_wtf.file import FileAllowed
+from datetime import date
+
+
+class LoginForm(FlaskForm):
+    username = StringField('Tên đăng nhập', validators=[DataRequired(message='Vui lòng nhập tên đăng nhập')])
+    password = PasswordField('Mật khẩu', validators=[DataRequired(message='Vui lòng nhập mật khẩu')])
+
+
+class RegisterForm(FlaskForm):
+    username = StringField('Tên đăng nhập', validators=[DataRequired(message='Vui lòng nhập tên đăng nhập'), Length(min=4, max=64, message='Tên đăng nhập phải có từ 4-64 ký tự')])
+    email = StringField('Email', validators=[DataRequired(message='Vui lòng nhập email'), Email(message='Email không hợp lệ')])
+    password = PasswordField('Mật khẩu', validators=[DataRequired(message='Vui lòng nhập mật khẩu'), Length(min=6, message='Mật khẩu phải có ít nhất 6 ký tự')])
+    confirm_password = PasswordField('Xác nhận mật khẩu', validators=[DataRequired(message='Vui lòng xác nhận mật khẩu'), EqualTo('password', message='Mật khẩu xác nhận không khớp')])
+
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user:
+            raise ValidationError('Tên đăng nhập đã tồn tại.')
+
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user:
+            raise ValidationError('Email này đã được đăng ký.')
+
+
+class DepartmentForm(FlaskForm):
+    name = StringField('Tên phòng ban', validators=[DataRequired(message='Vui lòng nhập tên phòng ban')])
+    description = TextAreaField('Mô tả', validators=[Optional()])
+
+
+class EmployeeForm(FlaskForm):
+    employee_code = StringField('Mã nhân viên', validators=[DataRequired(message='Vui lòng nhập mã nhân viên')])
+    full_name = StringField('Họ và tên', validators=[DataRequired(message='Vui lòng nhập họ và tên')])
+    gender = SelectField('Giới tính', choices=[(g.name, g.value) for g in Gender], validators=[DataRequired(message='Vui lòng chọn giới tính')])
+    date_of_birth = DateField('Ngày sinh', validators=[DataRequired(message='Vui lòng nhập ngày sinh')])
+    home_town = StringField('Quê quán', validators=[Optional()])
+    address = StringField('Địa chỉ', validators=[Optional()])
+    phone_number = StringField('Số điện thoại', validators=[Optional()])
+    email = StringField('Email', validators=[DataRequired(message='Vui lòng nhập email'), Email(message='Email không hợp lệ')])
+    department_id = SelectField('Phòng ban', coerce=int, validators=[DataRequired(message='Vui lòng chọn phòng ban')])
+    position = StringField('Chức vụ', validators=[Optional()])
+    join_date = DateField('Ngày vào công ty', validators=[DataRequired(message='Vui lòng nhập ngày vào công ty')])
+    salary_grade = StringField('Bậc lương', validators=[Optional()])
+    salary_coefficient = FloatField('Hệ số lương', validators=[Optional()])
+    contract_start_date = DateField('Ngày bắt đầu hợp đồng', validators=[Optional()])
+    contract_end_date = DateField('Ngày kết thúc hợp đồng', validators=[Optional()])
+    education_level = StringField('Trình độ học vấn', validators=[Optional()])
+    skills = TextAreaField('Kỹ năng', validators=[Optional()])
+    profile_image = FileField('Ảnh đại diện', validators=[Optional(), FileAllowed(['jpg', 'png', 'jpeg'], 'Chỉ chấp nhận file hình ảnh')])
+    status = SelectField('Trạng thái', choices=[(s.name, s.value) for s in EmployeeStatus], validators=[DataRequired(message='Vui lòng chọn trạng thái')])
+    
+    def __init__(self, *args, **kwargs):
+        super(EmployeeForm, self).__init__(*args, **kwargs)
+        self.department_id.choices = [(d.id, d.name) for d in Department.query.all()]
+
+    def validate_employee_code(self, employee_code):
+        employee = Employee.query.filter_by(employee_code=employee_code.data).first()
+        if employee and (not hasattr(self, 'employee_id') or employee.id != self.employee_id.data):
+            raise ValidationError('Mã nhân viên đã tồn tại.')
+
+    def validate_email(self, email):
+        employee = Employee.query.filter_by(email=email.data).first()
+        if employee and (not hasattr(self, 'employee_id') or employee.id != self.employee_id.data):
+            raise ValidationError('Email này đã được sử dụng.')
+
+    def validate_contract_dates(self):
+        if self.contract_start_date.data and self.contract_end_date.data:
+            if self.contract_start_date.data > self.contract_end_date.data:
+                self.contract_end_date.errors.append('Ngày kết thúc phải sau ngày bắt đầu hợp đồng.')
+                return False
+        return True
+
+
+class EmployeeEditForm(EmployeeForm):
+    employee_id = HiddenField('ID')
+
+
+class LeaveRequestForm(FlaskForm):
+    leave_type = SelectField('Loại phép', choices=[(t.name, t.value) for t in LeaveType], validators=[DataRequired(message='Vui lòng chọn loại phép')])
+    start_date = DateField('Từ ngày', validators=[DataRequired(message='Vui lòng chọn ngày bắt đầu')])
+    end_date = DateField('Đến ngày', validators=[DataRequired(message='Vui lòng chọn ngày kết thúc')])
+    reason = TextAreaField('Lý do', validators=[DataRequired(message='Vui lòng nhập lý do')])
+
+    def validate_dates(self):
+        if self.start_date.data and self.end_date.data:
+            if self.start_date.data > self.end_date.data:
+                self.end_date.errors.append('Ngày kết thúc phải sau ngày bắt đầu.')
+                return False
+            if self.start_date.data < date.today():
+                self.start_date.errors.append('Ngày bắt đầu không thể trong quá khứ.')
+                return False
+        return True
+
+
+class CareerPathForm(FlaskForm):
+    position = StringField('Vị trí', validators=[DataRequired(message='Vui lòng nhập vị trí')])
+    start_date = DateField('Ngày bắt đầu', validators=[DataRequired(message='Vui lòng chọn ngày bắt đầu')])
+    end_date = DateField('Ngày kết thúc', validators=[Optional()])
+    description = TextAreaField('Mô tả', validators=[Optional()])
+
+    def validate_dates(self):
+        if self.start_date.data and self.end_date.data:
+            if self.start_date.data > self.end_date.data:
+                self.end_date.errors.append('Ngày kết thúc phải sau ngày bắt đầu.')
+                return False
+        return True
+
+
+class AttendanceReportForm(FlaskForm):
+    start_date = DateField('Từ ngày', validators=[DataRequired(message='Vui lòng chọn ngày bắt đầu')])
+    end_date = DateField('Đến ngày', validators=[DataRequired(message='Vui lòng chọn ngày kết thúc')])
+    employee_id = SelectField('Nhân viên', coerce=int, validators=[Optional()])
+    
+    def __init__(self, *args, **kwargs):
+        super(AttendanceReportForm, self).__init__(*args, **kwargs)
+        self.employee_id.choices = [(0, 'Tất cả nhân viên')] + [(e.id, f"{e.employee_code} - {e.full_name}") for e in Employee.query.filter_by(status=EmployeeStatus.ACTIVE).all()]
+
+    def validate_dates(self):
+        if self.start_date.data and self.end_date.data:
+            if self.start_date.data > self.end_date.data:
+                self.end_date.errors.append('Ngày kết thúc phải sau ngày bắt đầu.')
+                return False
+        return True

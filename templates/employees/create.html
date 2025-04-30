@@ -1,0 +1,236 @@
+{% extends "layout.html" %}
+
+{% block title %}Thêm nhân viên mới - Hệ thống Quản lý Nhân sự{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/vn.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="mb-0">
+                <i class="bi bi-person-plus-fill me-2"></i>Thêm nhân viên mới
+            </h1>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('create_employee') }}" enctype="multipart/form-data" novalidate>
+            {{ form.hidden_tag() }}
+            
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="border-bottom pb-2">Thông tin cơ bản</h4>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="employee_code" class="form-label">{{ form.employee_code.label }} <span class="text-danger">*</span></label>
+                    {{ form.employee_code(class="form-control", id="employee_code", placeholder="Nhập mã nhân viên") }}
+                    {% for error in form.employee_code.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-8">
+                    <label for="full_name" class="form-label">{{ form.full_name.label }} <span class="text-danger">*</span></label>
+                    {{ form.full_name(class="form-control", id="full_name", placeholder="Nhập họ và tên") }}
+                    {% for error in form.full_name.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="gender" class="form-label">{{ form.gender.label }} <span class="text-danger">*</span></label>
+                    {{ form.gender(class="form-select", id="gender") }}
+                    {% for error in form.gender.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-4">
+                    <label for="date_of_birth" class="form-label">{{ form.date_of_birth.label }} <span class="text-danger">*</span></label>
+                    {{ form.date_of_birth(class="form-control datepicker", id="date_of_birth", placeholder="Chọn ngày sinh") }}
+                    {% for error in form.date_of_birth.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-4">
+                    <label for="join_date" class="form-label">{{ form.join_date.label }} <span class="text-danger">*</span></label>
+                    {{ form.join_date(class="form-control datepicker", id="join_date", placeholder="Chọn ngày vào công ty") }}
+                    {% for error in form.join_date.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="department_id" class="form-label">{{ form.department_id.label }} <span class="text-danger">*</span></label>
+                    {{ form.department_id(class="form-select", id="department_id") }}
+                    {% for error in form.department_id.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-6">
+                    <label for="position" class="form-label">{{ form.position.label }}</label>
+                    {{ form.position(class="form-control", id="position", placeholder="Nhập chức vụ") }}
+                    {% for error in form.position.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="border-bottom pb-2 mt-4">Thông tin liên hệ</h4>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="email" class="form-label">{{ form.email.label }} <span class="text-danger">*</span></label>
+                    {{ form.email(class="form-control", id="email", placeholder="Nhập địa chỉ email") }}
+                    {% for error in form.email.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-6">
+                    <label for="phone_number" class="form-label">{{ form.phone_number.label }}</label>
+                    {{ form.phone_number(class="form-control", id="phone_number", placeholder="Nhập số điện thoại") }}
+                    {% for error in form.phone_number.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="home_town" class="form-label">{{ form.home_town.label }}</label>
+                    {{ form.home_town(class="form-control", id="home_town", placeholder="Nhập quê quán") }}
+                    {% for error in form.home_town.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-6">
+                    <label for="address" class="form-label">{{ form.address.label }}</label>
+                    {{ form.address(class="form-control", id="address", placeholder="Nhập địa chỉ") }}
+                    {% for error in form.address.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="border-bottom pb-2 mt-4">Thông tin hợp đồng và lương</h4>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label for="salary_grade" class="form-label">{{ form.salary_grade.label }}</label>
+                    {{ form.salary_grade(class="form-control", id="salary_grade", placeholder="Nhập bậc lương") }}
+                    {% for error in form.salary_grade.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-3">
+                    <label for="salary_coefficient" class="form-label">{{ form.salary_coefficient.label }}</label>
+                    {{ form.salary_coefficient(class="form-control", id="salary_coefficient", placeholder="Nhập hệ số lương") }}
+                    {% for error in form.salary_coefficient.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-3">
+                    <label for="contract_start_date" class="form-label">{{ form.contract_start_date.label }}</label>
+                    {{ form.contract_start_date(class="form-control datepicker", id="contract_start_date", placeholder="Chọn ngày bắt đầu") }}
+                    {% for error in form.contract_start_date.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-3">
+                    <label for="contract_end_date" class="form-label">{{ form.contract_end_date.label }}</label>
+                    {{ form.contract_end_date(class="form-control datepicker", id="contract_end_date", placeholder="Chọn ngày kết thúc") }}
+                    {% for error in form.contract_end_date.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="border-bottom pb-2 mt-4">Thông tin bổ sung</h4>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="education_level" class="form-label">{{ form.education_level.label }}</label>
+                    {{ form.education_level(class="form-control", id="education_level", placeholder="Nhập trình độ học vấn") }}
+                    {% for error in form.education_level.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-6">
+                    <label for="status" class="form-label">{{ form.status.label }} <span class="text-danger">*</span></label>
+                    {{ form.status(class="form-select", id="status") }}
+                    {% for error in form.status.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="skills" class="form-label">{{ form.skills.label }}</label>
+                    {{ form.skills(class="form-control", id="skills", rows="3", placeholder="Nhập kỹ năng, chuyên môn") }}
+                    {% for error in form.skills.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-6">
+                    <label for="profile_image" class="form-label">{{ form.profile_image.label }}</label>
+                    {{ form.profile_image(class="form-control", id="profile_image") }}
+                    {% for error in form.profile_image.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                    <div class="form-text">Hỗ trợ: JPG, PNG, JPEG, GIF. Tối đa 2MB.</div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{{ url_for('employees') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Quay lại
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save me-1"></i>Lưu thông tin
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize flatpickr datepickers
+        flatpickr('.datepicker', {
+            dateFormat: 'Y-m-d',
+            locale: 'vn',
+            altInput: true,
+            altFormat: 'd/m/Y',
+            allowInput: true
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,147 @@
+{% extends "layout.html" %}
+
+{% block title %}Tạo đơn xin nghỉ phép - Hệ thống Quản lý Nhân sự{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/vn.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="mb-0">
+                <i class="bi bi-calendar-plus-fill me-2"></i>Tạo đơn xin nghỉ phép
+            </h1>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Thông tin nhân viên</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <img src="{{ url_for('static', filename=employee.profile_image) if '/' in employee.profile_image else employee.profile_image }}" 
+                         alt="{{ employee.full_name }}" class="rounded-circle img-fluid mb-3" style="width: 120px; height: 120px; object-fit: cover;">
+                    <h5>{{ employee.full_name }}</h5>
+                    <p class="mb-1">{{ employee.employee_code }}</p>
+                    <p class="text-muted mb-0">{{ employee.department.name }} - {{ employee.position }}</p>
+                </div>
+                
+                <hr>
+                
+                <div class="mb-0">
+                    <h6>Hướng dẫn:</h6>
+                    <ol class="small">
+                        <li>Chọn loại phép phù hợp với lý do nghỉ.</li>
+                        <li>Điền thời gian nghỉ (từ ngày đến ngày).</li>
+                        <li>Nêu rõ lý do xin nghỉ phép.</li>
+                        <li>Kiểm tra thông tin trước khi gửi đơn.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Thông tin đơn xin nghỉ phép</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('create_leave_request') }}" id="leave-request-form" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        <label for="leave_type" class="form-label">{{ form.leave_type.label }} <span class="text-danger">*</span></label>
+                        {{ form.leave_type(class="form-select", id="leave_type") }}
+                        {% for error in form.leave_type.errors %}
+                            <div class="text-danger mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="start_date" class="form-label">{{ form.start_date.label }} <span class="text-danger">*</span></label>
+                            {{ form.start_date(class="form-control datepicker", id="start_date", placeholder="Chọn ngày bắt đầu") }}
+                            {% for error in form.start_date.errors %}
+                                <div class="text-danger mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="end_date" class="form-label">{{ form.end_date.label }} <span class="text-danger">*</span></label>
+                            {{ form.end_date(class="form-control datepicker", id="end_date", placeholder="Chọn ngày kết thúc") }}
+                            {% for error in form.end_date.errors %}
+                                <div class="text-danger mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">{{ form.reason.label }} <span class="text-danger">*</span></label>
+                        {{ form.reason(class="form-control", id="reason", rows="5", placeholder="Nhập chi tiết lý do xin nghỉ phép...") }}
+                        {% for error in form.reason.errors %}
+                            <div class="text-danger mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Lưu ý:</strong> Đơn xin nghỉ phép sau khi gửi sẽ được quản lý xem xét và phê duyệt. Bạn có thể hủy đơn trước khi được phê duyệt.
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('leave_requests') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Quay lại
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send me-1"></i>Gửi đơn
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/leave.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize datepickers
+        const today = new Date();
+        
+        flatpickr('#start_date', {
+            dateFormat: 'Y-m-d',
+            locale: 'vn',
+            altInput: true,
+            altFormat: 'd/m/Y',
+            minDate: today,
+            onChange: function(selectedDates, dateStr, instance) {
+                endDatePicker.set('minDate', dateStr);
+                
+                // If end date is before start date, update it
+                if (endDatePicker.selectedDates[0] < selectedDates[0]) {
+                    endDatePicker.setDate(dateStr);
+                }
+            }
+        });
+        
+        const endDatePicker = flatpickr('#end_date', {
+            dateFormat: 'Y-m-d',
+            locale: 'vn',
+            altInput: true,
+            altFormat: 'd/m/Y',
+            minDate: today
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,916 @@
+from flask import render_template, redirect, url_for, flash, request, jsonify, send_from_directory, abort, Response
+from flask_login import login_user, logout_user, login_required, current_user
+from urllib.parse import urlparse
+from datetime import datetime, date, timedelta
+import os
+import json
+import pandas as pd
+
+from app import app, db
+from models import User, Department, Employee, Attendance, LeaveRequest, CareerPath, Gender, EmployeeStatus, UserRole, LeaveStatus, LeaveType
+from forms import (LoginForm, RegisterForm, DepartmentForm, EmployeeForm, EmployeeEditForm, 
+                  LeaveRequestForm, CareerPathForm, AttendanceReportForm)
+from utils import save_profile_image, export_employees_to_excel, export_attendance_to_excel
+
+
+# Admin required decorator
+def admin_required(f):
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_admin():
+            flash('Bạn không có quyền truy cập trang này.', 'danger')
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    decorated_function.__name__ = f.__name__
+    return login_required(decorated_function)
+
+
+# Routes
+@app.route('/')
+def index():
+    if current_user.is_authenticated:
+        # Get contract expiring alerts
+        expiring_contracts = []
+        if current_user.is_admin():
+            expiring_contracts = Employee.query.filter(
+                Employee.contract_end_date.isnot(None),
+                Employee.contract_end_date > date.today(),
+                Employee.contract_end_date <= date.today() + timedelta(days=30),
+                Employee.status == EmployeeStatus.ACTIVE
+            ).all()
+        
+        # Get pending leave requests
+        pending_requests = []
+        if current_user.is_admin():
+            pending_requests = LeaveRequest.query.filter_by(status=LeaveStatus.PENDING).count()
+        else:
+            # Get employee ID
+            employee = Employee.query.filter_by(user_id=current_user.id).first()
+            if employee:
+                # Check if employee has checked in today
+                today_attendance = Attendance.query.filter_by(
+                    employee_id=employee.id,
+                    date=date.today()
+                ).first()
+                
+                return render_template(
+                    'index.html', 
+                    employee=employee,
+                    today_attendance=today_attendance,
+                    today=date.today()
+                )
+        
+        return render_template(
+            'index.html', 
+            expiring_contracts=expiring_contracts,
+            pending_requests=pending_requests
+        )
+    
+    return render_template('index.html')
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user is None or not user.check_password(form.password.data):
+            flash('Tên đăng nhập hoặc mật khẩu không chính xác.', 'danger')
+            return redirect(url_for('login'))
+        
+        login_user(user)
+        
+        next_page = request.args.get('next')
+        if not next_page or urlparse(next_page).netloc != '':
+            next_page = url_for('index')
+        
+        return redirect(next_page)
+    
+    return render_template('login.html', form=form)
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
+
+
+@app.route('/register', methods=['GET', 'POST'])
+@admin_required
+def register():
+    form = RegisterForm()
+    if form.validate_on_submit():
+        user = User(
+            username=form.username.data,
+            email=form.email.data,
+            role=UserRole.EMPLOYEE
+        )
+        user.set_password(form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        flash('Tài khoản đã được tạo thành công!', 'success')
+        return redirect(url_for('users'))
+    
+    return render_template('register.html', form=form)
+
+
+@app.route('/admin')
+@admin_required
+def admin():
+    # Số liệu người dùng
+    user_count = User.query.count()
+    admin_count = User.query.filter_by(role=UserRole.ADMIN).count()
+    employee_user_count = User.query.filter_by(role=UserRole.EMPLOYEE).count()
+    
+    # Số liệu giả lập cho demo
+    login_count = 15
+    action_count = 78
+    error_count = 2
+    
+    return render_template(
+        'admin.html',
+        user_count=user_count,
+        admin_count=admin_count,
+        employee_user_count=employee_user_count,
+        login_count=login_count,
+        action_count=action_count,
+        error_count=error_count,
+        today=date.today()
+    )
+
+@app.route('/users')
+@admin_required
+def users():
+    users = User.query.all()
+    return render_template('users.html', users=users)
+
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    # Department statistics
+    departments = Department.query.all()
+    dept_stats = []
+    
+    for dept in departments:
+        employee_count = Employee.query.filter_by(department_id=dept.id, status=EmployeeStatus.ACTIVE).count()
+        dept_stats.append({
+            'name': dept.name,
+            'count': employee_count
+        })
+    
+    # Gender statistics
+    male_count = Employee.query.filter_by(gender=Gender.MALE, status=EmployeeStatus.ACTIVE).count()
+    female_count = Employee.query.filter_by(gender=Gender.FEMALE, status=EmployeeStatus.ACTIVE).count()
+    other_count = Employee.query.filter_by(gender=Gender.OTHER, status=EmployeeStatus.ACTIVE).count()
+    
+    gender_stats = {
+        'male': male_count,
+        'female': female_count,
+        'other': other_count
+    }
+    
+    # Overall statistics
+    total_employees = Employee.query.filter_by(status=EmployeeStatus.ACTIVE).count()
+    total_departments = Department.query.count()
+    leave_requests = LeaveRequest.query.filter_by(status=LeaveStatus.PENDING).count()
+    
+    # Get employees with contracts expiring in the next 30 days
+    expiring_contracts = Employee.query.filter(
+        Employee.contract_end_date.isnot(None),
+        Employee.contract_end_date > date.today(),
+        Employee.contract_end_date <= date.today() + timedelta(days=30),
+        Employee.status == EmployeeStatus.ACTIVE
+    ).count()
+    
+    overall_stats = {
+        'total_employees': total_employees,
+        'total_departments': total_departments,
+        'leave_requests': leave_requests,
+        'expiring_contracts': expiring_contracts
+    }
+    
+    # Get attendance data for the past 30 days
+    thirty_days_ago = date.today() - timedelta(days=30)
+    attendance_data = db.session.query(
+        Attendance.date, 
+        db.func.count(Attendance.id).label('count')
+    ).filter(
+        Attendance.date >= thirty_days_ago
+    ).group_by(
+        Attendance.date
+    ).order_by(
+        Attendance.date
+    ).all()
+    
+    attendance_stats = {
+        'dates': [record.date.strftime('%d/%m') for record in attendance_data],
+        'counts': [record.count for record in attendance_data]
+    }
+    
+    return render_template(
+        'dashboard.html',
+        dept_stats=dept_stats,
+        gender_stats=gender_stats,
+        overall_stats=overall_stats,
+        attendance_stats=attendance_stats
+    )
+
+
+# Department routes
+@app.route('/departments')
+@login_required
+def departments():
+    departments = Department.query.all()
+    return render_template('departments/index.html', departments=departments)
+
+
+@app.route('/departments/create', methods=['GET', 'POST'])
+@admin_required
+def create_department():
+    form = DepartmentForm()
+    if form.validate_on_submit():
+        department = Department(
+            name=form.name.data,
+            description=form.description.data
+        )
+        db.session.add(department)
+        db.session.commit()
+        flash('Phòng ban mới đã được tạo thành công!', 'success')
+        return redirect(url_for('departments'))
+    
+    return render_template('departments/create.html', form=form)
+
+
+@app.route('/departments/<int:id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_department(id):
+    department = Department.query.get_or_404(id)
+    form = DepartmentForm(obj=department)
+    
+    if form.validate_on_submit():
+        department.name = form.name.data
+        department.description = form.description.data
+        db.session.commit()
+        flash('Phòng ban đã được cập nhật thành công!', 'success')
+        return redirect(url_for('departments'))
+    
+    return render_template('departments/edit.html', form=form, department=department)
+
+
+@app.route('/departments/<int:id>/delete', methods=['POST'])
+@admin_required
+def delete_department(id):
+    department = Department.query.get_or_404(id)
+    
+    # Check if department has employees
+    if Employee.query.filter_by(department_id=id).count() > 0:
+        flash('Không thể xóa phòng ban vì có nhân viên đang thuộc phòng ban này.', 'danger')
+        return redirect(url_for('departments'))
+    
+    db.session.delete(department)
+    db.session.commit()
+    flash('Phòng ban đã được xóa thành công!', 'success')
+    return redirect(url_for('departments'))
+
+
+# Employee routes
+@app.route('/employees')
+@login_required
+def employees():
+    # Get filter parameters
+    search = request.args.get('search', '')
+    department_id = request.args.get('department', type=int)
+    status = request.args.get('status')
+    
+    query = Employee.query
+    
+    # Apply filters
+    if search:
+        query = query.filter(
+            db.or_(
+                Employee.full_name.ilike(f'%{search}%'),
+                Employee.employee_code.ilike(f'%{search}%')
+            )
+        )
+    
+    if department_id:
+        query = query.filter_by(department_id=department_id)
+    
+    if status:
+        query = query.filter_by(status=EmployeeStatus[status])
+    
+    employees = query.all()
+    departments = Department.query.all()
+    statuses = [(s.name, s.value) for s in EmployeeStatus]
+    
+    return render_template(
+        'employees/index.html', 
+        employees=employees, 
+        departments=departments,
+        statuses=statuses,
+        search=search,
+        department_id=department_id,
+        status=status
+    )
+
+
+@app.route('/employees/create', methods=['GET', 'POST'])
+@admin_required
+def create_employee():
+    form = EmployeeForm()
+    
+    if form.validate_on_submit() and form.validate_contract_dates():
+        # Handle profile image upload
+        profile_image_path = None
+        if form.profile_image.data:
+            profile_image_path = save_profile_image(form.profile_image.data)
+        
+        # Create new employee
+        employee = Employee(
+            employee_code=form.employee_code.data,
+            full_name=form.full_name.data,
+            gender=Gender[form.gender.data],
+            date_of_birth=form.date_of_birth.data,
+            home_town=form.home_town.data,
+            address=form.address.data,
+            phone_number=form.phone_number.data,
+            email=form.email.data,
+            department_id=form.department_id.data,
+            position=form.position.data,
+            join_date=form.join_date.data,
+            salary_grade=form.salary_grade.data,
+            salary_coefficient=form.salary_coefficient.data,
+            contract_start_date=form.contract_start_date.data,
+            contract_end_date=form.contract_end_date.data,
+            education_level=form.education_level.data,
+            skills=form.skills.data,
+            status=EmployeeStatus[form.status.data]
+        )
+        
+        if profile_image_path:
+            employee.profile_image = profile_image_path
+        
+        db.session.add(employee)
+        db.session.commit()
+        
+        # Create initial career path entry
+        career_path = CareerPath(
+            employee_id=employee.id,
+            position=form.position.data,
+            start_date=form.join_date.data,
+            description="Vị trí ban đầu khi gia nhập công ty"
+        )
+        db.session.add(career_path)
+        db.session.commit()
+        
+        flash('Nhân viên mới đã được tạo thành công!', 'success')
+        return redirect(url_for('employees'))
+    
+    return render_template('employees/create.html', form=form)
+
+
+@app.route('/employees/<int:id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_employee(id):
+    employee = Employee.query.get_or_404(id)
+    form = EmployeeEditForm(obj=employee)
+    form.employee_id.data = employee.id
+    
+    if form.validate_on_submit() and form.validate_contract_dates():
+        # Handle profile image upload
+        if form.profile_image.data:
+            profile_image_path = save_profile_image(form.profile_image.data)
+            if profile_image_path:
+                employee.profile_image = profile_image_path
+        
+        # Update employee data
+        employee.employee_code = form.employee_code.data
+        employee.full_name = form.full_name.data
+        employee.gender = Gender[form.gender.data]
+        employee.date_of_birth = form.date_of_birth.data
+        employee.home_town = form.home_town.data
+        employee.address = form.address.data
+        employee.phone_number = form.phone_number.data
+        employee.email = form.email.data
+        employee.department_id = form.department_id.data
+        employee.position = form.position.data
+        employee.join_date = form.join_date.data
+        employee.salary_grade = form.salary_grade.data
+        employee.salary_coefficient = form.salary_coefficient.data
+        employee.contract_start_date = form.contract_start_date.data
+        employee.contract_end_date = form.contract_end_date.data
+        employee.education_level = form.education_level.data
+        employee.skills = form.skills.data
+        employee.status = EmployeeStatus[form.status.data]
+        
+        db.session.commit()
+        flash('Thông tin nhân viên đã được cập nhật thành công!', 'success')
+        return redirect(url_for('view_employee', id=employee.id))
+    
+    return render_template('employees/edit.html', form=form, employee=employee)
+
+
+@app.route('/employees/<int:id>')
+@login_required
+def view_employee(id):
+    employee = Employee.query.get_or_404(id)
+    
+    # Check if the current user has permission to view this employee
+    if not current_user.is_admin() and (not current_user.employee or current_user.employee.id != id):
+        flash('Bạn không có quyền xem thông tin của nhân viên này.', 'danger')
+        return redirect(url_for('index'))
+    
+    career_paths = CareerPath.query.filter_by(employee_id=id).order_by(CareerPath.start_date.desc()).all()
+    leave_requests = LeaveRequest.query.filter_by(employee_id=id).order_by(LeaveRequest.created_at.desc()).all()
+    
+    return render_template(
+        'employees/view.html', 
+        employee=employee, 
+        career_paths=career_paths, 
+        leave_requests=leave_requests
+    )
+
+
+@app.route('/employees/<int:id>/delete', methods=['POST'])
+@admin_required
+def delete_employee(id):
+    employee = Employee.query.get_or_404(id)
+    
+    # Update status to LEAVE instead of deleting
+    employee.status = EmployeeStatus.LEAVE
+    db.session.commit()
+    
+    flash('Nhân viên đã được chuyển sang trạng thái nghỉ việc!', 'success')
+    return redirect(url_for('employees'))
+
+
+@app.route('/employees/export', methods=['GET'])
+@admin_required
+def export_employees():
+    file_path = export_employees_to_excel()
+    return redirect(url_for('download_file', filename=file_path))
+
+
+# Career path routes
+@app.route('/employees/<int:employee_id>/career_path/add', methods=['GET', 'POST'])
+@admin_required
+def add_career_path(employee_id):
+    employee = Employee.query.get_or_404(employee_id)
+    form = CareerPathForm()
+    
+    if form.validate_on_submit() and form.validate_dates():
+        career_path = CareerPath(
+            employee_id=employee_id,
+            position=form.position.data,
+            start_date=form.start_date.data,
+            end_date=form.end_date.data,
+            description=form.description.data
+        )
+        db.session.add(career_path)
+        db.session.commit()
+        flash('Lộ trình công danh đã được thêm thành công!', 'success')
+        return redirect(url_for('view_employee', id=employee_id))
+    
+    return render_template('employees/career_path_form.html', form=form, employee=employee, action='add')
+
+
+@app.route('/career_path/<int:id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_career_path(id):
+    career_path = CareerPath.query.get_or_404(id)
+    form = CareerPathForm(obj=career_path)
+    
+    if form.validate_on_submit() and form.validate_dates():
+        career_path.position = form.position.data
+        career_path.start_date = form.start_date.data
+        career_path.end_date = form.end_date.data
+        career_path.description = form.description.data
+        db.session.commit()
+        flash('Lộ trình công danh đã được cập nhật thành công!', 'success')
+        return redirect(url_for('view_employee', id=career_path.employee_id))
+    
+    return render_template('employees/career_path_form.html', form=form, career_path=career_path, employee=career_path.employee, action='edit')
+
+
+@app.route('/career_path/<int:id>/delete', methods=['POST'])
+@admin_required
+def delete_career_path(id):
+    career_path = CareerPath.query.get_or_404(id)
+    employee_id = career_path.employee_id
+    
+    db.session.delete(career_path)
+    db.session.commit()
+    flash('Lộ trình công danh đã được xóa thành công!', 'success')
+    return redirect(url_for('view_employee', id=employee_id))
+
+
+# Attendance routes
+@app.route('/attendance')
+@login_required
+def attendance():
+    if current_user.is_admin():
+        # Admin view - show all attendance records for today
+        today = date.today()
+        attendances = db.session.query(
+            Attendance,
+            Employee
+        ).join(
+            Employee, Attendance.employee_id == Employee.id
+        ).filter(
+            Attendance.date == today
+        ).all()
+        
+        # Get employees who haven't checked in today
+        checked_in_employees = db.session.query(Attendance.employee_id).filter(Attendance.date == today).all()
+        checked_in_ids = [emp[0] for emp in checked_in_employees]
+        
+        not_checked_in = Employee.query.filter(
+            Employee.status == EmployeeStatus.ACTIVE,
+            ~Employee.id.in_(checked_in_ids) if checked_in_ids else True
+        ).all()
+        
+        return render_template(
+            'attendance/index.html', 
+            attendances=attendances, 
+            not_checked_in=not_checked_in,
+            today=today
+        )
+    else:
+        # Employee view - show their attendance
+        employee = Employee.query.filter_by(user_id=current_user.id).first()
+        
+        if not employee:
+            flash('Không tìm thấy thông tin nhân viên liên kết với tài khoản của bạn.', 'danger')
+            return redirect(url_for('index'))
+        
+        # Get current month's attendance
+        current_month = date.today().replace(day=1)
+        next_month = (current_month.replace(day=28) + timedelta(days=4)).replace(day=1)
+        
+        attendances = Attendance.query.filter(
+            Attendance.employee_id == employee.id,
+            Attendance.date >= current_month,
+            Attendance.date < next_month
+        ).order_by(Attendance.date.desc()).all()
+        
+        # Check if the employee has checked in today
+        today_attendance = Attendance.query.filter_by(
+            employee_id=employee.id,
+            date=date.today()
+        ).first()
+        
+        return render_template(
+            'attendance/employee_view.html', 
+            employee=employee, 
+            attendances=attendances,
+            today_attendance=today_attendance,
+            today=date.today()
+        )
+
+
+@app.route('/attendance/check_in', methods=['POST'])
+@login_required
+def check_in():
+    if current_user.is_admin():
+        # Admin check-in for an employee
+        employee_id = request.form.get('employee_id', type=int)
+        employee = Employee.query.get_or_404(employee_id)
+    else:
+        # Employee checks in themselves
+        employee = Employee.query.filter_by(user_id=current_user.id).first()
+        
+        if not employee:
+            flash('Không tìm thấy thông tin nhân viên liên kết với tài khoản của bạn.', 'danger')
+            return redirect(url_for('index'))
+    
+    # Check if employee has already checked in today
+    today_attendance = Attendance.query.filter_by(
+        employee_id=employee.id,
+        date=date.today()
+    ).first()
+    
+    if today_attendance:
+        if today_attendance.check_in:
+            flash('Nhân viên đã check-in hôm nay rồi.', 'warning')
+        else:
+            today_attendance.check_in = datetime.now()
+            db.session.commit()
+            flash('Check-in thành công!', 'success')
+    else:
+        # Create new attendance record
+        attendance = Attendance(
+            employee_id=employee.id,
+            date=date.today(),
+            check_in=datetime.now()
+        )
+        db.session.add(attendance)
+        db.session.commit()
+        flash('Check-in thành công!', 'success')
+    
+    return redirect(url_for('attendance'))
+
+
+@app.route('/attendance/check_out', methods=['POST'])
+@login_required
+def check_out():
+    if current_user.is_admin():
+        # Admin check-out for an employee
+        attendance_id = request.form.get('attendance_id', type=int)
+        attendance = Attendance.query.get_or_404(attendance_id)
+    else:
+        # Employee checks out themselves
+        employee = Employee.query.filter_by(user_id=current_user.id).first()
+        
+        if not employee:
+            flash('Không tìm thấy thông tin nhân viên liên kết với tài khoản của bạn.', 'danger')
+            return redirect(url_for('index'))
+        
+        attendance = Attendance.query.filter_by(
+            employee_id=employee.id,
+            date=date.today()
+        ).first()
+    
+    if not attendance:
+        flash('Không tìm thấy bản ghi chấm công cho hôm nay. Vui lòng check-in trước.', 'danger')
+    elif attendance.check_out:
+        flash('Nhân viên đã check-out hôm nay rồi.', 'warning')
+    else:
+        attendance.check_out = datetime.now()
+        
+        # Calculate total hours
+        if attendance.check_in:
+            total_hours = (attendance.check_out - attendance.check_in).total_seconds() / 3600
+            attendance.total_hours = round(total_hours, 2)
+        
+        db.session.commit()
+        flash('Check-out thành công!', 'success')
+    
+    return redirect(url_for('attendance'))
+
+
+@app.route('/attendance/report', methods=['GET', 'POST'])
+@admin_required
+def attendance_report():
+    form = AttendanceReportForm()
+    
+    if form.validate_on_submit() and form.validate_dates():
+        # Query attendance data for the report
+        query = db.session.query(
+            Attendance,
+            Employee,
+            Department
+        ).join(
+            Employee, Attendance.employee_id == Employee.id
+        ).join(
+            Department, Employee.department_id == Department.id
+        ).filter(
+            Attendance.date.between(form.start_date.data, form.end_date.data)
+        )
+        
+        if form.employee_id.data and form.employee_id.data > 0:
+            query = query.filter(Attendance.employee_id == form.employee_id.data)
+        
+        attendances = query.order_by(Attendance.date.desc(), Employee.full_name).all()
+        
+        return render_template(
+            'attendance/report.html',
+            form=form,
+            attendances=attendances,
+            has_results=True
+        )
+    
+    return render_template('attendance/report.html', form=form, has_results=False)
+
+
+@app.route('/attendance/export', methods=['POST'])
+@admin_required
+def export_attendance():
+    form = AttendanceReportForm()
+    
+    if form.validate_on_submit() and form.validate_dates():
+        file_path = export_attendance_to_excel(
+            form.start_date.data, 
+            form.end_date.data, 
+            form.employee_id.data
+        )
+        return redirect(url_for('download_file', filename=file_path))
+    
+    flash('Có lỗi xảy ra khi tạo báo cáo. Vui lòng thử lại.', 'danger')
+    return redirect(url_for('attendance_report'))
+
+
+# Leave request routes
+@app.route('/leave_requests')
+@login_required
+def leave_requests():
+    if current_user.is_admin():
+        # Admin view - show all leave requests
+        pending_requests = LeaveRequest.query.filter_by(status=LeaveStatus.PENDING).order_by(LeaveRequest.created_at.desc()).all()
+        other_requests = LeaveRequest.query.filter(LeaveRequest.status != LeaveStatus.PENDING).order_by(LeaveRequest.created_at.desc()).limit(20).all()
+        
+        return render_template(
+            'leave/admin.html',
+            pending_requests=pending_requests,
+            other_requests=other_requests
+        )
+    else:
+        # Employee view - show their leave requests
+        employee = Employee.query.filter_by(user_id=current_user.id).first()
+        
+        if not employee:
+            flash('Không tìm thấy thông tin nhân viên liên kết với tài khoản của bạn.', 'danger')
+            return redirect(url_for('index'))
+        
+        leave_requests = LeaveRequest.query.filter_by(employee_id=employee.id).order_by(LeaveRequest.created_at.desc()).all()
+        
+        return render_template(
+            'leave/index.html',
+            employee=employee,
+            leave_requests=leave_requests
+        )
+
+
+@app.route('/leave_requests/create', methods=['GET', 'POST'])
+@login_required
+def create_leave_request():
+    if current_user.is_admin():
+        # Admin can create leave requests for any employee
+        employee_id = request.args.get('employee_id', type=int)
+        if employee_id:
+            employee = Employee.query.get_or_404(employee_id)
+        else:
+            employees = Employee.query.filter_by(status=EmployeeStatus.ACTIVE).all()
+            return render_template('leave/select_employee.html', employees=employees)
+    else:
+        # Regular employee can only create for themselves
+        employee = Employee.query.filter_by(user_id=current_user.id).first()
+        
+        if not employee:
+            flash('Không tìm thấy thông tin nhân viên liên kết với tài khoản của bạn.', 'danger')
+            return redirect(url_for('index'))
+    
+    form = LeaveRequestForm()
+    
+    if form.validate_on_submit() and form.validate_dates():
+        leave_request = LeaveRequest(
+            employee_id=employee.id,
+            leave_type=LeaveType[form.leave_type.data],
+            start_date=form.start_date.data,
+            end_date=form.end_date.data,
+            reason=form.reason.data,
+            status=LeaveStatus.PENDING
+        )
+        db.session.add(leave_request)
+        db.session.commit()
+        flash('Yêu cầu nghỉ phép đã được gửi thành công!', 'success')
+        return redirect(url_for('leave_requests'))
+    
+    return render_template('leave/create.html', form=form, employee=employee)
+
+
+@app.route('/leave_requests/<int:id>/approve', methods=['POST'])
+@admin_required
+def approve_leave_request(id):
+    leave_request = LeaveRequest.query.get_or_404(id)
+    
+    if leave_request.status != LeaveStatus.PENDING:
+        flash('Yêu cầu nghỉ phép này đã được xử lý.', 'warning')
+    else:
+        leave_request.status = LeaveStatus.APPROVED
+        leave_request.reviewed_by = current_user.id
+        leave_request.reviewed_at = datetime.now()
+        db.session.commit()
+        flash('Yêu cầu nghỉ phép đã được phê duyệt!', 'success')
+    
+    return redirect(url_for('leave_requests'))
+
+
+@app.route('/leave_requests/<int:id>/reject', methods=['POST'])
+@admin_required
+def reject_leave_request(id):
+    leave_request = LeaveRequest.query.get_or_404(id)
+    
+    if leave_request.status != LeaveStatus.PENDING:
+        flash('Yêu cầu nghỉ phép này đã được xử lý.', 'warning')
+    else:
+        leave_request.status = LeaveStatus.REJECTED
+        leave_request.reviewed_by = current_user.id
+        leave_request.reviewed_at = datetime.now()
+        db.session.commit()
+        flash('Yêu cầu nghỉ phép đã bị từ chối!', 'warning')
+    
+    return redirect(url_for('leave_requests'))
+
+
+@app.route('/leave_requests/<int:id>/cancel', methods=['POST'])
+@login_required
+def cancel_leave_request(id):
+    leave_request = LeaveRequest.query.get_or_404(id)
+    
+    # Check if the current user owns this leave request or is an admin
+    employee = Employee.query.filter_by(user_id=current_user.id).first()
+    if not current_user.is_admin() and (not employee or employee.id != leave_request.employee_id):
+        flash('Bạn không có quyền hủy yêu cầu nghỉ phép này.', 'danger')
+        return redirect(url_for('leave_requests'))
+    
+    if leave_request.status != LeaveStatus.PENDING:
+        flash('Chỉ có thể hủy yêu cầu đang chờ xét duyệt.', 'warning')
+    else:
+        db.session.delete(leave_request)
+        db.session.commit()
+        flash('Yêu cầu nghỉ phép đã được hủy!', 'success')
+    
+    return redirect(url_for('leave_requests'))
+
+
+# File download route
+@app.route('/download/<path:filename>')
+@login_required
+def download_file(filename):
+    # Check that the filename is an export file (for security)
+    if not filename.startswith('exports/'):
+        abort(404)
+    
+    directory = os.path.join('static')
+    return send_from_directory(directory, filename, as_attachment=True)
+
+
+# API routes for Ajax requests
+@app.route('/api/employee/<int:id>')
+@login_required
+def get_employee(id):
+    employee = Employee.query.get_or_404(id)
+    
+    # Check permissions
+    if not current_user.is_admin() and (not current_user.employee or current_user.employee.id != id):
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    department = Department.query.get(employee.department_id)
+    
+    return jsonify({
+        "id": employee.id,
+        "employee_code": employee.employee_code,
+        "full_name": employee.full_name,
+        "gender": employee.gender.value,
+        "date_of_birth": employee.date_of_birth.strftime('%Y-%m-%d'),
+        "department_name": department.name if department else "",
+        "position": employee.position,
+        "join_date": employee.join_date.strftime('%Y-%m-%d'),
+        "email": employee.email,
+        "phone_number": employee.phone_number or "",
+        "status": employee.status.value
+    })
+
+
+@app.route('/api/dashboard/stats')
+@login_required
+def dashboard_stats():
+    if not current_user.is_admin():
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    # Department statistics
+    departments = Department.query.all()
+    dept_stats = []
+    
+    for dept in departments:
+        employee_count = Employee.query.filter_by(department_id=dept.id, status=EmployeeStatus.ACTIVE).count()
+        dept_stats.append({
+            'name': dept.name,
+            'count': employee_count
+        })
+    
+    # Gender statistics
+    male_count = Employee.query.filter_by(gender=Gender.MALE, status=EmployeeStatus.ACTIVE).count()
+    female_count = Employee.query.filter_by(gender=Gender.FEMALE, status=EmployeeStatus.ACTIVE).count()
+    other_count = Employee.query.filter_by(gender=Gender.OTHER, status=EmployeeStatus.ACTIVE).count()
+    
+    # Overall statistics
+    total_employees = Employee.query.filter_by(status=EmployeeStatus.ACTIVE).count()
+    total_departments = Department.query.count()
+    
+    return jsonify({
+        "departments": dept_stats,
+        "gender": {
+            "male": male_count,
+            "female": female_count,
+            "other": other_count
+        },
+        "total_employees": total_employees,
+        "total_departments": total_departments
+    })
+
+
+# Error handlers
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('errors/404.html'), 404
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    return render_template('errors/500.html'), 500
