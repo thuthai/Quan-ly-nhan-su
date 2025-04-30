@@ -452,6 +452,39 @@ def delete_employee(id):
 @admin_required
 def export_employees():
     file_path = export_employees_to_excel()
+    flash('Xuất dữ liệu thành công!', 'success')
+    return redirect(url_for('download_file', filename=file_path))
+
+
+@app.route('/employees/import', methods=['GET', 'POST'])
+@admin_required
+def import_employees():
+    """Import employees from Excel/CSV"""
+    form = EmployeeImportForm()
+    import_results = None
+    
+    if form.validate_on_submit():
+        # Process the import
+        import_results = process_employee_import(
+            file=form.import_file.data,
+            skip_header=form.skip_header.data,
+            update_existing=form.update_existing.data,
+            default_department_id=form.department_id.data if form.department_id.data > 0 else None
+        )
+        
+        if import_results['added'] > 0 or import_results['updated'] > 0:
+            flash(f"Nhập dữ liệu thành công! Đã thêm {import_results['added']} và cập nhật {import_results['updated']} nhân viên.", 'success')
+        else:
+            flash("Không có nhân viên nào được thêm hoặc cập nhật.", 'warning')
+    
+    return render_template('employees/import.html', form=form, import_results=import_results)
+
+
+@app.route('/employees/download-sample-import')
+@admin_required
+def download_sample_import():
+    """Download sample import file"""
+    file_path = create_sample_import_file()
     return redirect(url_for('download_file', filename=file_path))
 
 
