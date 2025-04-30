@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SelectField, DateField, TextAreaField, FloatField, FileField, HiddenField, BooleanField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, ValidationError
-from models import Gender, EmployeeStatus, LeaveType, Department, User, Employee
+from models import Gender, EmployeeStatus, LeaveType, Department, User, Employee, AwardType
 from flask_wtf.file import FileAllowed
 from datetime import date
 
@@ -140,3 +140,70 @@ class EmployeeImportForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super(EmployeeImportForm, self).__init__(*args, **kwargs)
         self.department_id.choices = [(0, 'Không chọn')] + [(d.id, d.name) for d in Department.query.all()]
+
+
+class AwardForm(FlaskForm):
+    name = StringField('Tên danh hiệu', validators=[DataRequired(message='Vui lòng nhập tên danh hiệu')])
+    award_type = SelectField('Loại danh hiệu', choices=[(t.name, t.value) for t in AwardType], validators=[DataRequired(message='Vui lòng chọn loại danh hiệu')])
+    year = StringField('Năm đạt được', validators=[DataRequired(message='Vui lòng nhập năm đạt được')])
+    date_received = DateField('Ngày nhận', validators=[Optional()])
+    description = TextAreaField('Mô tả', validators=[Optional()])
+    certificate_number = StringField('Số giấy chứng nhận', validators=[Optional()])
+    issued_by = StringField('Đơn vị cấp', validators=[Optional()])
+    
+    def validate_year(self, year):
+        try:
+            year_value = int(year.data)
+            current_year = date.today().year
+            if year_value < 1900 or year_value > current_year + 1:
+                raise ValidationError(f'Năm phải trong khoảng từ 1900 đến {current_year + 1}.')
+        except ValueError:
+            raise ValidationError('Năm phải là một số nguyên.')
+
+
+class AwardEditForm(AwardForm):
+    award_id = HiddenField('ID')
+
+
+class EmployeeFilterForm(FlaskForm):
+    keyword = StringField('Từ khóa', validators=[Optional()])
+    department_id = SelectField('Phòng ban', coerce=int, validators=[Optional()])
+    gender = SelectField('Giới tính', validators=[Optional()])
+    status = SelectField('Trạng thái', validators=[Optional()])
+    home_town = StringField('Quê quán', validators=[Optional()])
+    age_min = StringField('Tuổi từ', validators=[Optional()])
+    age_max = StringField('Đến', validators=[Optional()])
+    join_date_from = DateField('Ngày vào làm từ', validators=[Optional()])
+    join_date_to = DateField('Đến ngày', validators=[Optional()])
+    education_level = StringField('Trình độ học vấn', validators=[Optional()])
+    
+    def __init__(self, *args, **kwargs):
+        super(EmployeeFilterForm, self).__init__(*args, **kwargs)
+        self.department_id.choices = [(0, 'Tất cả phòng ban')] + [(d.id, d.name) for d in Department.query.all()]
+        self.gender.choices = [('', 'Tất cả')] + [(g.name, g.value) for g in Gender]
+        self.status.choices = [('', 'Tất cả')] + [(s.name, s.value) for s in EmployeeStatus]
+        
+    def validate_age_min(self, age_min):
+        if age_min.data:
+            try:
+                age = int(age_min.data)
+                if age < 0 or age > 100:
+                    raise ValidationError('Tuổi phải từ 0 đến 100.')
+            except ValueError:
+                raise ValidationError('Tuổi phải là số nguyên.')
+                
+    def validate_age_max(self, age_max):
+        if age_max.data:
+            try:
+                age = int(age_max.data)
+                if age < 0 or age > 100:
+                    raise ValidationError('Tuổi phải từ 0 đến 100.')
+            except ValueError:
+                raise ValidationError('Tuổi phải là số nguyên.')
+                
+    def validate_dates(self):
+        if self.join_date_from.data and self.join_date_to.data:
+            if self.join_date_from.data > self.join_date_to.data:
+                self.join_date_to.errors.append('Ngày kết thúc phải sau ngày bắt đầu.')
+                return False
+        return True

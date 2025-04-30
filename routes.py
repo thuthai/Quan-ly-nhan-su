@@ -7,7 +7,7 @@ import json
 import pandas as pd
 
 from app import app, db
-from models import User, Department, Employee, Attendance, LeaveRequest, CareerPath, Gender, EmployeeStatus, UserRole, LeaveStatus, LeaveType
+from models import User, Department, Employee, Attendance, LeaveRequest, CareerPath, Gender, EmployeeStatus, UserRole, LeaveStatus, LeaveType, Award, AwardType
 from forms import (LoginForm, RegisterForm, DepartmentForm, EmployeeForm, EmployeeEditForm, 
                   LeaveRequestForm, CareerPathForm, AttendanceReportForm, EmployeeImportForm)
 from utils import save_profile_image, export_employees_to_excel, export_attendance_to_excel, process_employee_import, create_sample_import_file
