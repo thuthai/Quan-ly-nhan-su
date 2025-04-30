@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SelectField, DateField, DateTimeField, TextAreaField, FloatField, FileField, HiddenField, BooleanField, SelectMultipleField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, ValidationError
 from models import (Gender, EmployeeStatus, LeaveType, Department, User, Employee, 
-              AwardType, EducationLevel, VIETNAM_PROVINCES, SalaryGrade, WorkScheduleType, WorkScheduleStatus,
+              AwardType, EducationLevel, Position, VIETNAM_PROVINCES, SalaryGrade, WorkScheduleType, WorkScheduleStatus,
               PerformanceRatingPeriod, PerformanceRatingStatus, PerformanceEvaluationCriteria)
 from flask_wtf.file import FileAllowed
 from datetime import date, datetime, timedelta
@@ -45,7 +45,7 @@ class EmployeeForm(FlaskForm):
     phone_number = StringField('Số điện thoại', validators=[Optional()])
     email = StringField('Email', validators=[DataRequired(message='Vui lòng nhập email'), Email(message='Email không hợp lệ')])
     department_id = SelectField('Phòng ban', coerce=int, validators=[DataRequired(message='Vui lòng chọn phòng ban')])
-    position = StringField('Chức vụ', validators=[Optional()])
+    position = SelectField('Chức vụ', choices=[(p.name, p.value) for p in Position], validators=[Optional()])
     join_date = DateField('Ngày vào công ty', validators=[DataRequired(message='Vui lòng nhập ngày vào công ty')])
     salary_grade = StringField('Bậc lương', validators=[Optional()])
     salary_coefficient = FloatField('Hệ số lương', validators=[Optional()])

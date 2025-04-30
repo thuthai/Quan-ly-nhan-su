@@ -66,6 +66,15 @@ class LeaveStatus(enum.Enum):
     REJECTED = "Từ chối"
 
 
+class ApproverRole(enum.Enum):
+    """Vai trò người phê duyệt trong quy trình"""
+    MANAGER = "Quản lý trực tiếp"
+    DEPARTMENT_HEAD = "Trưởng phòng"
+    HR_MANAGER = "Quản lý nhân sự"
+    DIRECTOR = "Giám đốc"
+    CEO = "Tổng giám đốc"
+
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
@@ -115,7 +124,7 @@ class Employee(db.Model):
     phone_number = db.Column(db.String(20))
     email = db.Column(db.String(120), unique=True, nullable=False)
     department_id = db.Column(db.Integer, db.ForeignKey('department.id'), nullable=False)
-    position = db.Column(db.String(100))
+    position = db.Column(db.Enum(Position), default=Position.STAFF)
     join_date = db.Column(db.Date, nullable=False)
     salary_grade = db.Column(db.String(20))
     salary_coefficient = db.Column(db.Float)
