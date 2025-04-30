@@ -266,3 +266,65 @@ class EmployeeSalary(db.Model):
     def calculated_salary(self):
         """Tính toán mức lương dựa trên tổng hệ số và lương cơ sở"""
         return int(self.total_coefficient * self.salary_grade.base_salary)
+
+
+class WorkScheduleStatus(enum.Enum):
+    """Trạng thái lịch công tác"""
+    PENDING = "Chờ phê duyệt"
+    APPROVED = "Đã duyệt"
+    REJECTED = "Từ chối"
+    COMPLETED = "Đã hoàn thành"
+    CANCELLED = "Đã hủy"
+
+
+class WorkScheduleType(enum.Enum):
+    """Loại lịch công tác"""
+    MEETING = "Cuộc họp"
+    BUSINESS_TRIP = "Công tác"
+    TRAINING = "Đào tạo"
+    CUSTOMER_VISIT = "Gặp khách hàng"
+    FIELD_WORK = "Công việc hiện trường"
+    OTHER = "Khác"
+
+
+class WorkSchedule(db.Model):
+    """Lịch công tác"""
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    schedule_type = db.Column(db.Enum(WorkScheduleType), default=WorkScheduleType.OTHER, nullable=False)
+    location = db.Column(db.String(200))
+    start_time = db.Column(db.DateTime, nullable=False)
+    end_time = db.Column(db.DateTime, nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    status = db.Column(db.Enum(WorkScheduleStatus), default=WorkScheduleStatus.PENDING, nullable=False)
+    reviewed_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    reviewed_at = db.Column(db.DateTime)
+    feedback = db.Column(db.Text)  # Phản hồi từ người duyệt
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Mối quan hệ
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_schedules')
+    reviewer = db.relationship('User', foreign_keys=[reviewed_by])
+    participants = db.relationship('WorkScheduleParticipant', backref='work_schedule', lazy=True, cascade="all, delete-orphan")
+    
+    def __repr__(self):
+        return f'<WorkSchedule {self.title} - {self.start_time.strftime("%Y-%m-%d")}>)>'
+
+
+class WorkScheduleParticipant(db.Model):
+    """Người tham gia lịch công tác"""
+    id = db.Column(db.Integer, primary_key=True)
+    schedule_id = db.Column(db.Integer, db.ForeignKey('work_schedule.id'), nullable=False)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
+    is_required = db.Column(db.Boolean, default=True)  # Bắt buộc hay không bắt buộc
+    confirmation_status = db.Column(db.Boolean, default=None)  # None: Chưa phản hồi, True: Đồng ý, False: Từ chối
+    confirmation_time = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Mối quan hệ
+    employee = db.relationship('Employee', backref='schedule_participations')
+    
+    def __repr__(self):
+        return f'<WorkScheduleParticipant {self.employee_id} - {self.schedule_id}>'

@@ -1060,6 +1060,185 @@ def dashboard_stats():
 
 
 # Error handlers
+# Salary Grade Management
+@app.route('/salary-grades')
+@admin_required
+def salary_grades():
+    grades = SalaryGrade.query.order_by(SalaryGrade.code).all()
+    return render_template('salary_grades/index.html', grades=grades)
+
+
+@app.route('/salary-grades/create', methods=['GET', 'POST'])
+@admin_required
+def create_salary_grade():
+    form = SalaryGradeForm()
+    if form.validate_on_submit():
+        try:
+            salary_grade = SalaryGrade(
+                code=form.code.data,
+                name=form.name.data,
+                base_coefficient=form.base_coefficient.data,
+                base_salary=int(form.base_salary.data),
+                description=form.description.data
+            )
+            db.session.add(salary_grade)
+            db.session.commit()
+            flash('Bậc lương mới đã được tạo thành công!', 'success')
+            return redirect(url_for('salary_grades'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Lỗi khi tạo bậc lương: {str(e)}', 'danger')
+    
+    return render_template('salary_grades/create.html', form=form)
+
+
+@app.route('/salary-grades/<int:id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_salary_grade(id):
+    salary_grade = SalaryGrade.query.get_or_404(id)
+    form = SalaryGradeEditForm(obj=salary_grade)
+    
+    if form.validate_on_submit():
+        try:
+            salary_grade.code = form.code.data
+            salary_grade.name = form.name.data
+            salary_grade.base_coefficient = form.base_coefficient.data
+            salary_grade.base_salary = int(form.base_salary.data)
+            salary_grade.description = form.description.data
+            db.session.commit()
+            flash('Bậc lương đã được cập nhật thành công!', 'success')
+            return redirect(url_for('salary_grades'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Lỗi khi cập nhật bậc lương: {str(e)}', 'danger')
+    
+    return render_template('salary_grades/edit.html', form=form, salary_grade=salary_grade)
+
+
+@app.route('/salary-grades/<int:id>/delete', methods=['POST'])
+@admin_required
+def delete_salary_grade(id):
+    salary_grade = SalaryGrade.query.get_or_404(id)
+    
+    # Check if grade is being used
+    if EmployeeSalary.query.filter_by(salary_grade_id=id).count() > 0:
+        flash('Không thể xóa bậc lương vì đang được sử dụng cho nhân viên.', 'danger')
+        return redirect(url_for('salary_grades'))
+    
+    try:
+        db.session.delete(salary_grade)
+        db.session.commit()
+        flash('Bậc lương đã được xóa thành công!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Lỗi khi xóa bậc lương: {str(e)}', 'danger')
+        
+    return redirect(url_for('salary_grades'))
+
+
+# Employee Salary Management
+@app.route('/employee-salaries')
+@admin_required
+def employee_salaries():
+    salaries = db.session.query(
+        EmployeeSalary, 
+        Employee, 
+        SalaryGrade
+    ).join(
+        Employee, 
+        EmployeeSalary.employee_id == Employee.id
+    ).join(
+        SalaryGrade, 
+        EmployeeSalary.salary_grade_id == SalaryGrade.id
+    ).order_by(
+        desc(EmployeeSalary.effective_date)
+    ).all()
+    
+    return render_template('employee_salaries/index.html', salaries=salaries)
+
+
+@app.route('/employee-salaries/create', methods=['GET', 'POST'])
+@admin_required
+def create_employee_salary():
+    form = EmployeeSalaryForm()
+    if form.validate_on_submit() and form.validate_dates():
+        try:
+            employee_salary = EmployeeSalary(
+                employee_id=form.employee_id.data,
+                salary_grade_id=form.salary_grade_id.data,
+                effective_date=form.effective_date.data,
+                end_date=form.end_date.data,
+                additional_coefficient=form.additional_coefficient.data or 0,
+                reason=form.reason.data,
+                decision_number=form.decision_number.data
+            )
+            
+            # Đánh dấu các hồ sơ lương hiện có của nhân viên là kết thúc
+            if not form.end_date.data:
+                # Nếu không có ngày kết thúc, chúng ta cần cập nhật các hồ sơ hiện có
+                existing_salaries = EmployeeSalary.query.filter(
+                    EmployeeSalary.employee_id == form.employee_id.data,
+                    (EmployeeSalary.end_date.is_(None) | 
+                     (EmployeeSalary.end_date >= form.effective_date.data))
+                ).all()
+                
+                for existing in existing_salaries:
+                    # Cập nhật ngày kết thúc của hồ sơ hiện có
+                    existing.end_date = form.effective_date.data - timedelta(days=1)
+            
+            db.session.add(employee_salary)
+            db.session.commit()
+            flash('Thông tin lương mới của nhân viên đã được tạo thành công!', 'success')
+            return redirect(url_for('employee_salaries'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Lỗi khi tạo thông tin lương: {str(e)}', 'danger')
+    
+    return render_template('employee_salaries/create.html', form=form)
+
+
+@app.route('/employee-salaries/<int:id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_employee_salary(id):
+    employee_salary = EmployeeSalary.query.get_or_404(id)
+    form = EmployeeSalaryEditForm(obj=employee_salary)
+    
+    if form.validate_on_submit() and form.validate_dates():
+        try:
+            employee_salary.employee_id = form.employee_id.data
+            employee_salary.salary_grade_id = form.salary_grade_id.data
+            employee_salary.effective_date = form.effective_date.data
+            employee_salary.end_date = form.end_date.data
+            employee_salary.additional_coefficient = form.additional_coefficient.data or 0
+            employee_salary.reason = form.reason.data
+            employee_salary.decision_number = form.decision_number.data
+            
+            db.session.commit()
+            flash('Thông tin lương của nhân viên đã được cập nhật thành công!', 'success')
+            return redirect(url_for('employee_salaries'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Lỗi khi cập nhật thông tin lương: {str(e)}', 'danger')
+    
+    return render_template('employee_salaries/edit.html', form=form, employee_salary=employee_salary)
+
+
+@app.route('/employee-salaries/<int:id>/delete', methods=['POST'])
+@admin_required
+def delete_employee_salary(id):
+    employee_salary = EmployeeSalary.query.get_or_404(id)
+    
+    try:
+        db.session.delete(employee_salary)
+        db.session.commit()
+        flash('Thông tin lương đã được xóa thành công!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Lỗi khi xóa thông tin lương: {str(e)}', 'danger')
+        
+    return redirect(url_for('employee_salaries'))
+
+
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('errors/404.html'), 404
