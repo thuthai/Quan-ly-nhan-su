@@ -171,24 +171,156 @@ body {
     border: 1px solid var(--bs-border-color);
 }
 
-/* Fix for date picker */
+/* Enhanced date picker styles */
 input[type="date"], 
 input[type="datetime-local"] {
-    color: #212529 !important;
-    background-color: #fff !important;
+    color: var(--bs-body-color) !important;
+    background-color: var(--bs-body-bg) !important;
 }
 
+/* Flatpickr styles */
+.flatpickr-calendar {
+    background-color: var(--bs-body-bg) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+    border-radius: 10px !important;
+    border: none !important;
+    padding: 16px !important;
+}
+
+.flatpickr-day {
+    border-radius: 50% !important;
+    margin: 2px !important;
+    height: 38px !important;
+    line-height: 38px !important;
+    transition: all 0.2s ease !important;
+}
+
+.flatpickr-day:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
+    border-color: transparent !important;
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+    background-color: var(--bs-primary) !important;
+    border-color: var(--bs-primary) !important;
+    color: white !important;
+    font-weight: bold !important;
+    box-shadow: 0 4px 8px rgba(var(--bs-primary-rgb), 0.3) !important;
+    transform: scale(1.05) !important;
+}
+
+.flatpickr-day.today {
+    border-color: var(--bs-primary) !important;
+    color: var(--bs-primary) !important;
+    font-weight: bold !important;
+}
+
+.flatpickr-months .flatpickr-month,
+.flatpickr-current-month .flatpickr-monthDropdown-months,
+.flatpickr-current-month input.cur-year {
+    background-color: var(--bs-primary) !important;
+    color: white !important;
+    fill: white !important;
+    border-radius: 8px 8px 0 0 !important;
+    padding: 8px 0 !important;
+}
+
+.flatpickr-months {
+    background-color: var(--bs-primary) !important;
+    border-radius: 8px 8px 0 0 !important;
+    margin: -16px -16px 10px -16px !important;
+    padding: 8px 16px !important;
+}
+
+.flatpickr-weekdays {
+    margin-bottom: 10px !important;
+}
+
+.flatpickr-weekday {
+    color: var(--bs-secondary) !important;
+    font-weight: 600 !important;
+}
+
+.flatpickr-next-month, 
+.flatpickr-prev-month {
+    padding: 10px !important;
+    fill: white !important;
+}
+
+.flatpickr-next-month:hover, 
+.flatpickr-prev-month:hover {
+    fill: rgba(255, 255, 255, 0.8) !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 50% !important;
+}
+
+.flatpickr-next-month svg,
+.flatpickr-prev-month svg {
+    width: 16px !important;
+    height: 16px !important;
+}
+
+/* Input group styles for datepicker */
+.input-group .datepicker {
+    border-right: 0;
+}
+
+.input-group .datepicker:focus {
+    border-color: var(--bs-primary) !important;
+    box-shadow: none !important;
+}
+
+.input-group .datepicker-icon {
+    background-color: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-left: 0;
+    color: var(--bs-primary);
+    padding: 0.375rem 0.75rem;
+    border-radius: 0 0.25rem 0.25rem 0;
+}
+
+/* Support for dark mode */
+[data-bs-theme=dark] .flatpickr-calendar {
+    background-color: var(--bs-dark) !important;
+    color: var(--bs-light) !important;
+    border-color: var(--bs-border-color) !important;
+}
+
+[data-bs-theme=dark] .flatpickr-day {
+    color: var(--bs-light) !important;
+    border-color: transparent !important;
+}
+
+[data-bs-theme=dark] .flatpickr-day:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.2) !important;
+}
+
+[data-bs-theme=dark] .flatpickr-weekday {
+    color: var(--bs-gray-400) !important;
+}
+
+[data-bs-theme=dark] .flatpickr-day.today {
+    border-color: var(--bs-primary) !important;
+}
+
+/* Legacy datepicker styles (for backward compatibility) */
 .datepicker-dropdown,
 .ui-datepicker {
-    color: #212529 !important;
-    background-color: #ffffff !important;
+    color: var(--bs-body-color) !important;
+    background-color: var(--bs-body-bg) !important;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--bs-border-color) !important;
+    padding: 8px !important;
 }
 
 .datepicker table tr td,
 .datepicker table tr th,
 .ui-datepicker-calendar td a,
 .ui-datepicker-calendar th {
-    color: #212529 !important;
+    color: var(--bs-body-color) !important;
 }
 
 .datepicker table tr td.active,
@@ -196,4 +328,6 @@ input[type="datetime-local"] {
 .ui-datepicker-calendar td a.ui-state-active {
     color: #ffffff !important;
     background-color: var(--bs-primary) !important;
+    border-radius: 50% !important;
+    font-weight: bold !important;
 }

@@ -58,14 +58,20 @@
                 </div>
                 <div class="col-md-4">
                     <label for="date_of_birth" class="form-label">{{ form.date_of_birth.label }} <span class="text-danger">*</span></label>
-                    {{ form.date_of_birth(class="form-control datepicker", id="date_of_birth", placeholder="Chọn ngày sinh") }}
+                    <div class="input-group">
+                        {{ form.date_of_birth(class="form-control datepicker", id="date_of_birth", placeholder="Chọn ngày sinh") }}
+                        <span class="input-group-text datepicker-icon"><i class="bi bi-calendar-date"></i></span>
+                    </div>
                     {% for error in form.date_of_birth.errors %}
                         <div class="text-danger">{{ error }}</div>
                     {% endfor %}
                 </div>
                 <div class="col-md-4">
                     <label for="join_date" class="form-label">{{ form.join_date.label }} <span class="text-danger">*</span></label>
-                    {{ form.join_date(class="form-control datepicker", id="join_date", placeholder="Chọn ngày vào công ty") }}
+                    <div class="input-group">
+                        {{ form.join_date(class="form-control datepicker", id="join_date", placeholder="Chọn ngày vào công ty") }}
+                        <span class="input-group-text datepicker-icon"><i class="bi bi-calendar-date"></i></span>
+                    </div>
                     {% for error in form.join_date.errors %}
                         <div class="text-danger">{{ error }}</div>
                     {% endfor %}
@@ -82,7 +88,12 @@
                 </div>
                 <div class="col-md-6">
                     <label for="position" class="form-label">{{ form.position.label }}</label>
-                    {{ form.position(class="form-control", id="position", placeholder="Nhập chức vụ") }}
+                    <div class="input-group">
+                        {{ form.position(class="form-select", id="position") }}
+                        <button type="button" class="btn btn-outline-primary" id="btnAddNewPosition" data-bs-toggle="modal" data-bs-target="#addPositionModal">
+                            <i class="bi bi-plus-circle"></i> Thêm mới
+                        </button>
+                    </div>
                     {% for error in form.position.errors %}
                         <div class="text-danger">{{ error }}</div>
                     {% endfor %}
@@ -220,17 +231,126 @@
 </div>
 {% endblock %}
 
+<!-- Modal thêm chức vụ mới -->
+<div class="modal fade" id="addPositionModal" tabindex="-1" aria-labelledby="addPositionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addPositionModalLabel">
+                    <i class="bi bi-plus-circle me-2"></i>Thêm chức vụ mới
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newPositionForm">
+                    <div class="mb-3">
+                        <label for="newPositionName" class="form-label">Tên chức vụ <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="newPositionName" required>
+                        <div class="invalid-feedback" id="positionNameError"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newPositionDescription" class="form-label">Mô tả</label>
+                        <textarea class="form-control" id="newPositionDescription" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                <button type="button" class="btn btn-primary" id="saveNewPosition">Lưu chức vụ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize flatpickr datepickers
+        // Initialize flatpickr datepickers with enhanced UI
         flatpickr('.datepicker', {
             dateFormat: 'Y-m-d',
             locale: 'vn',
             altInput: true,
             altFormat: 'd/m/Y',
-            allowInput: true
+            allowInput: true,
+            disableMobile: true,
+            monthSelectorType: 'static',
+            animate: true,
+            showMonths: 1,
+            static: true,
+            position: "auto center",
+            wrap: true,
+            nextArrow: '<i class="bi bi-arrow-right-circle-fill"></i>',
+            prevArrow: '<i class="bi bi-arrow-left-circle-fill"></i>'
         });
+        
+        // Xử lý thêm chức vụ mới
+        const saveNewPositionBtn = document.getElementById('saveNewPosition');
+        if (saveNewPositionBtn) {
+            saveNewPositionBtn.addEventListener('click', function() {
+                const positionName = document.getElementById('newPositionName').value.trim();
+                const positionDescription = document.getElementById('newPositionDescription').value.trim();
+                const positionNameError = document.getElementById('positionNameError');
+                
+                // Kiểm tra dữ liệu nhập
+                if (!positionName) {
+                    positionNameError.textContent = 'Vui lòng nhập tên chức vụ';
+                    document.getElementById('newPositionName').classList.add('is-invalid');
+                    return;
+                }
+                
+                // Gửi request để tạo chức vụ mới
+                fetch('/api/positions/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: positionName,
+                        description: positionDescription
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Thêm chức vụ mới vào dropdown
+                        const positionSelect = document.getElementById('position');
+                        const option = new Option(data.position.name, data.position.name);
+                        positionSelect.add(option);
+                        
+                        // Chọn chức vụ mới thêm
+                        positionSelect.value = data.position.name;
+                        
+                        // Đóng modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('addPositionModal'));
+                        modal.hide();
+                        
+                        // Hiển thị thông báo thành công
+                        alert('Đã thêm chức vụ mới thành công!');
+                        
+                        // Reset form
+                        document.getElementById('newPositionForm').reset();
+                        document.getElementById('newPositionName').classList.remove('is-invalid');
+                    } else {
+                        positionNameError.textContent = data.message || 'Có lỗi xảy ra, vui lòng thử lại';
+                        document.getElementById('newPositionName').classList.add('is-invalid');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Có lỗi xảy ra khi thêm chức vụ mới. Vui lòng thử lại.');
+                });
+            });
+        }
+        
+        // Reset form khi đóng modal
+        const addPositionModal = document.getElementById('addPositionModal');
+        if (addPositionModal) {
+            addPositionModal.addEventListener('hidden.bs.modal', function() {
+                document.getElementById('newPositionForm').reset();
+                document.getElementById('newPositionName').classList.remove('is-invalid');
+                document.getElementById('positionNameError').textContent = '';
+            });
+        }
     });
 </script>
 {% endblock %}
