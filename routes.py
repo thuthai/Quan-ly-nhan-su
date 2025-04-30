@@ -9,7 +9,8 @@ import pandas as pd
 from app import app, db
 from models import User, Department, Employee, Attendance, LeaveRequest, CareerPath, Gender, EmployeeStatus, UserRole, LeaveStatus, LeaveType, Award, AwardType
 from forms import (LoginForm, RegisterForm, DepartmentForm, EmployeeForm, EmployeeEditForm, 
-                  LeaveRequestForm, CareerPathForm, AttendanceReportForm, EmployeeImportForm)
+                  LeaveRequestForm, CareerPathForm, AttendanceReportForm, EmployeeImportForm,
+                  AwardForm, AwardEditForm, EmployeeFilterForm)
 from utils import save_profile_image, export_employees_to_excel, export_attendance_to_excel, process_employee_import, create_sample_import_file
 
 
@@ -281,15 +282,27 @@ def delete_department(id):
 @app.route('/employees')
 @login_required
 def employees():
+    # Create the employee filter form
+    filter_form = EmployeeFilterForm(request.args)
+    
     # Get filter parameters
     search = request.args.get('search', '')
-    department_id = request.args.get('department', type=int)
-    status = request.args.get('status')
+    keyword = request.args.get('keyword', '')
+    department_id = request.args.get('department_id', type=int)
+    gender = request.args.get('gender', '')
+    status = request.args.get('status', '')
+    home_town = request.args.get('home_town', '')
+    age_min = request.args.get('age_min', '')
+    age_max = request.args.get('age_max', '')
+    join_date_from = request.args.get('join_date_from', '')
+    join_date_to = request.args.get('join_date_to', '')
+    education_level = request.args.get('education_level', '')
     
     query = Employee.query
     
     # Apply filters
     if search:
+        # Legacy search support
         query = query.filter(
             db.or_(
                 Employee.full_name.ilike(f'%{search}%'),
@@ -297,14 +310,75 @@ def employees():
             )
         )
     
-    if department_id:
+    if keyword:
+        # Advanced keyword search
+        query = query.filter(
+            db.or_(
+                Employee.full_name.ilike(f'%{keyword}%'),
+                Employee.employee_code.ilike(f'%{keyword}%'),
+                Employee.position.ilike(f'%{keyword}%'),
+                Employee.skills.ilike(f'%{keyword}%'),
+                Employee.email.ilike(f'%{keyword}%')
+            )
+        )
+    
+    if department_id and department_id > 0:
         query = query.filter_by(department_id=department_id)
+    
+    if gender:
+        query = query.filter_by(gender=Gender[gender])
     
     if status:
         query = query.filter_by(status=EmployeeStatus[status])
+        
+    if home_town:
+        query = query.filter(Employee.home_town.ilike(f'%{home_town}%'))
     
+    # Filter by age
+    if age_min:
+        try:
+            min_age = int(age_min)
+            # Calculate the date for this age
+            max_birth_date = date.today().replace(year=date.today().year - min_age)
+            query = query.filter(Employee.date_of_birth <= max_birth_date)
+        except ValueError:
+            pass
+    
+    if age_max:
+        try:
+            max_age = int(age_max)
+            # Calculate the date for this age
+            min_birth_date = date.today().replace(year=date.today().year - max_age - 1)
+            min_birth_date = min_birth_date.replace(year=min_birth_date.year + 1)
+            query = query.filter(Employee.date_of_birth >= min_birth_date)
+        except ValueError:
+            pass
+    
+    # Filter by join date
+    if join_date_from:
+        try:
+            from_date = datetime.strptime(join_date_from, '%Y-%m-%d').date()
+            query = query.filter(Employee.join_date >= from_date)
+        except ValueError:
+            pass
+    
+    if join_date_to:
+        try:
+            to_date = datetime.strptime(join_date_to, '%Y-%m-%d').date()
+            query = query.filter(Employee.join_date <= to_date)
+        except ValueError:
+            pass
+            
+    if education_level:
+        query = query.filter(Employee.education_level.ilike(f'%{education_level}%'))
+    
+    # Get all employees with filters applied
     employees = query.all()
+    
+    # Get all departments for filter dropdown
     departments = Department.query.all()
+    
+    # Get all statuses for filter dropdown
     statuses = [(s.name, s.value) for s in EmployeeStatus]
     
     return render_template(
@@ -313,8 +387,17 @@ def employees():
         departments=departments,
         statuses=statuses,
         search=search,
+        filter_form=filter_form,
         department_id=department_id,
-        status=status
+        status=status,
+        keyword=keyword,
+        gender=gender,
+        home_town=home_town,
+        age_min=age_min,
+        age_max=age_max,
+        join_date_from=join_date_from,
+        join_date_to=join_date_to,
+        education_level=education_level
     )
 
 

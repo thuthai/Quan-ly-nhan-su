@@ -102,15 +102,46 @@ function handleSearch(formId, resetBtn = true) {
   const form = document.getElementById(formId);
   if (!form) return;
   
-  const searchInput = form.querySelector('input[name="search"]');
-  const clearButton = form.querySelector('.btn-clear-search');
+  // Handle clear search button
+  if (resetBtn) {
+    const clearBtn = form.querySelector('.btn-clear-search');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        // Clear all input fields except submit buttons
+        form.querySelectorAll('input, select').forEach(input => {
+          if (input.type !== 'submit' && input.type !== 'button') {
+            if (input.type === 'checkbox' || input.type === 'radio') {
+              input.checked = false;
+            } else {
+              input.value = '';
+            }
+          }
+        });
+        
+        // Submit the form
+        form.submit();
+      });
+    }
+  }
   
-  if (clearButton && resetBtn) {
-    clearButton.addEventListener('click', function(e) {
-      e.preventDefault();
-      searchInput.value = '';
-      form.submit();
+  // Auto-expand advanced filter if any advanced filter is set
+  const advancedFilterContainer = document.getElementById('advancedFilterForm');
+  if (advancedFilterContainer) {
+    let hasAdvancedFilter = false;
+    
+    // Check if any advanced filters are set
+    ['gender', 'home_town', 'education_level', 'age_min', 'age_max', 'join_date_from', 'join_date_to'].forEach(filterName => {
+      const input = form.querySelector(`[name="${filterName}"]`);
+      if (input && input.value) {
+        hasAdvancedFilter = true;
+      }
     });
+    
+    // If any advanced filter is set, expand the section
+    if (hasAdvancedFilter) {
+      advancedFilterContainer.classList.add('show');
+    }
   }
 }
 
