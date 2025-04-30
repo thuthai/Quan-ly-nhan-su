@@ -405,12 +405,15 @@ body, p, span, div, a, li, td, th, label, input, select, textarea, button, h1, h
 
 .dashboard-chart {
     height: 280px;
+    max-height: 280px;
     margin-top: 1rem;
     position: relative;
+    overflow: hidden;
 }
 
 canvas {
     max-width: 100%;
+    max-height: 280px;
 }
 
 /* Button styles */
