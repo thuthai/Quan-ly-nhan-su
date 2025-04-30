@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SelectField, DateField, TextAreaField, FloatField, FileField, HiddenField, BooleanField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, ValidationError
-from models import Gender, EmployeeStatus, LeaveType, Department, User, Employee, AwardType, VIETNAM_PROVINCES
+from models import Gender, EmployeeStatus, LeaveType, Department, User, Employee, AwardType, VIETNAM_PROVINCES, SalaryGrade
 from flask_wtf.file import FileAllowed
 from datetime import date
 
@@ -209,3 +209,62 @@ class EmployeeFilterForm(FlaskForm):
                 self.join_date_to.errors.append('Ngày kết thúc phải sau ngày bắt đầu.')
                 return False
         return True
+
+
+class SalaryGradeForm(FlaskForm):
+    code = StringField('Mã bậc lương', validators=[DataRequired(message='Vui lòng nhập mã bậc lương')])
+    name = StringField('Tên bậc lương', validators=[DataRequired(message='Vui lòng nhập tên bậc lương')])
+    base_coefficient = FloatField('Hệ số cơ bản', validators=[DataRequired(message='Vui lòng nhập hệ số cơ bản')])
+    base_salary = StringField('Lương cơ sở', validators=[DataRequired(message='Vui lòng nhập lương cơ sở')])
+    description = TextAreaField('Mô tả', validators=[Optional()])
+    
+    def validate_code(self, code):
+        grade = SalaryGrade.query.filter_by(code=code.data).first()
+        if grade and (not hasattr(self, 'salary_grade_id') or grade.id != int(self.salary_grade_id.data)):
+            raise ValidationError('Mã bậc lương đã tồn tại.')
+    
+    def validate_base_coefficient(self, base_coefficient):
+        if base_coefficient.data and base_coefficient.data <= 0:
+            raise ValidationError('Hệ số cơ bản phải lớn hơn 0.')
+    
+    def validate_base_salary(self, base_salary):
+        try:
+            value = int(base_salary.data)
+            if value <= 0:
+                raise ValidationError('Lương cơ sở phải lớn hơn 0.')
+        except ValueError:
+            raise ValidationError('Lương cơ sở phải là một số nguyên.')
+
+
+class SalaryGradeEditForm(SalaryGradeForm):
+    salary_grade_id = HiddenField('ID')
+
+
+class EmployeeSalaryForm(FlaskForm):
+    employee_id = SelectField('Nhân viên', coerce=int, validators=[DataRequired(message='Vui lòng chọn nhân viên')])
+    salary_grade_id = SelectField('Bậc lương', coerce=int, validators=[DataRequired(message='Vui lòng chọn bậc lương')])
+    effective_date = DateField('Ngày hiệu lực', validators=[DataRequired(message='Vui lòng chọn ngày hiệu lực')])
+    end_date = DateField('Ngày kết thúc', validators=[Optional()])
+    additional_coefficient = FloatField('Hệ số phụ cấp', validators=[Optional()], default=0)
+    reason = TextAreaField('Lý do', validators=[Optional()])
+    decision_number = StringField('Số quyết định', validators=[Optional()])
+    
+    def __init__(self, *args, **kwargs):
+        super(EmployeeSalaryForm, self).__init__(*args, **kwargs)
+        self.employee_id.choices = [(e.id, f"{e.employee_code} - {e.full_name}") for e in Employee.query.filter_by(status=EmployeeStatus.ACTIVE).all()]
+        self.salary_grade_id.choices = [(g.id, f"{g.code} - {g.name} (Hệ số: {g.base_coefficient})") for g in SalaryGrade.query.all()]
+    
+    def validate_dates(self):
+        if self.effective_date.data and self.end_date.data:
+            if self.effective_date.data > self.end_date.data:
+                self.end_date.errors.append('Ngày kết thúc phải sau ngày hiệu lực.')
+                return False
+        return True
+    
+    def validate_additional_coefficient(self, additional_coefficient):
+        if additional_coefficient.data and additional_coefficient.data < 0:
+            raise ValidationError('Hệ số phụ cấp không được âm.')
+
+
+class EmployeeSalaryEditForm(EmployeeSalaryForm):
+    salary_id = HiddenField('ID')

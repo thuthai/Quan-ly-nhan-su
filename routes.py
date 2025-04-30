@@ -5,12 +5,14 @@ from datetime import datetime, date, timedelta
 import os
 import json
 import pandas as pd
+from sqlalchemy import func, desc
 
 from app import app, db
-from models import User, Department, Employee, Attendance, LeaveRequest, CareerPath, Gender, EmployeeStatus, UserRole, LeaveStatus, LeaveType, Award, AwardType
+from models import User, Department, Employee, Attendance, LeaveRequest, CareerPath, Gender, EmployeeStatus, UserRole, LeaveStatus, LeaveType, Award, AwardType, SalaryGrade, EmployeeSalary
 from forms import (LoginForm, RegisterForm, DepartmentForm, EmployeeForm, EmployeeEditForm, 
                   LeaveRequestForm, CareerPathForm, AttendanceReportForm, EmployeeImportForm,
-                  AwardForm, AwardEditForm, EmployeeFilterForm)
+                  AwardForm, AwardEditForm, EmployeeFilterForm, 
+                  SalaryGradeForm, SalaryGradeEditForm, EmployeeSalaryForm, EmployeeSalaryEditForm)
 from utils import save_profile_image, export_employees_to_excel, export_attendance_to_excel, process_employee_import, create_sample_import_file
 
 

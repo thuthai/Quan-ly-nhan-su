@@ -213,3 +213,56 @@ class Award(db.Model):
     
     def __repr__(self):
         return f'<Award {self.name} - {self.year}>'
+        
+
+class SalaryGrade(db.Model):
+    """Bậc lương và hệ số lương"""
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(20), unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    base_coefficient = db.Column(db.Float, nullable=False)
+    base_salary = db.Column(db.Integer, nullable=False, default=1490000)  # Lương cơ sở mặc định
+    description = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Mối quan hệ với bảng nhân viên
+    employees = db.relationship('EmployeeSalary', backref='salary_grade', lazy=True)
+    
+    def __repr__(self):
+        return f'<SalaryGrade {self.code} - {self.name}>'
+        
+    @property
+    def calculated_salary(self):
+        """Tính toán mức lương dựa trên hệ số và lương cơ sở"""
+        return int(self.base_coefficient * self.base_salary)
+
+
+class EmployeeSalary(db.Model):
+    """Lưu trữ lịch sử áp dụng bậc lương cho nhân viên"""
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
+    salary_grade_id = db.Column(db.Integer, db.ForeignKey('salary_grade.id'), nullable=False)
+    effective_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date)
+    additional_coefficient = db.Column(db.Float, default=0)  # Hệ số phụ cấp thêm
+    reason = db.Column(db.Text)
+    decision_number = db.Column(db.String(50))  # Số quyết định
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Mối quan hệ với bảng nhân viên
+    employee = db.relationship('Employee', backref='salary_history', lazy=True)
+    
+    def __repr__(self):
+        return f'<EmployeeSalary {self.employee_id} - {self.salary_grade_id}>'
+        
+    @property
+    def total_coefficient(self):
+        """Tổng hệ số lương (hệ số cơ bản + hệ số phụ cấp)"""
+        return self.salary_grade.base_coefficient + self.additional_coefficient
+        
+    @property
+    def calculated_salary(self):
+        """Tính toán mức lương dựa trên tổng hệ số và lương cơ sở"""
+        return int(self.total_coefficient * self.salary_grade.base_salary)
