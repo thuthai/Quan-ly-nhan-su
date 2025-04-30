@@ -332,7 +332,7 @@ def employees():
         query = query.filter_by(status=EmployeeStatus[status])
         
     if home_town:
-        query = query.filter(Employee.home_town.ilike(f'%{home_town}%'))
+        query = query.filter(Employee.home_town == home_town)
     
     # Filter by age
     if age_min:
@@ -381,6 +381,39 @@ def employees():
     # Get all statuses for filter dropdown
     statuses = [(s.name, s.value) for s in EmployeeStatus]
     
+    # Tính toán dữ liệu thống kê
+    # 1. Thống kê theo giới tính
+    gender_stats = {}
+    for g in Gender:
+        gender_stats[g.value] = len([e for e in employees if e.gender == g])
+    
+    # 2. Thống kê theo trình độ học vấn
+    education_stats = {}
+    all_education_levels = db.session.query(Employee.education_level).distinct().all()
+    for level in all_education_levels:
+        if level[0]:  # Kiểm tra không phải None hoặc chuỗi rỗng
+            education_stats[level[0]] = len([e for e in employees if e.education_level == level[0]])
+    
+    # 3. Thống kê theo độ tuổi
+    age_groups = {
+        "Dưới 25 tuổi": 0,
+        "25-35 tuổi": 0,
+        "36-45 tuổi": 0,
+        "Trên 45 tuổi": 0
+    }
+    
+    for employee in employees:
+        if employee.date_of_birth:
+            age = date.today().year - employee.date_of_birth.year
+            if age < 25:
+                age_groups["Dưới 25 tuổi"] += 1
+            elif age <= 35:
+                age_groups["25-35 tuổi"] += 1
+            elif age <= 45:
+                age_groups["36-45 tuổi"] += 1
+            else:
+                age_groups["Trên 45 tuổi"] += 1
+    
     return render_template(
         'employees/index.html', 
         employees=employees, 
@@ -397,7 +430,11 @@ def employees():
         age_max=age_max,
         join_date_from=join_date_from,
         join_date_to=join_date_to,
-        education_level=education_level
+        education_level=education_level,
+        # Truyền dữ liệu thống kê cho template
+        gender_stats=gender_stats,
+        education_stats=education_stats,
+        age_groups=age_groups
     )
 
 

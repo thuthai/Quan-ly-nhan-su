@@ -91,7 +91,14 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Quê quán</label>
-                            <input type="text" class="form-control" name="home_town" value="{{ home_town }}" placeholder="Nhập quê quán">
+                            <select name="home_town" class="form-select">
+                                <option value="">Tất cả tỉnh thành</option>
+                                {% for province in filter_form.home_town.choices %}
+                                    {% if province[0] != '' %}
+                                    <option value="{{ province[0] }}" {% if home_town == province[0] %}selected{% endif %}>{{ province[1] }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Trình độ học vấn</label>

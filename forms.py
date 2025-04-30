@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SelectField, DateField, TextAreaField, FloatField, FileField, HiddenField, BooleanField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, ValidationError
-from models import Gender, EmployeeStatus, LeaveType, Department, User, Employee, AwardType
+from models import Gender, EmployeeStatus, LeaveType, Department, User, Employee, AwardType, VIETNAM_PROVINCES
 from flask_wtf.file import FileAllowed
 from datetime import date
 
@@ -38,7 +38,7 @@ class EmployeeForm(FlaskForm):
     full_name = StringField('Họ và tên', validators=[DataRequired(message='Vui lòng nhập họ và tên')])
     gender = SelectField('Giới tính', choices=[(g.name, g.value) for g in Gender], validators=[DataRequired(message='Vui lòng chọn giới tính')])
     date_of_birth = DateField('Ngày sinh', validators=[DataRequired(message='Vui lòng nhập ngày sinh')])
-    home_town = StringField('Quê quán', validators=[Optional()])
+    home_town = SelectField('Quê quán', validators=[Optional()])
     address = StringField('Địa chỉ', validators=[Optional()])
     phone_number = StringField('Số điện thoại', validators=[Optional()])
     email = StringField('Email', validators=[DataRequired(message='Vui lòng nhập email'), Email(message='Email không hợp lệ')])
@@ -170,7 +170,7 @@ class EmployeeFilterForm(FlaskForm):
     department_id = SelectField('Phòng ban', coerce=int, validators=[Optional()])
     gender = SelectField('Giới tính', validators=[Optional()])
     status = SelectField('Trạng thái', validators=[Optional()])
-    home_town = StringField('Quê quán', validators=[Optional()])
+    home_town = SelectField('Quê quán', validators=[Optional()])
     age_min = StringField('Tuổi từ', validators=[Optional()])
     age_max = StringField('Đến', validators=[Optional()])
     join_date_from = DateField('Ngày vào làm từ', validators=[Optional()])
@@ -182,6 +182,7 @@ class EmployeeFilterForm(FlaskForm):
         self.department_id.choices = [(0, 'Tất cả phòng ban')] + [(d.id, d.name) for d in Department.query.all()]
         self.gender.choices = [('', 'Tất cả')] + [(g.name, g.value) for g in Gender]
         self.status.choices = [('', 'Tất cả')] + [(s.name, s.value) for s in EmployeeStatus]
+        self.home_town.choices = [('', 'Tất cả tỉnh thành')] + [(province, province) for province in VIETNAM_PROVINCES]
         
     def validate_age_min(self, age_min):
         if age_min.data:
