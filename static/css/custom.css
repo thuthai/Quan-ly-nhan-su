@@ -4,10 +4,12 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    background-color: #ffffff;
 }
 
 .content {
     flex: 1;
+    background-color: #ffffff;
 }
 
 .footer {
