@@ -1,0 +1,75 @@
+{% extends "layout.html" %}
+
+{% block title %}Chỉnh sửa tiêu chí đánh giá{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h2 class="h5 mb-0">Chỉnh sửa tiêu chí đánh giá hiệu suất</h2>
+        </div>
+        <div class="card-body">
+            <form method="POST" class="row g-3 needs-validation" novalidate>
+                {{ form.hidden_tag() }}
+                
+                <div class="col-md-6">
+                    <label for="name" class="form-label">{{ form.name.label }} <span class="text-danger">*</span></label>
+                    {{ form.name(class="form-control", id="name", placeholder="Nhập tên tiêu chí") }}
+                    {% for error in form.name.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="col-md-3">
+                    <label for="max_score" class="form-label">{{ form.max_score.label }} <span class="text-danger">*</span></label>
+                    {{ form.max_score(class="form-control", id="max_score", placeholder="Nhập điểm tối đa") }}
+                    {% for error in form.max_score.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="col-md-3">
+                    <label for="weight" class="form-label">{{ form.weight.label }} <span class="text-danger">*</span></label>
+                    {{ form.weight(class="form-control", id="weight", placeholder="Nhập trọng số") }}
+                    {% for error in form.weight.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="col-md-6">
+                    <label for="department_id" class="form-label">{{ form.department_id.label }}</label>
+                    {{ form.department_id(class="form-select", id="department_id") }}
+                    {% for error in form.department_id.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                    <div class="form-text">Chọn "Tất cả phòng ban" nếu tiêu chí này áp dụng cho mọi phòng ban</div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-check form-switch mt-4">
+                        {{ form.is_active(class="form-check-input", id="is_active") }}
+                        <label class="form-check-label" for="is_active">{{ form.is_active.label }}</label>
+                    </div>
+                </div>
+                
+                <div class="col-12">
+                    <label for="description" class="form-label">{{ form.description.label }}</label>
+                    {{ form.description(class="form-control", id="description", rows="3", placeholder="Nhập mô tả chi tiết về tiêu chí") }}
+                    {% for error in form.description.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="d-flex justify-content-between mt-3">
+                    <a href="{{ url_for('performance_criteria') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Quay lại
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i>Cập nhật tiêu chí
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

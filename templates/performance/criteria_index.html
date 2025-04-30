@@ -1,0 +1,116 @@
+{% extends "layout.html" %}
+
+{% block title %}Quản lý tiêu chí đánh giá hiệu suất{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Quản lý tiêu chí đánh giá hiệu suất</h2>
+        <a href="{{ url_for('create_performance_criteria') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Thêm tiêu chí mới
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="criteria-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Tên tiêu chí</th>
+                            <th scope="col">Điểm tối đa</th>
+                            <th scope="col">Trọng số</th>
+                            <th scope="col">Phòng ban</th>
+                            <th scope="col">Trạng thái</th>
+                            <th scope="col">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for criteria in criterias %}
+                        <tr>
+                            <td>{{ criteria.id }}</td>
+                            <td>{{ criteria.name }}</td>
+                            <td>{{ criteria.max_score }}</td>
+                            <td>{{ criteria.weight }}</td>
+                            <td>
+                                {% if criteria.department %}
+                                    {{ criteria.department.name }}
+                                {% else %}
+                                    Tất cả phòng ban
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if criteria.is_active %}
+                                    <span class="badge bg-success">Kích hoạt</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Không kích hoạt</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{{ url_for('edit_performance_criteria', id=criteria.id) }}" class="btn btn-outline-primary">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger" 
+                                            data-bs-toggle="modal" data-bs-target="#deleteCriteriaModal{{ criteria.id }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Modal xác nhận xóa -->
+                                <div class="modal fade" id="deleteCriteriaModal{{ criteria.id }}" tabindex="-1" aria-labelledby="deleteCriteriaModalLabel{{ criteria.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="deleteCriteriaModalLabel{{ criteria.id }}">Xác nhận xóa</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                Bạn có chắc chắn muốn xóa tiêu chí <strong>"{{ criteria.name }}"</strong> không?
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                                <a href="{{ url_for('delete_performance_criteria', id=criteria.id) }}" class="btn btn-danger">Xóa</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center">Chưa có tiêu chí đánh giá nào được tạo</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        $('#criteria-table').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/vi.json'
+            },
+            order: [[0, 'desc']]
+        });
+    });
+</script>
+{% endblock %}

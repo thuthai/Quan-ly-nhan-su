@@ -1,0 +1,183 @@
+{% extends "layout.html" %}
+
+{% block title %}Đánh giá hiệu suất nhân viên{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Đánh giá hiệu suất nhân viên</h2>
+        <a href="{{ url_for('create_performance_evaluation') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Tạo đánh giá mới
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Bộ lọc</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('performance_evaluations') }}" class="row g-3">
+                <div class="col-md-3">
+                    {{ filter_form.employee_id.label(class="form-label") }}
+                    {{ filter_form.employee_id(class="form-select") }}
+                </div>
+                <div class="col-md-3">
+                    {{ filter_form.evaluation_period.label(class="form-label") }}
+                    {{ filter_form.evaluation_period(class="form-select") }}
+                </div>
+                <div class="col-md-3">
+                    {{ filter_form.status.label(class="form-label") }}
+                    {{ filter_form.status(class="form-select") }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label d-block">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search me-1"></i>Lọc dữ liệu
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    {{ filter_form.start_date.label(class="form-label") }}
+                    {{ filter_form.start_date(class="form-control datepicker") }}
+                </div>
+                <div class="col-md-3">
+                    {{ filter_form.end_date.label(class="form-label") }}
+                    {{ filter_form.end_date(class="form-control datepicker") }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label d-block">&nbsp;</label>
+                    <a href="{{ url_for('performance_evaluations') }}" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-x-lg me-1"></i>Xóa bộ lọc
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="evaluations-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Nhân viên</th>
+                            <th scope="col">Kỳ đánh giá</th>
+                            <th scope="col">Thời gian</th>
+                            <th scope="col">Điểm</th>
+                            <th scope="col">Trạng thái</th>
+                            <th scope="col">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for evaluation in evaluations %}
+                        <tr>
+                            <td>{{ evaluation.id }}</td>
+                            <td>
+                                <a href="{{ url_for('view_employee', id=evaluation.employee.id) }}" class="text-decoration-none">
+                                    {{ evaluation.employee.full_name }}
+                                </a>
+                                <div class="small text-muted">{{ evaluation.employee.employee_code }}</div>
+                            </td>
+                            <td>{{ evaluation.evaluation_period.value }}</td>
+                            <td>{{ evaluation.start_date.strftime('%d/%m/%Y') }} - {{ evaluation.end_date.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                {% if evaluation.overall_score %}
+                                    <span class="fw-bold">{{ "%.1f"|format(evaluation.overall_score) }}</span>/10
+                                {% else %}
+                                    <span class="text-muted">Chưa có điểm</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if evaluation.status.name == 'DRAFT' %}
+                                    <span class="badge bg-secondary">{{ evaluation.status.value }}</span>
+                                {% elif evaluation.status.name == 'SUBMITTED' %}
+                                    <span class="badge bg-info">{{ evaluation.status.value }}</span>
+                                {% elif evaluation.status.name == 'MANAGER_REVIEWED' %}
+                                    <span class="badge bg-warning">{{ evaluation.status.value }}</span>
+                                {% elif evaluation.status.name == 'COMPLETED' %}
+                                    <span class="badge bg-success">{{ evaluation.status.value }}</span>
+                                {% elif evaluation.status.name == 'CANCELLED' %}
+                                    <span class="badge bg-danger">{{ evaluation.status.value }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{{ url_for('view_performance_evaluation', id=evaluation.id) }}" class="btn btn-outline-info" title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('edit_performance_evaluation', id=evaluation.id) }}" class="btn btn-outline-primary" title="Chỉnh sửa">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger" title="Xóa"
+                                            data-bs-toggle="modal" data-bs-target="#deleteEvaluationModal{{ evaluation.id }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Modal xác nhận xóa -->
+                                <div class="modal fade" id="deleteEvaluationModal{{ evaluation.id }}" tabindex="-1" aria-labelledby="deleteEvaluationModalLabel{{ evaluation.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="deleteEvaluationModalLabel{{ evaluation.id }}">Xác nhận xóa</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Bạn có chắc chắn muốn xóa đánh giá hiệu suất của nhân viên <strong>{{ evaluation.employee.full_name }}</strong> không?</p>
+                                                <p class="text-danger">Lưu ý: Hành động này không thể hoàn tác.</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                                <a href="{{ url_for('delete_performance_evaluation', id=evaluation.id) }}" class="btn btn-danger">Xóa</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center">Chưa có đánh giá hiệu suất nào được tạo</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize datepickers
+        flatpickr('.datepicker', {
+            dateFormat: 'Y-m-d',
+            locale: 'vn',
+            altInput: true,
+            altFormat: 'd/m/Y',
+            allowInput: true
+        });
+        
+        // Initialize DataTable
+        $('#evaluations-table').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/vi.json'
+            },
+            order: [[0, 'desc']]
+        });
+    });
+</script>
+{% endblock %}

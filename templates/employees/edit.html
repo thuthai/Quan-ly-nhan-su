@@ -152,14 +152,14 @@
                     {% endfor %}
                 </div>
                 <div class="col-md-3">
-                    <label for="contract_start_date" class="form-label">{{ form.contract_start_date.label }}</label>
+                    <label for="contract_start_date" class="form-label">Ngày bắt đầu hợp đồng</label>
                     {{ form.contract_start_date(class="form-control datepicker", id="contract_start_date", placeholder="Chọn ngày bắt đầu") }}
                     {% for error in form.contract_start_date.errors %}
                         <div class="text-danger">{{ error }}</div>
                     {% endfor %}
                 </div>
                 <div class="col-md-3">
-                    <label for="contract_end_date" class="form-label">{{ form.contract_end_date.label }}</label>
+                    <label for="contract_end_date" class="form-label">Ngày kết thúc hợp đồng</label>
                     {{ form.contract_end_date(class="form-control datepicker", id="contract_end_date", placeholder="Chọn ngày kết thúc") }}
                     {% for error in form.contract_end_date.errors %}
                         <div class="text-danger">{{ error }}</div>

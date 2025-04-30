@@ -2,7 +2,8 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SelectField, DateField, DateTimeField, TextAreaField, FloatField, FileField, HiddenField, BooleanField, SelectMultipleField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, ValidationError
 from models import (Gender, EmployeeStatus, LeaveType, Department, User, Employee, 
-              AwardType, EducationLevel, VIETNAM_PROVINCES, SalaryGrade, WorkScheduleType, WorkScheduleStatus)
+              AwardType, EducationLevel, VIETNAM_PROVINCES, SalaryGrade, WorkScheduleType, WorkScheduleStatus,
+              PerformanceRatingPeriod, PerformanceRatingStatus, PerformanceEvaluationCriteria)
 from flask_wtf.file import FileAllowed
 from datetime import date, datetime, timedelta
 
@@ -270,3 +271,154 @@ class EmployeeSalaryForm(FlaskForm):
 
 class EmployeeSalaryEditForm(EmployeeSalaryForm):
     salary_id = HiddenField('ID')
+
+
+class WorkScheduleForm(FlaskForm):
+    """Form tạo lịch công tác"""
+    title = StringField('Tiêu đề', validators=[DataRequired(message='Vui lòng nhập tiêu đề')])
+    description = TextAreaField('Mô tả', validators=[Optional()])
+    schedule_type = SelectField('Loại lịch công tác', choices=[(t.name, t.value) for t in WorkScheduleType], validators=[DataRequired(message='Vui lòng chọn loại lịch công tác')])
+    location = StringField('Địa điểm', validators=[DataRequired(message='Vui lòng nhập địa điểm')])
+    start_time = DateTimeField('Thời gian bắt đầu', format='%Y-%m-%dT%H:%M', validators=[DataRequired(message='Vui lòng chọn thời gian bắt đầu')])
+    end_time = DateTimeField('Thời gian kết thúc', format='%Y-%m-%dT%H:%M', validators=[DataRequired(message='Vui lòng chọn thời gian kết thúc')])
+    participants = SelectMultipleField('Người tham gia', coerce=int, validators=[DataRequired(message='Vui lòng chọn ít nhất một người tham gia')])
+    
+    def __init__(self, *args, **kwargs):
+        super(WorkScheduleForm, self).__init__(*args, **kwargs)
+        self.participants.choices = [(e.id, f"{e.employee_code} - {e.full_name}") for e in Employee.query.filter_by(status=EmployeeStatus.ACTIVE).all()]
+    
+    def validate_end_time(self, end_time):
+        if self.start_time.data and end_time.data:
+            if self.start_time.data >= end_time.data:
+                raise ValidationError('Thời gian kết thúc phải sau thời gian bắt đầu.')
+
+
+class WorkScheduleEditForm(WorkScheduleForm):
+    """Form chỉnh sửa lịch công tác"""
+    schedule_id = HiddenField('ID')
+
+
+class WorkScheduleApprovalForm(FlaskForm):
+    """Form phê duyệt lịch công tác"""
+    status = SelectField('Trạng thái', choices=[(s.name, s.value) for s in WorkScheduleStatus if s != WorkScheduleStatus.PENDING], validators=[DataRequired(message='Vui lòng chọn trạng thái')])
+    feedback = TextAreaField('Phản hồi', validators=[Optional()])
+
+
+class WorkScheduleFilterForm(FlaskForm):
+    """Form lọc lịch công tác"""
+    keyword = StringField('Từ khóa', validators=[Optional()])
+    schedule_type = SelectField('Loại lịch công tác', validators=[Optional()])
+    status = SelectField('Trạng thái', validators=[Optional()])
+    start_date = DateField('Từ ngày', validators=[Optional()])
+    end_date = DateField('Đến ngày', validators=[Optional()])
+    
+    def __init__(self, *args, **kwargs):
+        super(WorkScheduleFilterForm, self).__init__(*args, **kwargs)
+        self.schedule_type.choices = [('', 'Tất cả loại')] + [(t.name, t.value) for t in WorkScheduleType]
+        self.status.choices = [('', 'Tất cả trạng thái')] + [(s.name, s.value) for s in WorkScheduleStatus]
+    
+    def validate_dates(self):
+        if self.start_date.data and self.end_date.data:
+            if self.start_date.data > self.end_date.data:
+                self.end_date.errors.append('Ngày kết thúc phải sau ngày bắt đầu.')
+                return False
+        return True
+
+
+class PerformanceCriteriaForm(FlaskForm):
+    """Form tạo tiêu chí đánh giá hiệu suất"""
+    name = StringField('Tên tiêu chí', validators=[DataRequired(message='Vui lòng nhập tên tiêu chí')])
+    description = TextAreaField('Mô tả', validators=[Optional()])
+    max_score = StringField('Điểm tối đa', validators=[DataRequired(message='Vui lòng nhập điểm tối đa')], default='10')
+    weight = FloatField('Trọng số', validators=[DataRequired(message='Vui lòng nhập trọng số')], default=1.0)
+    department_id = SelectField('Áp dụng cho phòng ban', coerce=int, validators=[Optional()])
+    is_active = BooleanField('Kích hoạt', default=True)
+    
+    def __init__(self, *args, **kwargs):
+        super(PerformanceCriteriaForm, self).__init__(*args, **kwargs)
+        self.department_id.choices = [(0, 'Tất cả phòng ban')] + [(d.id, d.name) for d in Department.query.all()]
+    
+    def validate_max_score(self, max_score):
+        try:
+            score = int(max_score.data)
+            if score <= 0:
+                raise ValidationError('Điểm tối đa phải là số nguyên dương.')
+        except ValueError:
+            raise ValidationError('Điểm tối đa phải là số nguyên.')
+    
+    def validate_weight(self, weight):
+        if weight.data <= 0:
+            raise ValidationError('Trọng số phải lớn hơn 0.')
+
+
+class PerformanceEvaluationForm(FlaskForm):
+    """Form tạo đánh giá hiệu suất nhân viên"""
+    employee_id = SelectField('Nhân viên', coerce=int, validators=[DataRequired(message='Vui lòng chọn nhân viên')])
+    evaluation_period = SelectField('Kỳ đánh giá', choices=[(p.name, p.value) for p in PerformanceRatingPeriod], validators=[DataRequired(message='Vui lòng chọn kỳ đánh giá')])
+    start_date = DateField('Từ ngày', validators=[DataRequired(message='Vui lòng chọn ngày bắt đầu')])
+    end_date = DateField('Đến ngày', validators=[DataRequired(message='Vui lòng chọn ngày kết thúc')])
+    comments = TextAreaField('Nhận xét tổng quát', validators=[Optional()])
+    strengths = TextAreaField('Điểm mạnh', validators=[Optional()])
+    areas_for_improvement = TextAreaField('Lĩnh vực cần cải thiện', validators=[Optional()])
+    goals_for_next_period = TextAreaField('Mục tiêu cho kỳ tiếp theo', validators=[Optional()])
+    
+    def __init__(self, *args, **kwargs):
+        super(PerformanceEvaluationForm, self).__init__(*args, **kwargs)
+        self.employee_id.choices = [(e.id, f"{e.employee_code} - {e.full_name}") for e in Employee.query.filter_by(status=EmployeeStatus.ACTIVE).all()]
+    
+    def validate_dates(self):
+        if self.start_date.data and self.end_date.data:
+            if self.start_date.data > self.end_date.data:
+                self.end_date.errors.append('Ngày kết thúc phải sau ngày bắt đầu.')
+                return False
+        return True
+
+
+class PerformanceCriteriaScoreForm(FlaskForm):
+    """Form điền điểm cho tiêu chí"""
+    score = FloatField('Điểm số', validators=[Optional()])
+    comments = TextAreaField('Nhận xét', validators=[Optional()])
+    
+    def __init__(self, criteria=None, *args, **kwargs):
+        super(PerformanceCriteriaScoreForm, self).__init__(*args, **kwargs)
+        self.criteria = criteria
+    
+    def validate_score(self, score):
+        if score.data is not None:
+            if hasattr(self, 'criteria') and self.criteria and score.data > self.criteria.max_score:
+                raise ValidationError(f'Điểm số không thể vượt quá {self.criteria.max_score}.')
+            if score.data < 0:
+                raise ValidationError('Điểm số không thể âm.')
+
+
+class EmployeePerformanceFeedbackForm(FlaskForm):
+    """Form phản hồi của nhân viên về kết quả đánh giá"""
+    employee_comments = TextAreaField('Phản hồi của bạn', validators=[Optional()])
+
+
+class PerformanceApprovalForm(FlaskForm):
+    """Form phê duyệt đánh giá hiệu suất"""
+    status = SelectField('Trạng thái', choices=[(s.name, s.value) for s in PerformanceRatingStatus if s != PerformanceRatingStatus.DRAFT], validators=[DataRequired(message='Vui lòng chọn trạng thái')])
+    comments = TextAreaField('Nhận xét', validators=[Optional()])
+
+
+class PerformanceFilterForm(FlaskForm):
+    """Form lọc đánh giá hiệu suất"""
+    employee_id = SelectField('Nhân viên', coerce=int, validators=[Optional()])
+    evaluation_period = SelectField('Kỳ đánh giá', validators=[Optional()])
+    status = SelectField('Trạng thái', validators=[Optional()])
+    start_date = DateField('Từ ngày', validators=[Optional()])
+    end_date = DateField('Đến ngày', validators=[Optional()])
+    
+    def __init__(self, *args, **kwargs):
+        super(PerformanceFilterForm, self).__init__(*args, **kwargs)
+        self.employee_id.choices = [(0, 'Tất cả nhân viên')] + [(e.id, f"{e.employee_code} - {e.full_name}") for e in Employee.query.filter_by(status=EmployeeStatus.ACTIVE).all()]
+        self.evaluation_period.choices = [('', 'Tất cả kỳ đánh giá')] + [(p.name, p.value) for p in PerformanceRatingPeriod]
+        self.status.choices = [('', 'Tất cả trạng thái')] + [(s.name, s.value) for s in PerformanceRatingStatus]
+    
+    def validate_dates(self):
+        if self.start_date.data and self.end_date.data:
+            if self.start_date.data > self.end_date.data:
+                self.end_date.errors.append('Ngày kết thúc phải sau ngày bắt đầu.')
+                return False
+        return True

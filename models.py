@@ -340,3 +340,102 @@ class WorkScheduleParticipant(db.Model):
     
     def __repr__(self):
         return f'<WorkScheduleParticipant {self.employee_id} - {self.schedule_id}>'
+
+
+class PerformanceRatingPeriod(enum.Enum):
+    """Kỳ đánh giá hiệu suất"""
+    MONTHLY = "Hàng tháng"
+    QUARTERLY = "Hàng quý"
+    BIANNUAL = "Nửa năm"
+    ANNUAL = "Hàng năm"
+    OTHER = "Khác"
+
+
+class PerformanceRatingStatus(enum.Enum):
+    """Trạng thái đánh giá"""
+    DRAFT = "Bản nháp"
+    SUBMITTED = "Đã nộp"
+    MANAGER_REVIEWED = "Quản lý đã xem xét"
+    COMPLETED = "Hoàn thành"
+    CANCELLED = "Đã hủy"
+
+
+class PerformanceEvaluationCriteria(db.Model):
+    """Tiêu chí đánh giá hiệu suất"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    max_score = db.Column(db.Integer, default=10)
+    weight = db.Column(db.Float, default=1.0)  # Trọng số
+    department_id = db.Column(db.Integer, db.ForeignKey('department.id'))  # Có thể đặc thù theo phòng ban
+    is_active = db.Column(db.Boolean, default=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Mối quan hệ
+    department = db.relationship('Department', backref='performance_criterias')
+    creator = db.relationship('User', backref='created_criterias')
+    
+    def __repr__(self):
+        return f'<PerformanceEvaluationCriteria {self.name}>'
+
+
+class PerformanceEvaluation(db.Model):
+    """Đánh giá hiệu suất nhân viên"""
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
+    evaluator_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Người đánh giá
+    evaluation_period = db.Column(db.Enum(PerformanceRatingPeriod), nullable=False)
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=False)
+    overall_score = db.Column(db.Float)  # Điểm tổng hợp
+    status = db.Column(db.Enum(PerformanceRatingStatus), default=PerformanceRatingStatus.DRAFT)
+    comments = db.Column(db.Text)  # Nhận xét tổng quát
+    employee_comments = db.Column(db.Text)  # Phản hồi của nhân viên
+    strengths = db.Column(db.Text)  # Điểm mạnh
+    areas_for_improvement = db.Column(db.Text)  # Lĩnh vực cần cải thiện
+    goals_for_next_period = db.Column(db.Text)  # Mục tiêu cho kỳ tiếp theo
+    approved_by = db.Column(db.Integer, db.ForeignKey('user.id'))  # Người phê duyệt
+    approved_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Mối quan hệ
+    employee = db.relationship('Employee', backref='performance_evaluations', foreign_keys=[employee_id])
+    evaluator = db.relationship('User', backref='evaluations_given', foreign_keys=[evaluator_id])
+    approver = db.relationship('User', backref='evaluations_approved', foreign_keys=[approved_by])
+    criteria_scores = db.relationship('PerformanceEvaluationDetail', backref='evaluation', lazy=True, cascade="all, delete-orphan")
+    
+    def __repr__(self):
+        return f'<PerformanceEvaluation {self.employee_id} - {self.start_date} to {self.end_date}>'
+    
+    def calculate_overall_score(self):
+        """Tính điểm tổng hợp dựa trên điểm và trọng số của từng tiêu chí"""
+        if not self.criteria_scores:
+            return None
+            
+        weighted_scores = [detail.score * detail.criteria.weight for detail in self.criteria_scores if detail.score is not None]
+        total_weight = sum([detail.criteria.weight for detail in self.criteria_scores if detail.score is not None])
+        
+        if not weighted_scores or total_weight == 0:
+            return None
+            
+        return sum(weighted_scores) / total_weight
+
+
+class PerformanceEvaluationDetail(db.Model):
+    """Chi tiết đánh giá theo từng tiêu chí"""
+    id = db.Column(db.Integer, primary_key=True)
+    evaluation_id = db.Column(db.Integer, db.ForeignKey('performance_evaluation.id'), nullable=False)
+    criteria_id = db.Column(db.Integer, db.ForeignKey('performance_evaluation_criteria.id'), nullable=False)
+    score = db.Column(db.Float)  # Điểm số
+    comments = db.Column(db.Text)  # Nhận xét cho tiêu chí này
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Mối quan hệ
+    criteria = db.relationship('PerformanceEvaluationCriteria')
+    
+    def __repr__(self):
+        return f'<PerformanceEvaluationDetail {self.evaluation_id} - {self.criteria_id}>'

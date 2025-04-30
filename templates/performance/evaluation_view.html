@@ -1,0 +1,299 @@
+{% extends "layout.html" %}
+
+{% block title %}Chi tiết đánh giá hiệu suất{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Chi tiết đánh giá hiệu suất</h2>
+        <div>
+            {% if current_user.is_admin and evaluation.status.name != 'COMPLETED' and evaluation.status.name != 'CANCELLED' %}
+            <button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#approvalModal">
+                <i class="bi bi-check-circle me-1"></i>Phê duyệt
+            </button>
+            {% endif %}
+            
+            {% if evaluation.status.name == 'DRAFT' or (current_user.is_admin and evaluation.status.name != 'COMPLETED' and evaluation.status.name != 'CANCELLED') %}
+            <a href="{{ url_for('edit_performance_evaluation', id=evaluation.id) }}" class="btn btn-primary">
+                <i class="bi bi-pencil-square me-1"></i>Chỉnh sửa
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Thông tin cơ bản -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Thông tin đánh giá</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Nhân viên:</h6>
+                            <p class="mb-0 fw-bold">{{ evaluation.employee.full_name }}</p>
+                            <small class="text-muted">{{ evaluation.employee.employee_code }}</small>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Phòng ban:</h6>
+                            <p class="mb-0">{{ evaluation.employee.department.name }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Kỳ đánh giá:</h6>
+                            <p class="mb-0">{{ evaluation.evaluation_period.value }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Thời gian:</h6>
+                            <p class="mb-0">{{ evaluation.start_date.strftime('%d/%m/%Y') }} - {{ evaluation.end_date.strftime('%d/%m/%Y') }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Người đánh giá:</h6>
+                            <p class="mb-0">{{ evaluation.evaluator.username }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Trạng thái:</h6>
+                            <p class="mb-0">
+                                {% if evaluation.status.name == 'DRAFT' %}
+                                    <span class="badge bg-secondary">{{ evaluation.status.value }}</span>
+                                {% elif evaluation.status.name == 'SUBMITTED' %}
+                                    <span class="badge bg-info">{{ evaluation.status.value }}</span>
+                                {% elif evaluation.status.name == 'MANAGER_REVIEWED' %}
+                                    <span class="badge bg-warning">{{ evaluation.status.value }}</span>
+                                {% elif evaluation.status.name == 'COMPLETED' %}
+                                    <span class="badge bg-success">{{ evaluation.status.value }}</span>
+                                {% elif evaluation.status.name == 'CANCELLED' %}
+                                    <span class="badge bg-danger">{{ evaluation.status.value }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <h6 class="text-muted">Điểm tổng hợp:</h6>
+                            <p class="display-6 mb-0">
+                                {% if evaluation.overall_score %}
+                                    {{ "%.1f"|format(evaluation.overall_score) }}<span class="fs-5">/10</span>
+                                {% else %}
+                                    <span class="text-muted fs-5">Chưa có điểm</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bảng điểm chi tiết -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Chi tiết điểm đánh giá</h5>
+                </div>
+                <div class="card-body">
+                    {% if criteria_scores %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Tiêu chí</th>
+                                    <th class="text-center">Điểm tối đa</th>
+                                    <th class="text-center">Trọng số</th>
+                                    <th class="text-center">Điểm đánh giá</th>
+                                    <th class="text-center">Điểm có trọng số</th>
+                                    <th class="text-center">Nhận xét</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for detail in criteria_scores %}
+                                <tr>
+                                    <td>{{ detail.criteria.name }}</td>
+                                    <td class="text-center">{{ detail.criteria.max_score }}</td>
+                                    <td class="text-center">{{ detail.criteria.weight }}</td>
+                                    <td class="text-center">
+                                        {% if detail.score is not none %}
+                                            {{ "%.1f"|format(detail.score) }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if detail.score is not none %}
+                                            {{ "%.1f"|format(detail.score * detail.criteria.weight) }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if detail.comments %}
+                                            <button type="button" class="btn btn-sm btn-outline-info" 
+                                                    data-bs-toggle="popover" 
+                                                    data-bs-title="Nhận xét" 
+                                                    data-bs-content="{{ detail.comments }}">
+                                                <i class="bi bi-chat-text"></i>
+                                            </button>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle me-2"></i>Chưa có điểm đánh giá chi tiết. 
+                        {% if evaluation.status.name == 'DRAFT' or current_user.is_admin %}
+                        <a href="{{ url_for('score_performance_evaluation', id=evaluation.id) }}" class="alert-link">Thêm điểm đánh giá</a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Thông tin nhận xét -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Nhận xét tổng quát</h5>
+                </div>
+                <div class="card-body">
+                    {% if evaluation.comments %}
+                        <p>{{ evaluation.comments|nl2br }}</p>
+                    {% else %}
+                        <p class="text-muted">Chưa có nhận xét tổng quát.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Điểm mạnh và cải thiện -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Điểm mạnh</h5>
+                </div>
+                <div class="card-body">
+                    {% if evaluation.strengths %}
+                        <p>{{ evaluation.strengths|nl2br }}</p>
+                    {% else %}
+                        <p class="text-muted">Chưa có thông tin.</p>
+                    {% endif %}
+                </div>
+                <div class="card-header bg-light border-top">
+                    <h5 class="mb-0">Lĩnh vực cần cải thiện</h5>
+                </div>
+                <div class="card-body">
+                    {% if evaluation.areas_for_improvement %}
+                        <p>{{ evaluation.areas_for_improvement|nl2br }}</p>
+                    {% else %}
+                        <p class="text-muted">Chưa có thông tin.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Mục tiêu cho kỳ tiếp theo -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Mục tiêu cho kỳ tiếp theo</h5>
+                </div>
+                <div class="card-body">
+                    {% if evaluation.goals_for_next_period %}
+                        <p>{{ evaluation.goals_for_next_period|nl2br }}</p>
+                    {% else %}
+                        <p class="text-muted">Chưa có thông tin về mục tiêu.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Phản hồi của nhân viên -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Phản hồi của nhân viên</h5>
+                </div>
+                <div class="card-body">
+                    {% if evaluation.employee_comments %}
+                        <p>{{ evaluation.employee_comments|nl2br }}</p>
+                    {% elif current_user.is_authenticated and evaluation.employee_id == current_user.employee.id and evaluation.status.name != 'DRAFT' %}
+                        <form method="POST" action="{{ url_for('employee_feedback_evaluation', id=evaluation.id) }}">
+                            {{ feedback_form.hidden_tag() }}
+                            <div class="mb-3">
+                                {{ feedback_form.employee_comments(class="form-control", rows="4", placeholder="Nhập phản hồi của bạn về đánh giá này") }}
+                            </div>
+                            <button type="submit" class="btn btn-primary">Gửi phản hồi</button>
+                        </form>
+                    {% else %}
+                        <p class="text-muted">Chưa có phản hồi từ nhân viên.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="d-flex justify-content-between mt-3">
+        <a href="{{ url_for('performance_evaluations') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Quay lại danh sách
+        </a>
+        {% if evaluation.status.name == 'DRAFT' or current_user.is_admin %}
+        <a href="{{ url_for('score_performance_evaluation', id=evaluation.id) }}" class="btn btn-primary">
+            <i class="bi bi-pencil-square me-1"></i>Điền điểm đánh giá
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal phê duyệt -->
+<div class="modal fade" id="approvalModal" tabindex="-1" aria-labelledby="approvalModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('approve_performance_evaluation', id=evaluation.id) }}">
+                {{ approval_form.hidden_tag() }}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="approvalModalLabel">Phê duyệt đánh giá hiệu suất</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="status" class="form-label">{{ approval_form.status.label }}</label>
+                        {{ approval_form.status(class="form-select") }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="comments" class="form-label">{{ approval_form.comments.label }}</label>
+                        {{ approval_form.comments(class="form-control", rows="3", placeholder="Nhập nhận xét của bạn (tùy chọn)") }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu trạng thái</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Enable popovers
+        const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+        const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl, {
+            html: true,
+            trigger: 'focus'
+        }));
+    });
+</script>
+{% endblock %}
