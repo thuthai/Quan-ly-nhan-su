@@ -334,6 +334,22 @@ class WorkScheduleType(enum.Enum):
     OTHER = "Khác"
 
 
+class TaskStatus(enum.Enum):
+    """Trạng thái nhiệm vụ trong kanban"""
+    TODO = "Cần làm"
+    IN_PROGRESS = "Đang thực hiện"
+    REVIEW = "Đang kiểm tra"
+    DONE = "Hoàn thành"
+    
+
+class TaskPriority(enum.Enum):
+    """Mức độ ưu tiên của nhiệm vụ"""
+    LOW = "Thấp"
+    NORMAL = "Bình thường"
+    HIGH = "Cao"
+    URGENT = "Khẩn cấp"
+
+
 class WorkSchedule(db.Model):
     """Lịch công tác"""
     id = db.Column(db.Integer, primary_key=True)
@@ -474,3 +490,121 @@ class PerformanceEvaluationDetail(db.Model):
     
     def __repr__(self):
         return f'<PerformanceEvaluationDetail {self.evaluation_id} - {self.criteria_id}>'
+
+
+class Task(db.Model):
+    """Mô hình nhiệm vụ cho Kanban board"""
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    status = db.Column(db.Enum(TaskStatus), default=TaskStatus.TODO, nullable=False)
+    priority = db.Column(db.Enum(TaskPriority), default=TaskPriority.NORMAL, nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    assigned_to = db.Column(db.Integer, db.ForeignKey('employee.id'))
+    department_id = db.Column(db.Integer, db.ForeignKey('department.id'))
+    work_schedule_id = db.Column(db.Integer, db.ForeignKey('work_schedule.id'))
+    deadline = db.Column(db.DateTime)
+    estimated_hours = db.Column(db.Float)  # Số giờ dự kiến
+    actual_hours = db.Column(db.Float)  # Số giờ thực tế
+    order_in_status = db.Column(db.Integer, default=0)  # Thứ tự trong cột
+    labels = db.Column(db.String(255))  # Nhãn phân loại, lưu dạng chuỗi phân tách bằng dấu phẩy
+    progress = db.Column(db.Integer, default=0)  # Tiến độ (%)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    completed_at = db.Column(db.DateTime)
+    
+    # Mối quan hệ
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_tasks')
+    assignee = db.relationship('Employee', foreign_keys=[assigned_to], backref='assigned_tasks')
+    department = db.relationship('Department', backref='department_tasks')
+    work_schedule = db.relationship('WorkSchedule', backref='related_tasks')
+    comments = db.relationship('TaskComment', backref='task', lazy=True, cascade="all, delete-orphan")
+    attachments = db.relationship('TaskAttachment', backref='task', lazy=True, cascade="all, delete-orphan")
+    dependencies = db.relationship('TaskDependency', 
+                                  primaryjoin="or_(Task.id==TaskDependency.task_id, Task.id==TaskDependency.dependent_task_id)",
+                                  backref='tasks', lazy=True)
+    
+    @property
+    def is_overdue(self):
+        """Kiểm tra xem nhiệm vụ có bị quá hạn không"""
+        if not self.deadline:
+            return False
+        return self.deadline < datetime.utcnow() and self.status != TaskStatus.DONE
+    
+    @property
+    def days_remaining(self):
+        """Số ngày còn lại đến deadline"""
+        if not self.deadline:
+            return None
+        remaining = self.deadline - datetime.utcnow()
+        return max(0, remaining.days)
+    
+    @property
+    def status_display(self):
+        """Hiển thị trạng thái"""
+        return self.status.value if self.status else ""
+    
+    @property
+    def priority_display(self):
+        """Hiển thị mức độ ưu tiên"""
+        return self.priority.value if self.priority else ""
+    
+    @property
+    def labels_list(self):
+        """Chuyển đổi chuỗi nhãn thành danh sách"""
+        if not self.labels:
+            return []
+        return [label.strip() for label in self.labels.split(',')]
+    
+    def __repr__(self):
+        return f'<Task {self.id}: {self.title} - {self.status_display}>'
+
+
+class TaskComment(db.Model):
+    """Bình luận cho nhiệm vụ"""
+    id = db.Column(db.Integer, primary_key=True)
+    task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Mối quan hệ
+    author = db.relationship('User', backref='task_comments')
+    
+    def __repr__(self):
+        return f'<TaskComment {self.id} - Task {self.task_id}>'
+
+
+class TaskAttachment(db.Model):
+    """Tệp đính kèm cho nhiệm vụ"""
+    id = db.Column(db.Integer, primary_key=True)
+    task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)
+    file_name = db.Column(db.String(255), nullable=False)
+    file_path = db.Column(db.String(500), nullable=False)
+    file_size = db.Column(db.Integer)  # Kích thước tệp (bytes)
+    file_type = db.Column(db.String(100))  # Loại tệp (pdf, doc, jpg, ...)
+    uploaded_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Mối quan hệ
+    uploader = db.relationship('User', backref='uploaded_attachments')
+    
+    def __repr__(self):
+        return f'<TaskAttachment {self.id} - {self.file_name}>'
+
+
+class TaskDependency(db.Model):
+    """Quan hệ phụ thuộc giữa các nhiệm vụ"""
+    id = db.Column(db.Integer, primary_key=True)
+    task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)  # Nhiệm vụ gốc
+    dependent_task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)  # Nhiệm vụ phụ thuộc
+    dependency_type = db.Column(db.String(50), default="blocks")  # Loại phụ thuộc: 'blocks', 'relates_to', 'duplicates', etc.
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Mối quan hệ
+    task = db.relationship('Task', foreign_keys=[task_id], backref='dependencies_as_source')
+    dependent_task = db.relationship('Task', foreign_keys=[dependent_task_id], backref='dependencies_as_target')
+    
+    def __repr__(self):
+        return f'<TaskDependency {self.task_id} -> {self.dependent_task_id} ({self.dependency_type})>'
