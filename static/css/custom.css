@@ -766,6 +766,7 @@ input[type="datetime-local"] {
     border-radius: 10px !important;
     border: none !important;
     padding: 16px !important;
+    padding-top: 60px !important; /* Tăng padding-top để không che mất tháng năm */
 }
 
 .flatpickr-day {
@@ -818,6 +819,11 @@ input[type="datetime-local"] {
     border: none !important;
     -webkit-text-fill-color: white !important;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+    font-size: 1.2rem !important;
+    height: auto !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
 }
 
 .flatpickr-months {
@@ -826,6 +832,10 @@ input[type="datetime-local"] {
     margin: -16px -16px 10px -16px !important;
     padding: 8px 16px !important;
     z-index: 10 !important;
+    position: absolute !important;
+    top: 16px !important;
+    left: 16px !important;
+    right: 16px !important;
 }
 
 /* Sửa lỗi hiển thị tháng và năm */
