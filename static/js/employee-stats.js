@@ -23,6 +23,12 @@ function createGenderChart(genderStats) {
     const ctx = document.getElementById('genderChart');
     if (!ctx) return;
     
+    // Đặt kích thước cố định cho canvas
+    ctx.height = 280;
+    ctx.style.height = '280px';
+    ctx.style.maxHeight = '280px';
+    ctx.style.width = 'auto';
+    
     // Chuẩn bị dữ liệu
     const labels = Object.keys(genderStats);
     const data = Object.values(genderStats);
@@ -43,6 +49,7 @@ function createGenderChart(genderStats) {
         },
         options: {
             maintainAspectRatio: false,
+            responsive: true,
             plugins: {
                 legend: {
                     position: 'bottom',
@@ -75,6 +82,12 @@ function createAgeChart(ageGroups) {
     const ctx = document.getElementById('ageChart');
     if (!ctx) return;
     
+    // Đặt kích thước cố định cho canvas
+    ctx.height = 280;
+    ctx.style.height = '280px';
+    ctx.style.maxHeight = '280px';
+    ctx.style.width = 'auto';
+    
     // Chuẩn bị dữ liệu
     const labels = Object.keys(ageGroups);
     const data = Object.values(ageGroups);
@@ -96,6 +109,7 @@ function createAgeChart(ageGroups) {
         },
         options: {
             maintainAspectRatio: false,
+            responsive: true,
             scales: {
                 y: {
                     beginAtZero: true,

@@ -61,8 +61,8 @@
         <div class="card dashboard-card h-100">
             <div class="card-body">
                 <h5 class="card-title mb-4">Phân bố nhân viên theo phòng ban</h5>
-                <div style="height: 300px;">
-                    <canvas id="departmentChart" data-departments="{{ dept_stats|tojson }}"></canvas>
+                <div style="height: 280px; overflow: hidden;">
+                    <canvas id="departmentChart" data-departments="{{ dept_stats|tojson }}" style="max-height: 280px; height: 280px !important; width: auto !important;"></canvas>
                 </div>
             </div>
         </div>
@@ -71,8 +71,8 @@
         <div class="card dashboard-card h-100">
             <div class="card-body">
                 <h5 class="card-title mb-4">Phân bố giới tính</h5>
-                <div style="height: 300px;">
-                    <canvas id="genderChart" data-gender="{{ gender_stats|tojson }}"></canvas>
+                <div style="height: 280px; overflow: hidden;">
+                    <canvas id="genderChart" data-gender="{{ gender_stats|tojson }}" style="max-height: 280px; height: 280px !important; width: auto !important;"></canvas>
                 </div>
             </div>
         </div>
@@ -84,8 +84,8 @@
         <div class="card dashboard-card">
             <div class="card-body">
                 <h5 class="card-title mb-4">Biểu đồ chấm công trong 30 ngày gần đây</h5>
-                <div style="height: 300px;">
-                    <canvas id="attendanceChart" data-attendance="{{ attendance_stats|tojson }}"></canvas>
+                <div style="height: 280px; overflow: hidden;">
+                    <canvas id="attendanceChart" data-attendance="{{ attendance_stats|tojson }}" style="max-height: 280px; height: 280px !important; width: auto !important;"></canvas>
                 </div>
             </div>
         </div>
