@@ -174,14 +174,28 @@
             </div>
             
             <div class="row mb-3">
-                <div class="col-md-6">
+                <div class="col-md-3">
                     <label for="education_level" class="form-label">{{ form.education_level.label }}</label>
                     {{ form.education_level(class="form-control", id="education_level", placeholder="Nhập trình độ học vấn") }}
                     {% for error in form.education_level.errors %}
                         <div class="text-danger">{{ error }}</div>
                     {% endfor %}
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-3">
+                    <label for="university_name" class="form-label">{{ form.university_name.label }}</label>
+                    {{ form.university_name(class="form-control", id="university_name", placeholder="Nhập tên trường đại học") }}
+                    {% for error in form.university_name.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-3">
+                    <label for="university_major" class="form-label">{{ form.university_major.label }}</label>
+                    {{ form.university_major(class="form-control", id="university_major", placeholder="Nhập chuyên ngành") }}
+                    {% for error in form.university_major.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-3">
                     <label for="status" class="form-label">{{ form.status.label }} <span class="text-danger">*</span></label>
                     {{ form.status(class="form-select", id="status") }}
                     {% for error in form.status.errors %}
