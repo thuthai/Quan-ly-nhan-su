@@ -61,6 +61,7 @@ body {
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     border-radius: 8px;
     padding: 0.5rem;
+    background-color: #ffffff !important;
 }
 
 .dropdown-menu-animated {
@@ -143,7 +144,8 @@ body {
 /* Employee card styles */
 .employee-card {
     transition: transform 0.3s;
-    height: 100%;
+    height: auto;
+    min-height: 100%;
     border-radius: 12px;
     overflow: hidden;
 }
@@ -322,7 +324,7 @@ input, select, textarea, .form-control, .form-select, .form-control-plaintext,
 .bg-dark, .text-bg-dark, .card.bg-dark, .dropdown-menu-dark, 
 .table-dark, [class*="bg-dark"], [style*="background-color: #212529"],
 .bg-secondary, .bg-primary, .bg-success, .bg-danger, .bg-info,
-.dropdown-menu, .list-group-item-dark, .list-group-item-secondary,
+.list-group-item-dark, .list-group-item-secondary,
 [style*="background-color: #1e2126"], [style*="background-color: #212529"],
 [style*="background-color: #192a56"], .card-dark, 
 div[style*="background-color:#"] {
@@ -332,13 +334,26 @@ div[style*="background-color:#"] {
 .bg-dark *, .text-bg-dark *, .card.bg-dark *, .dropdown-menu-dark *, 
 .table-dark *, [class*="bg-dark"] *, [style*="background-color: #212529"] *,
 .bg-secondary *, .bg-primary *, .bg-success *, .bg-danger *, .bg-info *,
-.dropdown-menu *, .card-dark *,
+.card-dark *,
 div[style*="background-color:#"] *, [style*="background-color: #1e2126"] *,
 [style*="background-color: #192a56"] * {
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
     font-weight: 700 !important;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Sửa lại màu cho dropdown menu thành màu sáng */
+.dropdown-menu {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+
+.dropdown-menu * {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    font-weight: 700 !important;
+    text-shadow: none !important;
 }
 
 /* Ngoại lệ cho các phần tử có background đặc biệt cần text màu trắng */

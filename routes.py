@@ -165,8 +165,8 @@ def admin():
 @admin_required
 def positions():
     """Hiển thị danh sách vị trí/chức vụ"""
-    # Lấy danh sách vị trí mặc định (enum)
-    default_positions = [(pos.name, pos.value) for pos in Position]
+    # Không có enum Position, chỉ sử dụng vị trí tùy chỉnh
+    default_positions = []
     
     # Lấy danh sách vị trí tùy chỉnh (từ database)
     custom_positions = CustomPosition.query.all()
