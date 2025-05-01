@@ -1,0 +1,354 @@
+{% extends 'layout.html' %}
+
+{% block title %}Chỉnh sửa nhiệm vụ{% endblock %}
+
+{% block styles %}
+<style>
+    .form-label {
+        font-weight: 600;
+    }
+    .priority-info {
+        font-size: 0.85rem;
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.5rem;
+    }
+    .priority-item {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    .priority-color {
+        width: 12px;
+        height: 12px;
+        border-radius: 2px;
+    }
+    .priority-HIGH {
+        background-color: #ef4444;
+    }
+    .priority-MEDIUM {
+        background-color: #f59e0b;
+    }
+    .priority-LOW {
+        background-color: #22c55e;
+    }
+    .form-text {
+        font-size: 0.8rem;
+    }
+    .task-info-card {
+        background-color: #f8fafc;
+        border-radius: 0.25rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    .task-info-item {
+        margin-bottom: 0.5rem;
+    }
+    .task-info-label {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #64748b;
+    }
+    .task-info-value {
+        font-size: 0.95rem;
+    }
+    .task-overdue {
+        color: #ef4444;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Chỉnh sửa nhiệm vụ</h1>
+        <div>
+            <a href="{{ url_for('task_comments', id=task.id) }}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-comments"></i> Bình luận
+            </a>
+            <a href="{{ url_for('kanban_board') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại Kanban
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="task-info-card">
+                <h5 class="mb-3">Thông tin nhiệm vụ</h5>
+                
+                <div class="task-info-item">
+                    <div class="task-info-label">ID Nhiệm vụ</div>
+                    <div class="task-info-value">{{ task.id }}</div>
+                </div>
+                
+                <div class="task-info-item">
+                    <div class="task-info-label">Người tạo</div>
+                    <div class="task-info-value">
+                        {% if task.created_by %}
+                        {{ task.created_by.username }}
+                        {% else %}
+                        <span class="text-muted">Không xác định</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="task-info-item">
+                    <div class="task-info-label">Ngày tạo</div>
+                    <div class="task-info-value">
+                        {% if task.created_at %}
+                        {{ task.created_at.strftime('%d/%m/%Y %H:%M') }}
+                        {% else %}
+                        <span class="text-muted">Không xác định</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if task.updated_at %}
+                <div class="task-info-item">
+                    <div class="task-info-label">Cập nhật lần cuối</div>
+                    <div class="task-info-value">{{ task.updated_at.strftime('%d/%m/%Y %H:%M') }}</div>
+                </div>
+                {% endif %}
+                
+                {% if task.completed_at %}
+                <div class="task-info-item">
+                    <div class="task-info-label">Ngày hoàn thành</div>
+                    <div class="task-info-value text-success">{{ task.completed_at.strftime('%d/%m/%Y %H:%M') }}</div>
+                </div>
+                {% endif %}
+                
+                {% if task.deadline %}
+                <div class="task-info-item">
+                    <div class="task-info-label">Hạn chót</div>
+                    <div class="task-info-value {% if task.is_overdue %}task-overdue{% endif %}">
+                        {{ task.deadline.strftime('%d/%m/%Y %H:%M') }}
+                        {% if task.is_overdue %}
+                        <span class="badge bg-danger">Quá hạn</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if task.dependent_on %}
+                <div class="task-info-item">
+                    <div class="task-info-label">Phụ thuộc vào ({{ task.dependent_on|length }})</div>
+                    <div class="task-info-value">
+                        {% for dependency in task.dependent_on %}
+                        <div><a href="{{ url_for('edit_task', id=dependency.dependent_on_id) }}">#{{ dependency.dependent_on_id }}</a> - {{ dependency.dependent_task.title }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if task.dependents %}
+                <div class="task-info-item">
+                    <div class="task-info-label">Được phụ thuộc bởi ({{ task.dependents|length }})</div>
+                    <div class="task-info-value">
+                        {% for dependent in task.dependents %}
+                        <div><a href="{{ url_for('edit_task', id=dependent.task_id) }}">#{{ dependent.task_id }}</a> - {{ dependent.task.title }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('edit_task', id=task.id) }}">
+                        {{ form.hidden_tag() }}
+                        {{ form.task_id }}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="title" class="form-label">Tiêu đề nhiệm vụ <span class="text-danger">*</span></label>
+                                {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), placeholder="Nhập tiêu đề nhiệm vụ") }}
+                                {% for error in form.title.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="description" class="form-label">Mô tả</label>
+                                {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=4, placeholder="Mô tả chi tiết nhiệm vụ") }}
+                                {% for error in form.description.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="status" class="form-label">Trạng thái <span class="text-danger">*</span></label>
+                                {{ form.status(class="form-select" + (" is-invalid" if form.status.errors else "")) }}
+                                {% for error in form.status.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="priority" class="form-label">Mức độ ưu tiên <span class="text-danger">*</span></label>
+                                {{ form.priority(class="form-select" + (" is-invalid" if form.priority.errors else "")) }}
+                                {% for error in form.priority.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                                <div class="priority-info">
+                                    <div class="priority-item">
+                                        <div class="priority-color priority-HIGH"></div>
+                                        <span>Cao</span>
+                                    </div>
+                                    <div class="priority-item">
+                                        <div class="priority-color priority-MEDIUM"></div>
+                                        <span>Trung bình</span>
+                                    </div>
+                                    <div class="priority-item">
+                                        <div class="priority-color priority-LOW"></div>
+                                        <span>Thấp</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="assigned_to" class="form-label">Người thực hiện</label>
+                                {{ form.assigned_to(class="form-select" + (" is-invalid" if form.assigned_to.errors else "")) }}
+                                {% for error in form.assigned_to.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="department_id" class="form-label">Phòng ban</label>
+                                {{ form.department_id(class="form-select" + (" is-invalid" if form.department_id.errors else "")) }}
+                                {% for error in form.department_id.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="deadline" class="form-label">Hạn chót</label>
+                                {{ form.deadline(class="form-control" + (" is-invalid" if form.deadline.errors else ""), type="datetime-local") }}
+                                {% for error in form.deadline.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="work_schedule_id" class="form-label">Lịch công tác liên quan</label>
+                                {{ form.work_schedule_id(class="form-select" + (" is-invalid" if form.work_schedule_id.errors else "")) }}
+                                {% for error in form.work_schedule_id.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="estimated_hours" class="form-label">Số giờ dự kiến</label>
+                                {{ form.estimated_hours(class="form-control" + (" is-invalid" if form.estimated_hours.errors else ""), type="number", min="0", step="0.5") }}
+                                {% for error in form.estimated_hours.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="actual_hours" class="form-label">Số giờ thực tế</label>
+                                {{ form.actual_hours(class="form-control" + (" is-invalid" if form.actual_hours.errors else ""), type="number", min="0", step="0.5") }}
+                                {% for error in form.actual_hours.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="progress" class="form-label">Tiến độ (%)</label>
+                                {{ form.progress(class="form-control" + (" is-invalid" if form.progress.errors else ""), type="number", min="0", max="100") }}
+                                {% for error in form.progress.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="labels" class="form-label">Nhãn</label>
+                                {{ form.labels(class="form-control" + (" is-invalid" if form.labels.errors else ""), placeholder="Nhập các nhãn cách nhau bằng dấu phẩy, ví dụ: Backend, API, Khẩn") }}
+                                {% for error in form.labels.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                                <div class="form-text">{{ form.labels.description }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="dependent_tasks" class="form-label">Nhiệm vụ phụ thuộc</label>
+                                {{ form.dependent_tasks(class="form-select" + (" is-invalid" if form.dependent_tasks.errors else ""), multiple="multiple", size="5") }}
+                                {% for error in form.dependent_tasks.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                                <div class="form-text">Chọn các nhiệm vụ mà nhiệm vụ này phụ thuộc vào (nhiệm vụ tiên quyết). Nhấn Ctrl để chọn nhiều mục.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('kanban_board') }}" class="btn btn-outline-secondary">Quay lại</a>
+                            <div>
+                                <button type="button" class="btn btn-danger me-2" data-bs-toggle="modal" data-bs-target="#deleteTaskModal">
+                                    <i class="fas fa-trash"></i> Xóa
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Lưu thay đổi
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận xóa -->
+<div class="modal fade" id="deleteTaskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận xóa nhiệm vụ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa nhiệm vụ "<strong>{{ task.title }}</strong>" không?</p>
+                <p class="text-danger">Lưu ý: Hành động này không thể hoàn tác!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form action="{{ url_for('delete_task', id=task.id) }}" method="post">
+                    <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Format datetime-local inputs to show the saved value
+    const datetimeInputs = document.querySelectorAll('input[type="datetime-local"]');
+    datetimeInputs.forEach(input => {
+        if (input.value) {
+            // Make sure datetime is in the format required by the input
+            const dt = new Date(input.value);
+            if (!isNaN(dt.getTime())) {
+                const formatted = dt.toISOString().slice(0, 16);
+                input.value = formatted;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,333 @@
+{% extends 'layout.html' %}
+
+{% block title %}Bình luận - {{ task.title }}{% endblock %}
+
+{% block styles %}
+<style>
+    .task-title {
+        font-weight: 700;
+        font-size: 1.5rem;
+        color: #000;
+    }
+    
+    .task-detail {
+        background-color: #f8fafc;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .task-detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+    
+    .task-detail-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .task-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        color: #64748b;
+    }
+    
+    .task-description {
+        margin-top: 1rem;
+        white-space: pre-line;
+    }
+    
+    .comment-container {
+        margin-top: 2rem;
+    }
+    
+    .comment-item {
+        border-bottom: 1px solid #e2e8f0;
+        padding: 1rem 0;
+    }
+    
+    .comment-item:last-child {
+        border-bottom: none;
+    }
+    
+    .comment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 0.5rem;
+    }
+    
+    .comment-author {
+        font-weight: 600;
+    }
+    
+    .comment-date {
+        font-size: 0.85rem;
+        color: #64748b;
+    }
+    
+    .comment-content {
+        white-space: pre-line;
+    }
+    
+    .comment-form {
+        margin-top: 2rem;
+        background-color: #f8fafc;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+    }
+    
+    .priority-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .priority-LOW {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+    
+    .priority-MEDIUM {
+        background-color: #fff7ed;
+        color: #9a3412;
+    }
+    
+    .priority-HIGH {
+        background-color: #fee2e2;
+        color: #b91c1c;
+    }
+    
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .status-TODO {
+        background-color: #e2e8f0;
+        color: #334155;
+    }
+    
+    .status-IN_PROGRESS {
+        background-color: #dbeafe;
+        color: #1e40af;
+    }
+    
+    .status-REVIEW {
+        background-color: #e0f2fe;
+        color: #0369a1;
+    }
+    
+    .status-DONE {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+    
+    .labels-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .label-pill {
+        background-color: #e2e8f0;
+        color: #1e293b;
+        border-radius: 2rem;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .progress-container {
+        background-color: #e2e8f0;
+        height: 0.5rem;
+        border-radius: 1rem;
+        overflow: hidden;
+        margin-top: 1rem;
+    }
+    
+    .progress-bar {
+        height: 100%;
+        background-color: #3b82f6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Bình luận nhiệm vụ</h1>
+        <div>
+            <a href="{{ url_for('edit_task', id=task.id) }}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-edit"></i> Chỉnh sửa
+            </a>
+            <a href="{{ url_for('kanban_board') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại Kanban
+            </a>
+        </div>
+    </div>
+    
+    <div class="task-detail">
+        <div class="task-detail-header">
+            <div>
+                <div class="task-title">{{ task.title }}</div>
+                <div class="task-detail-meta">
+                    <span class="task-meta-item">
+                        <i class="fas fa-hashtag"></i> {{ task.id }}
+                    </span>
+                    <span class="task-meta-item">
+                        <i class="fas fa-user"></i> Tạo bởi: 
+                        {% if task.created_by %}
+                        {{ task.created_by.username }}
+                        {% else %}
+                        Không xác định
+                        {% endif %}
+                    </span>
+                    {% if task.created_at %}
+                    <span class="task-meta-item">
+                        <i class="far fa-calendar-plus"></i> {{ task.created_at.strftime('%d/%m/%Y %H:%M') }}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div>
+                <span class="status-badge status-{{ task.status.name }}">{{ task.status_display }}</span>
+                <span class="priority-badge priority-{{ task.priority.name }}">{{ task.priority_display }}</span>
+            </div>
+        </div>
+        
+        {% if task.description %}
+        <div class="task-description">{{ task.description }}</div>
+        {% else %}
+        <div class="text-muted fst-italic">Không có mô tả.</div>
+        {% endif %}
+        
+        {% if task.progress is not none %}
+        <div class="progress-container">
+            <div class="progress-bar" style="width: {{ task.progress }}%"></div>
+        </div>
+        <div class="text-center mt-1 small">Tiến độ: {{ task.progress }}%</div>
+        {% endif %}
+        
+        {% if task.labels %}
+        <div class="labels-container">
+            {% for label in task.labels.split(',') %}
+            <span class="label-pill">{{ label }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <div class="task-meta-item mb-2">
+                    <i class="fas fa-user-tie"></i> Người được giao: 
+                    {% if task.assigned_to %}
+                    <strong>{{ task.assigned_to.full_name }}</strong>
+                    {% else %}
+                    <span class="text-muted">Chưa phân công</span>
+                    {% endif %}
+                </div>
+                
+                <div class="task-meta-item mb-2">
+                    <i class="fas fa-building"></i> Phòng ban: 
+                    {% if task.department %}
+                    <strong>{{ task.department.name }}</strong>
+                    {% else %}
+                    <span class="text-muted">Không có</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                {% if task.deadline %}
+                <div class="task-meta-item mb-2">
+                    <i class="far fa-calendar-alt"></i> Hạn chót: 
+                    <strong {% if task.is_overdue %}class="text-danger"{% endif %}>
+                        {{ task.deadline.strftime('%d/%m/%Y %H:%M') }}
+                        {% if task.is_overdue %}<span class="badge bg-danger">Quá hạn</span>{% endif %}
+                    </strong>
+                </div>
+                {% endif %}
+                
+                {% if task.completed_at %}
+                <div class="task-meta-item mb-2">
+                    <i class="far fa-calendar-check"></i> Hoàn thành: 
+                    <strong class="text-success">{{ task.completed_at.strftime('%d/%m/%Y %H:%M') }}</strong>
+                </div>
+                {% endif %}
+                
+                <div class="task-meta-item mb-2">
+                    <i class="far fa-clock"></i> Dự kiến: 
+                    {% if task.estimated_hours %}
+                    <strong>{{ task.estimated_hours }} giờ</strong>
+                    {% else %}
+                    <span class="text-muted">Chưa ước tính</span>
+                    {% endif %}
+                    
+                    {% if task.actual_hours %}
+                    <span> / Thực tế: <strong>{{ task.actual_hours }} giờ</strong></span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="comment-container">
+        <h5 class="mb-3">Bình luận ({{ comments|length }})</h5>
+        
+        {% if comments %}
+            {% for comment in comments %}
+            <div class="comment-item">
+                <div class="comment-header">
+                    <div class="comment-author">
+                        {% if comment.author %}
+                        {{ comment.author.username }}
+                        {% else %}
+                        Người dùng không xác định
+                        {% endif %}
+                    </div>
+                    <div class="comment-date">{{ comment.created_at.strftime('%d/%m/%Y %H:%M') }}</div>
+                </div>
+                <div class="comment-content">{{ comment.content }}</div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center text-muted py-4">
+                <i class="far fa-comments fa-2x mb-3"></i>
+                <p>Chưa có bình luận nào. Hãy là người đầu tiên bình luận!</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="comment-form">
+        <h5 class="mb-3">Thêm bình luận mới</h5>
+        <form method="post" action="{{ url_for('task_comments', id=task.id) }}">
+            {{ form.hidden_tag() }}
+            
+            <div class="mb-3">
+                {{ form.content(class="form-control" + (" is-invalid" if form.content.errors else ""), rows=4, placeholder="Nhập nội dung bình luận...") }}
+                {% for error in form.content.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+            </div>
+            
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> Gửi bình luận
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

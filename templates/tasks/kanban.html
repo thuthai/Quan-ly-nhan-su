@@ -1,0 +1,757 @@
+{% extends 'layout.html' %}
+
+{% block title %}Kanban Board - Quản lý nhiệm vụ{% endblock %}
+
+{% block styles %}
+<style>
+    .kanban-board {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        min-height: 75vh;
+        padding-bottom: 1rem;
+    }
+    
+    .kanban-column {
+        flex: 0 0 320px;
+        margin-right: 15px;
+        border-radius: 5px;
+        background-color: #f8fafc;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        max-height: 80vh;
+    }
+    
+    .kanban-column-header {
+        padding: 12px 15px;
+        font-weight: bold;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .kanban-column-header .badge {
+        font-size: 12px;
+    }
+    
+    .kanban-column-content {
+        padding: 10px;
+        overflow-y: auto;
+        flex: 1;
+    }
+    
+    .kanban-card {
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 10px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        cursor: grab;
+        transition: box-shadow 0.2s, transform 0.1s;
+    }
+    
+    .kanban-card:hover {
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .kanban-card:active {
+        cursor: grabbing;
+        transform: scale(1.02);
+    }
+    
+    .kanban-card-title {
+        font-weight: bold;
+        margin-bottom: 8px;
+        font-size: 1rem;
+    }
+    
+    .kanban-card-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.8rem;
+        color: #64748b;
+        margin-top: 10px;
+    }
+    
+    .kanban-card-footer {
+        margin-top: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .kanban-labels {
+        display: flex;
+        flex-wrap: wrap;
+        margin-top: 5px;
+        gap: 4px;
+    }
+    
+    .kanban-label {
+        font-size: 0.7rem;
+        border-radius: 3px;
+        padding: 2px 5px;
+        background-color: #e2e8f0;
+        color: #1e293b;
+    }
+    
+    .priority-high {
+        border-left: 4px solid #ef4444;
+    }
+    
+    .priority-medium {
+        border-left: 4px solid #f59e0b;
+    }
+    
+    .priority-low {
+        border-left: 4px solid #22c55e;
+    }
+    
+    .kanban-task-actions {
+        display: flex;
+        gap: 5px;
+    }
+    
+    .task-progress-bar {
+        height: 5px;
+        background-color: #e2e8f0;
+        border-radius: 3px;
+        margin-top: 10px;
+        overflow: hidden;
+    }
+    
+    .task-progress-fill {
+        height: 100%;
+        background-color: #3b82f6;
+    }
+    
+    .task-deadline {
+        font-size: 0.8rem;
+        color: #64748b;
+    }
+    
+    .task-overdue .task-deadline {
+        color: #ef4444;
+        font-weight: bold;
+    }
+    
+    .kanban-drop-zone {
+        min-height: 10px;
+        transition: background-color 0.2s;
+    }
+    
+    .kanban-drop-zone.active {
+        background-color: #e2e8f0;
+        min-height: 80px;
+        border-radius: 5px;
+        border: 2px dashed #94a3b8;
+    }
+    
+    .dragging {
+        opacity: 0.5;
+    }
+    
+    .search-container {
+        margin-bottom: 20px;
+    }
+
+    @media (max-width: 768px) {
+        .kanban-board {
+            flex-wrap: wrap;
+        }
+        .kanban-column {
+            flex: 1 1 100%;
+            margin-bottom: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Kanban Board</h1>
+        <div>
+            <a href="{{ url_for('create_task') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Thêm nhiệm vụ mới
+            </a>
+            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#searchModal">
+                <i class="fas fa-search"></i> Tìm kiếm
+            </button>
+        </div>
+    </div>
+
+    <div class="kanban-board">
+        <!-- CỘT CHUẨN BỊ (TODO) -->
+        <div class="kanban-column" id="column-todo" data-status="TODO">
+            <div class="kanban-column-header bg-light">
+                <div>
+                    <i class="fas fa-list"></i> CHUẨN BỊ
+                </div>
+                <span class="badge bg-secondary">{{ todo_tasks|length }}</span>
+            </div>
+            <div class="kanban-column-content" id="tasks-todo">
+                {% for task in todo_tasks %}
+                <div class="kanban-card priority-{{ task.priority_class }}" 
+                     id="task-{{ task.id }}" 
+                     data-id="{{ task.id }}" 
+                     data-status="{{ task.status.name }}"
+                     draggable="true">
+                    <div class="d-flex justify-content-between">
+                        <span class="badge {{ task.priority_badge }}">{{ task.priority_display }}</span>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-link dropdown-toggle p-0" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{{ url_for('edit_task', id=task.id) }}">Chỉnh sửa</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('task_comments', id=task.id) }}">Bình luận</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form action="{{ url_for('delete_task', id=task.id) }}" method="post" class="d-inline delete-form">
+                                        <button type="submit" class="dropdown-item text-danger">Xóa</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <h5 class="kanban-card-title">
+                        <a href="{{ url_for('edit_task', id=task.id) }}">{{ task.title }}</a>
+                    </h5>
+                    <div class="task-progress-bar">
+                        <div class="task-progress-fill" style="width: {{ task.progress }}%;"></div>
+                    </div>
+                    {% if task.deadline %}
+                    <div class="task-deadline mt-2 {% if task.is_overdue %}task-overdue{% endif %}">
+                        <i class="far fa-calendar-alt"></i> 
+                        {{ task.deadline.strftime('%d/%m/%Y') }}
+                        {% if task.is_overdue %}<span class="text-danger">(Quá hạn)</span>{% endif %}
+                    </div>
+                    {% endif %}
+                    {% if task.labels %}
+                    <div class="kanban-labels">
+                        {% for label in task.labels.split(',') %}
+                        <span class="kanban-label">{{ label }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="kanban-card-footer">
+                        <div>
+                            {% if task.assigned_to %}
+                            <span class="text-muted" title="{{ task.assigned_to.full_name }}">
+                                <i class="fas fa-user"></i> {{ task.assigned_to.full_name }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">
+                                <i class="fas fa-user-slash"></i> Chưa gán
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            {% if task.department %}
+                            <span class="text-muted">
+                                <i class="fas fa-building"></i> {{ task.department.name }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-tasks fa-2x mb-3"></i>
+                    <p>Không có nhiệm vụ nào</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- CỘT ĐANG THỰC HIỆN (IN_PROGRESS) -->
+        <div class="kanban-column" id="column-in-progress" data-status="IN_PROGRESS">
+            <div class="kanban-column-header bg-light">
+                <div>
+                    <i class="fas fa-spinner"></i> ĐANG THỰC HIỆN
+                </div>
+                <span class="badge bg-primary">{{ in_progress_tasks|length }}</span>
+            </div>
+            <div class="kanban-column-content" id="tasks-in-progress">
+                {% for task in in_progress_tasks %}
+                <div class="kanban-card priority-{{ task.priority_class }}" 
+                     id="task-{{ task.id }}" 
+                     data-id="{{ task.id }}" 
+                     data-status="{{ task.status.name }}"
+                     draggable="true">
+                    <div class="d-flex justify-content-between">
+                        <span class="badge {{ task.priority_badge }}">{{ task.priority_display }}</span>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-link dropdown-toggle p-0" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{{ url_for('edit_task', id=task.id) }}">Chỉnh sửa</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('task_comments', id=task.id) }}">Bình luận</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form action="{{ url_for('delete_task', id=task.id) }}" method="post" class="d-inline delete-form">
+                                        <button type="submit" class="dropdown-item text-danger">Xóa</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <h5 class="kanban-card-title">
+                        <a href="{{ url_for('edit_task', id=task.id) }}">{{ task.title }}</a>
+                    </h5>
+                    <div class="task-progress-bar">
+                        <div class="task-progress-fill" style="width: {{ task.progress }}%;"></div>
+                    </div>
+                    {% if task.deadline %}
+                    <div class="task-deadline mt-2 {% if task.is_overdue %}task-overdue{% endif %}">
+                        <i class="far fa-calendar-alt"></i> 
+                        {{ task.deadline.strftime('%d/%m/%Y') }}
+                        {% if task.is_overdue %}<span class="text-danger">(Quá hạn)</span>{% endif %}
+                    </div>
+                    {% endif %}
+                    {% if task.labels %}
+                    <div class="kanban-labels">
+                        {% for label in task.labels.split(',') %}
+                        <span class="kanban-label">{{ label }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="kanban-card-footer">
+                        <div>
+                            {% if task.assigned_to %}
+                            <span class="text-muted" title="{{ task.assigned_to.full_name }}">
+                                <i class="fas fa-user"></i> {{ task.assigned_to.full_name }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">
+                                <i class="fas fa-user-slash"></i> Chưa gán
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            {% if task.department %}
+                            <span class="text-muted">
+                                <i class="fas fa-building"></i> {{ task.department.name }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-tasks fa-2x mb-3"></i>
+                    <p>Không có nhiệm vụ nào</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- CỘT XEM XÉT (REVIEW) -->
+        <div class="kanban-column" id="column-review" data-status="REVIEW">
+            <div class="kanban-column-header bg-light">
+                <div>
+                    <i class="fas fa-search"></i> XEM XÉT
+                </div>
+                <span class="badge bg-info">{{ review_tasks|length }}</span>
+            </div>
+            <div class="kanban-column-content" id="tasks-review">
+                {% for task in review_tasks %}
+                <div class="kanban-card priority-{{ task.priority_class }}" 
+                     id="task-{{ task.id }}" 
+                     data-id="{{ task.id }}" 
+                     data-status="{{ task.status.name }}"
+                     draggable="true">
+                    <div class="d-flex justify-content-between">
+                        <span class="badge {{ task.priority_badge }}">{{ task.priority_display }}</span>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-link dropdown-toggle p-0" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{{ url_for('edit_task', id=task.id) }}">Chỉnh sửa</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('task_comments', id=task.id) }}">Bình luận</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form action="{{ url_for('delete_task', id=task.id) }}" method="post" class="d-inline delete-form">
+                                        <button type="submit" class="dropdown-item text-danger">Xóa</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <h5 class="kanban-card-title">
+                        <a href="{{ url_for('edit_task', id=task.id) }}">{{ task.title }}</a>
+                    </h5>
+                    <div class="task-progress-bar">
+                        <div class="task-progress-fill" style="width: {{ task.progress }}%;"></div>
+                    </div>
+                    {% if task.deadline %}
+                    <div class="task-deadline mt-2 {% if task.is_overdue %}task-overdue{% endif %}">
+                        <i class="far fa-calendar-alt"></i> 
+                        {{ task.deadline.strftime('%d/%m/%Y') }}
+                        {% if task.is_overdue %}<span class="text-danger">(Quá hạn)</span>{% endif %}
+                    </div>
+                    {% endif %}
+                    {% if task.labels %}
+                    <div class="kanban-labels">
+                        {% for label in task.labels.split(',') %}
+                        <span class="kanban-label">{{ label }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="kanban-card-footer">
+                        <div>
+                            {% if task.assigned_to %}
+                            <span class="text-muted" title="{{ task.assigned_to.full_name }}">
+                                <i class="fas fa-user"></i> {{ task.assigned_to.full_name }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">
+                                <i class="fas fa-user-slash"></i> Chưa gán
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            {% if task.department %}
+                            <span class="text-muted">
+                                <i class="fas fa-building"></i> {{ task.department.name }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-tasks fa-2x mb-3"></i>
+                    <p>Không có nhiệm vụ nào</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- CỘT HOÀN THÀNH (DONE) -->
+        <div class="kanban-column" id="column-done" data-status="DONE">
+            <div class="kanban-column-header bg-light">
+                <div>
+                    <i class="fas fa-check-circle"></i> HOÀN THÀNH
+                </div>
+                <span class="badge bg-success">{{ done_tasks|length }}</span>
+            </div>
+            <div class="kanban-column-content" id="tasks-done">
+                {% for task in done_tasks %}
+                <div class="kanban-card priority-{{ task.priority_class }}" 
+                     id="task-{{ task.id }}" 
+                     data-id="{{ task.id }}" 
+                     data-status="{{ task.status.name }}"
+                     draggable="true">
+                    <div class="d-flex justify-content-between">
+                        <span class="badge {{ task.priority_badge }}">{{ task.priority_display }}</span>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-link dropdown-toggle p-0" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{{ url_for('edit_task', id=task.id) }}">Chỉnh sửa</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('task_comments', id=task.id) }}">Bình luận</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form action="{{ url_for('delete_task', id=task.id) }}" method="post" class="d-inline delete-form">
+                                        <button type="submit" class="dropdown-item text-danger">Xóa</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <h5 class="kanban-card-title">
+                        <a href="{{ url_for('edit_task', id=task.id) }}">{{ task.title }}</a>
+                    </h5>
+                    <div class="task-progress-bar">
+                        <div class="task-progress-fill" style="width: {{ task.progress }}%;"></div>
+                    </div>
+                    {% if task.deadline %}
+                    <div class="task-deadline mt-2">
+                        <i class="far fa-calendar-alt"></i> 
+                        {{ task.deadline.strftime('%d/%m/%Y') }}
+                    </div>
+                    {% endif %}
+                    {% if task.completed_at %}
+                    <div class="text-success mt-1">
+                        <i class="fas fa-check-circle"></i> Hoàn thành: {{ task.completed_at.strftime('%d/%m/%Y %H:%M') }}
+                    </div>
+                    {% endif %}
+                    {% if task.labels %}
+                    <div class="kanban-labels">
+                        {% for label in task.labels.split(',') %}
+                        <span class="kanban-label">{{ label }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="kanban-card-footer">
+                        <div>
+                            {% if task.assigned_to %}
+                            <span class="text-muted" title="{{ task.assigned_to.full_name }}">
+                                <i class="fas fa-user"></i> {{ task.assigned_to.full_name }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">
+                                <i class="fas fa-user-slash"></i> Chưa gán
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            {% if task.department %}
+                            <span class="text-muted">
+                                <i class="fas fa-building"></i> {{ task.department.name }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-tasks fa-2x mb-3"></i>
+                    <p>Không có nhiệm vụ nào</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal tìm kiếm -->
+<div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="searchModalLabel">Tìm kiếm nhiệm vụ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('search_tasks') }}" method="get">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="keyword" class="form-label">Từ khóa</label>
+                            <input type="text" class="form-control" id="keyword" name="keyword" placeholder="Tìm kiếm theo tiêu đề, mô tả, nhãn...">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="status" class="form-label">Trạng thái</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">Tất cả</option>
+                                {% for status in task_statuses %}
+                                <option value="{{ status.name }}">{{ status.value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="priority" class="form-label">Mức độ ưu tiên</label>
+                            <select class="form-select" id="priority" name="priority">
+                                <option value="">Tất cả</option>
+                                {% for priority in task_priorities %}
+                                <option value="{{ priority.name }}">{{ priority.value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="assigned_to" class="form-label">Người được giao</label>
+                            <select class="form-select" id="assigned_to" name="assigned_to">
+                                <option value="">Tất cả</option>
+                                {% for employee in employees %}
+                                <option value="{{ employee.id }}">{{ employee.employee_code }} - {{ employee.full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="department_id" class="form-label">Phòng ban</label>
+                            <select class="form-select" id="department_id" name="department_id">
+                                <option value="">Tất cả</option>
+                                {% for department in departments %}
+                                <option value="{{ department.id }}">{{ department.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="label" class="form-label">Nhãn</label>
+                            <input type="text" class="form-control" id="label" name="label" placeholder="Nhập nhãn cần tìm">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="overdue" name="overdue" value="true">
+                        <label class="form-check-label" for="overdue">Chỉ hiện nhiệm vụ quá hạn</label>
+                    </div>
+                    
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận xóa -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa nhiệm vụ này không?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">Xóa</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Xử lý kéo thả
+    const cards = document.querySelectorAll('.kanban-card');
+    const columns = document.querySelectorAll('.kanban-column-content');
+    
+    let draggedItem = null;
+    
+    // Thêm sự kiện kéo thả cho các thẻ
+    cards.forEach(card => {
+        card.addEventListener('dragstart', function() {
+            draggedItem = this;
+            setTimeout(() => {
+                this.classList.add('dragging');
+            }, 0);
+        });
+        
+        card.addEventListener('dragend', function() {
+            this.classList.remove('dragging');
+            draggedItem = null;
+        });
+    });
+    
+    // Xử lý các cột khi kéo thả
+    columns.forEach(column => {
+        column.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('active');
+        });
+        
+        column.addEventListener('dragleave', function() {
+            this.classList.remove('active');
+        });
+        
+        column.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('active');
+            
+            if (draggedItem) {
+                this.appendChild(draggedItem);
+                
+                // Lấy thông tin nhiệm vụ và trạng thái mới
+                const taskId = draggedItem.getAttribute('data-id');
+                const newStatus = this.parentElement.getAttribute('data-status');
+                const oldStatus = draggedItem.getAttribute('data-status');
+                
+                // Chỉ gọi API nếu trạng thái thay đổi
+                if (newStatus && oldStatus !== newStatus) {
+                    updateTaskStatus(taskId, newStatus);
+                    
+                    // Cập nhật thuộc tính của thẻ
+                    draggedItem.setAttribute('data-status', newStatus);
+                }
+            }
+        });
+    });
+    
+    // Gửi yêu cầu cập nhật trạng thái
+    function updateTaskStatus(taskId, newStatus) {
+        fetch('/tasks/update-status', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                taskId: taskId,
+                status: newStatus
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Cập nhật UI nếu cần
+                console.log('Đã cập nhật trạng thái thành công');
+                
+                // Cập nhật số lượng nhiệm vụ trong mỗi cột
+                updateTaskCounts();
+            } else {
+                console.error('Lỗi khi cập nhật trạng thái:', data.message);
+                // Hiển thị thông báo lỗi
+                alert('Lỗi: ' + data.message);
+                
+                // Nếu có lỗi, reload trang để làm mới giao diện
+                window.location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Lỗi khi gửi yêu cầu:', error);
+            alert('Đã xảy ra lỗi. Vui lòng thử lại sau.');
+            window.location.reload();
+        });
+    }
+    
+    // Cập nhật số lượng nhiệm vụ trong mỗi cột
+    function updateTaskCounts() {
+        const columns = [
+            { id: 'tasks-todo', badge: document.querySelector('#column-todo .badge') },
+            { id: 'tasks-in-progress', badge: document.querySelector('#column-in-progress .badge') },
+            { id: 'tasks-review', badge: document.querySelector('#column-review .badge') },
+            { id: 'tasks-done', badge: document.querySelector('#column-done .badge') }
+        ];
+        
+        columns.forEach(column => {
+            const taskCount = document.querySelectorAll(`#${column.id} .kanban-card`).length;
+            column.badge.textContent = taskCount;
+        });
+    }
+    
+    // Xử lý xác nhận xóa nhiệm vụ
+    const deleteModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+    const deleteForms = document.querySelectorAll('.delete-form');
+    const confirmDeleteBtn = document.getElementById('confirmDelete');
+    let currentDeleteForm = null;
+    
+    deleteForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            currentDeleteForm = this;
+            deleteModal.show();
+        });
+    });
+    
+    confirmDeleteBtn.addEventListener('click', function() {
+        if (currentDeleteForm) {
+            currentDeleteForm.submit();
+        }
+        deleteModal.hide();
+    });
+});
+</script>
+{% endblock %}

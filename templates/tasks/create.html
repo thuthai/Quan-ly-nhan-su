@@ -1,0 +1,199 @@
+{% extends 'layout.html' %}
+
+{% block title %}Tạo nhiệm vụ mới{% endblock %}
+
+{% block styles %}
+<style>
+    .form-label {
+        font-weight: 600;
+    }
+    .priority-info {
+        font-size: 0.85rem;
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.5rem;
+    }
+    .priority-item {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    .priority-color {
+        width: 12px;
+        height: 12px;
+        border-radius: 2px;
+    }
+    .priority-HIGH {
+        background-color: #ef4444;
+    }
+    .priority-MEDIUM {
+        background-color: #f59e0b;
+    }
+    .priority-LOW {
+        background-color: #22c55e;
+    }
+    .form-text {
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Tạo nhiệm vụ mới</h1>
+        <a href="{{ url_for('kanban_board') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Quay lại Kanban
+        </a>
+    </div>
+    
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="post" action="{{ url_for('create_task') }}">
+                {{ form.hidden_tag() }}
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label for="title" class="form-label">Tiêu đề nhiệm vụ <span class="text-danger">*</span></label>
+                        {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), placeholder="Nhập tiêu đề nhiệm vụ") }}
+                        {% for error in form.title.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label for="description" class="form-label">Mô tả</label>
+                        {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=4, placeholder="Mô tả chi tiết nhiệm vụ") }}
+                        {% for error in form.description.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="status" class="form-label">Trạng thái <span class="text-danger">*</span></label>
+                        {{ form.status(class="form-select" + (" is-invalid" if form.status.errors else "")) }}
+                        {% for error in form.status.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="priority" class="form-label">Mức độ ưu tiên <span class="text-danger">*</span></label>
+                        {{ form.priority(class="form-select" + (" is-invalid" if form.priority.errors else "")) }}
+                        {% for error in form.priority.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                        <div class="priority-info">
+                            <div class="priority-item">
+                                <div class="priority-color priority-HIGH"></div>
+                                <span>Cao</span>
+                            </div>
+                            <div class="priority-item">
+                                <div class="priority-color priority-MEDIUM"></div>
+                                <span>Trung bình</span>
+                            </div>
+                            <div class="priority-item">
+                                <div class="priority-color priority-LOW"></div>
+                                <span>Thấp</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="assigned_to" class="form-label">Người thực hiện</label>
+                        {{ form.assigned_to(class="form-select" + (" is-invalid" if form.assigned_to.errors else "")) }}
+                        {% for error in form.assigned_to.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="department_id" class="form-label">Phòng ban</label>
+                        {{ form.department_id(class="form-select" + (" is-invalid" if form.department_id.errors else "")) }}
+                        {% for error in form.department_id.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="deadline" class="form-label">Hạn chót</label>
+                        {{ form.deadline(class="form-control" + (" is-invalid" if form.deadline.errors else ""), type="datetime-local") }}
+                        {% for error in form.deadline.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="work_schedule_id" class="form-label">Lịch công tác liên quan</label>
+                        {{ form.work_schedule_id(class="form-select" + (" is-invalid" if form.work_schedule_id.errors else "")) }}
+                        {% for error in form.work_schedule_id.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="estimated_hours" class="form-label">Số giờ dự kiến</label>
+                        {{ form.estimated_hours(class="form-control" + (" is-invalid" if form.estimated_hours.errors else ""), type="number", min="0", step="0.5") }}
+                        {% for error in form.estimated_hours.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                        <div class="form-text">Ước tính thời gian hoàn thành nhiệm vụ (giờ)</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="progress" class="form-label">Tiến độ (%)</label>
+                        {{ form.progress(class="form-control" + (" is-invalid" if form.progress.errors else ""), type="number", min="0", max="100") }}
+                        {% for error in form.progress.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                        <div class="form-text">Tiến độ hoàn thành nhiệm vụ (%)</div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label for="labels" class="form-label">Nhãn</label>
+                        {{ form.labels(class="form-control" + (" is-invalid" if form.labels.errors else ""), placeholder="Nhập các nhãn cách nhau bằng dấu phẩy, ví dụ: Backend, API, Khẩn") }}
+                        {% for error in form.labels.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                        <div class="form-text">{{ form.labels.description }}</div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label for="dependent_tasks" class="form-label">Nhiệm vụ phụ thuộc</label>
+                        {{ form.dependent_tasks(class="form-select" + (" is-invalid" if form.dependent_tasks.errors else ""), multiple="multiple", size="5") }}
+                        {% for error in form.dependent_tasks.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                        <div class="form-text">Chọn các nhiệm vụ mà nhiệm vụ này phụ thuộc vào (nhiệm vụ tiên quyết). Nhấn Ctrl để chọn nhiều mục.</div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('kanban_board') }}" class="btn btn-outline-secondary">Hủy</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Lưu nhiệm vụ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Có thể thêm các xử lý JavaScript bổ sung ở đây nếu cần
+});
+</script>
+{% endblock %}
