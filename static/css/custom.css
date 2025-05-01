@@ -293,6 +293,20 @@ table.table tbody tr:nth-of-type(odd) td {
     background-color: rgba(0, 0, 0, 0.03) !important;
 }
 
+/* Sửa lỗi màu nền đen trong thông tin nhân viên */
+.list-group-item {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-color: #e9ecef !important;
+}
+
+.list-group-item span,
+.list-group-item strong {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    -webkit-text-fill-color: #000000 !important;
+}
+
 /* Fix cho các bảng trong admin card */
 .admin-card .list-group-item {
     background-color: #ffffff !important;
@@ -686,6 +700,20 @@ canvas {
 .leave-rejected {
     background-color: var(--bs-danger);
     color: white;
+}
+
+/* Khắc phục lỗi hiển thị trang lịch sử nghỉ phép */
+.card[style*="background-color"] .card-body {
+    background-color: #ffffff !important;
+}
+
+.card-header.bg-warning,
+.card-header.bg-primary,
+.card-header.bg-success,
+.card-header.bg-info,
+.card-header.bg-secondary {
+    color: #ffffff !important;
+    font-weight: 700 !important;
 }
 
 /* Contract warning */
