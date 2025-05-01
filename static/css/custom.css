@@ -270,6 +270,39 @@ textarea::placeholder {
     font-weight: normal !important;
 }
 
+/* Sửa bảng dữ liệu có nền tối */
+table.table tr {
+    background-color: #ffffff !important;
+}
+
+table.table td, 
+table.table th {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    background-color: #ffffff !important; 
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+table.table tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.03) !important;
+}
+
+table.table tbody tr:nth-of-type(odd) td {
+    background-color: rgba(0, 0, 0, 0.03) !important;
+}
+
+table.table thead th {
+    background-color: #f8f9fa !important;
+    border-bottom: 2px solid #dee2e6 !important;
+    font-weight: 700 !important;
+}
+
+.pagination .page-item.active .page-link {
+    color: #ffffff !important;
+    background-color: var(--bs-primary) !important;
+    -webkit-text-fill-color: white !important;
+}
+
 /* Đảm bảo tất cả các option trong select box có chữ đen */
 option {
     color: #000000 !important;
