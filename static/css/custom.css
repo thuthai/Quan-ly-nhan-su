@@ -806,7 +806,9 @@ input[type="datetime-local"] {
 
 .flatpickr-months .flatpickr-month,
 .flatpickr-current-month .flatpickr-monthDropdown-months,
-.flatpickr-current-month input.cur-year {
+.flatpickr-current-month input.cur-year,
+.flatpickr-current-month,
+.flatpickr-current-month span {
     background-color: var(--bs-primary) !important;
     color: white !important;
     fill: white !important;
@@ -814,6 +816,8 @@ input[type="datetime-local"] {
     padding: 8px 0 !important;
     font-weight: 700 !important;
     border: none !important;
+    -webkit-text-fill-color: white !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
 }
 
 .flatpickr-months {
@@ -821,6 +825,23 @@ input[type="datetime-local"] {
     border-radius: 8px 8px 0 0 !important;
     margin: -16px -16px 10px -16px !important;
     padding: 8px 16px !important;
+    z-index: 10 !important;
+}
+
+/* Sửa lỗi hiển thị tháng và năm */
+.numInputWrapper {
+    position: relative !important;
+    height: auto !important;
+}
+
+.flatpickr-current-month .numInputWrapper {
+    width: 7ch !important;
+}
+
+.flatpickr-current-month .numInputWrapper span.arrowUp,
+.flatpickr-current-month .numInputWrapper span.arrowDown {
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 .flatpickr-weekdays {
