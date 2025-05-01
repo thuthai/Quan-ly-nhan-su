@@ -702,7 +702,7 @@ canvas {
     color: white;
 }
 
-/* Khắc phục lỗi hiển thị trang lịch sử nghỉ phép */
+/* Khắc phục lỗi hiển thị trang lịch sử nghỉ phép và trang chi tiết nhân viên */
 .card[style*="background-color"] .card-body {
     background-color: #ffffff !important;
 }
@@ -714,6 +714,23 @@ canvas {
 .card-header.bg-secondary {
     color: #ffffff !important;
     font-weight: 700 !important;
+}
+
+.card-body {
+    background-color: #ffffff !important;
+}
+
+.employee-info-list .list-group-item {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-color: #e9ecef !important;
+}
+
+.employee-info-list .list-group-item strong,
+.employee-info-list .list-group-item span {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    -webkit-text-fill-color: #000000 !important;
 }
 
 /* Contract warning */

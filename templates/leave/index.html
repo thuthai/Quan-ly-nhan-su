@@ -20,7 +20,7 @@
     <div class="card-header bg-primary text-white">
         <h5 class="mb-0">Thông tin nhân viên</h5>
     </div>
-    <div class="card-body">
+    <div class="card-body bg-white">
         <div class="row">
             <div class="col-md-3 text-center">
                 <img src="{{ url_for('static', filename=employee.profile_image) if '/' in employee.profile_image else employee.profile_image }}" 
@@ -41,7 +41,7 @@
     <div class="card-header bg-info text-white">
         <h5 class="mb-0">Lịch sử đơn xin nghỉ phép</h5>
     </div>
-    <div class="card-body">
+    <div class="card-body bg-white">
         {% if leave_requests %}
             <div class="table-responsive">
                 <table class="table table-hover datatable">
@@ -100,7 +100,7 @@
     <div class="card-header bg-secondary text-white">
         <h5 class="mb-0">Hướng dẫn đăng ký nghỉ phép</h5>
     </div>
-    <div class="card-body">
+    <div class="card-body bg-white">
         <div class="row">
             <div class="col-md-6">
                 <h6>Các loại phép:</h6>

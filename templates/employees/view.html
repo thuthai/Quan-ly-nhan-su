@@ -59,33 +59,33 @@
                         <i class="bi bi-person-badge me-2"></i>Thông tin cá nhân
                     </h5>
                 </div>
-                <div class="card-body">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">
+                <div class="card-body bg-white">
+                    <ul class="list-group list-group-flush employee-info-list">
+                        <li class="list-group-item bg-white">
                             <strong><i class="bi bi-gender-ambiguous me-2"></i>Giới tính:</strong>
                             <span class="float-end">{{ employee.gender.value }}</span>
                         </li>
-                        <li class="list-group-item">
+                        <li class="list-group-item bg-white">
                             <strong><i class="bi bi-calendar3 me-2"></i>Ngày sinh:</strong>
                             <span class="float-end">{{ employee.date_of_birth.strftime('%d/%m/%Y') }}</span>
                         </li>
-                        <li class="list-group-item">
+                        <li class="list-group-item bg-white">
                             <strong><i class="bi bi-house me-2"></i>Quê quán:</strong>
                             <span class="float-end">{{ employee.home_town or 'Chưa cập nhật' }}</span>
                         </li>
-                        <li class="list-group-item">
+                        <li class="list-group-item bg-white">
                             <strong><i class="bi bi-geo-alt me-2"></i>Địa chỉ:</strong>
                             <span class="float-end">{{ employee.address or 'Chưa cập nhật' }}</span>
                         </li>
-                        <li class="list-group-item">
+                        <li class="list-group-item bg-white">
                             <strong><i class="bi bi-envelope me-2"></i>Email:</strong>
                             <span class="float-end">{{ employee.email }}</span>
                         </li>
-                        <li class="list-group-item">
+                        <li class="list-group-item bg-white">
                             <strong><i class="bi bi-telephone me-2"></i>Điện thoại:</strong>
                             <span class="float-end">{{ employee.phone_number or 'Chưa cập nhật' }}</span>
                         </li>
-                        <li class="list-group-item">
+                        <li class="list-group-item bg-white">
                             <strong><i class="bi bi-book me-2"></i>Trình độ học vấn:</strong>
                             <span class="float-end">{{ employee.education_level or 'Chưa cập nhật' }}</span>
                         </li>
@@ -99,29 +99,29 @@
                         <i class="bi bi-briefcase me-2"></i>Thông tin công việc
                     </h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body bg-white">
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item">
+                        <li class="list-group-item bg-white">
                             <strong><i class="bi bi-calendar-check me-2"></i>Ngày vào công ty:</strong>
                             <span class="float-end">{{ employee.join_date.strftime('%d/%m/%Y') }}</span>
                         </li>
-                        <li class="list-group-item">
+                        <li class="list-group-item bg-white">
                             <strong><i class="bi bi-building me-2"></i>Phòng ban:</strong>
                             <span class="float-end">{{ employee.department.name }}</span>
                         </li>
-                        <li class="list-group-item">
+                        <li class="list-group-item bg-white">
                             <strong><i class="bi bi-person-vcard me-2"></i>Chức vụ:</strong>
                             <span class="float-end">{{ employee.position or 'Chưa cập nhật' }}</span>
                         </li>
-                        <li class="list-group-item">
+                        <li class="list-group-item bg-white">
                             <strong><i class="bi bi-cash-stack me-2"></i>Bậc lương:</strong>
                             <span class="float-end">{{ employee.salary_grade or 'Chưa cập nhật' }}</span>
                         </li>
-                        <li class="list-group-item">
+                        <li class="list-group-item bg-white">
                             <strong><i class="bi bi-calculator me-2"></i>Hệ số lương:</strong>
                             <span class="float-end">{{ employee.salary_coefficient or 'Chưa cập nhật' }}</span>
                         </li>
-                        <li class="list-group-item">
+                        <li class="list-group-item bg-white">
                             <strong><i class="bi bi-calendar2-range me-2"></i>Thời hạn hợp đồng:</strong>
                             <span class="float-end">
                                 {% if employee.contract_start_date and employee.contract_end_date %}
