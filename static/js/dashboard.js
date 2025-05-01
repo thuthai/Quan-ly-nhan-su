@@ -1,6 +1,9 @@
 // dashboard.js - JavaScript for dashboard charts and statistics
 
 document.addEventListener('DOMContentLoaded', function() {
+  // Fix chart container height problems
+  fixChartContainers();
+  
   // Initialize department chart if element exists
   const deptChartElement = document.getElementById('departmentChart');
   if (deptChartElement) {
@@ -19,6 +22,47 @@ document.addEventListener('DOMContentLoaded', function() {
     renderAttendanceChart(attendanceChartElement);
   }
 });
+
+// Fix all chart containers to have consistent height
+function fixChartContainers() {
+  // Set fixed height for all chart elements to prevent extreme stretching
+  const charts = document.querySelectorAll('canvas');
+  charts.forEach(chart => {
+    // Giữ reference đến canvas cũ
+    const oldCanvas = chart;
+    
+    // Lấy thông tin context từ canvas cũ
+    const oldContext = chart.getContext('2d');
+    const oldId = chart.id;
+    const oldParent = chart.parentElement;
+    
+    // Tạo canvas mới với id và các thuộc tính của canvas cũ
+    const newCanvas = document.createElement('canvas');
+    newCanvas.id = oldId;
+    newCanvas.height = 280;
+    newCanvas.width = oldCanvas.width;
+    newCanvas.style.height = '280px';
+    newCanvas.style.maxHeight = '280px';
+    newCanvas.style.width = 'auto';
+    
+    // Thay thế canvas cũ bằng canvas mới
+    if (oldParent) {
+      // Tạo một div container nếu chưa có
+      oldParent.style.height = '280px';
+      oldParent.style.maxHeight = '280px';
+      oldParent.style.overflow = 'hidden';
+      
+      // Thay thế canvas
+      oldParent.replaceChild(newCanvas, oldCanvas);
+    }
+    
+    // Sao chép dữ liệu từ data attributes
+    const dataAttributes = oldCanvas.dataset;
+    for (const key in dataAttributes) {
+      newCanvas.dataset[key] = dataAttributes[key];
+    }
+  });
+}
 
 // Render department distribution chart
 function renderDepartmentChart(chartElement) {
