@@ -137,6 +137,11 @@ function createEducationChart(educationStats) {
     const ctx = document.getElementById('educationChart');
     if (!ctx) return;
     
+    // Đặt kích thước cố định cho canvas
+    ctx.height = 280;
+    ctx.style.height = '280px';
+    ctx.style.maxHeight = '280px';
+    
     // Chuẩn bị dữ liệu
     const labels = Object.keys(educationStats);
     const data = Object.values(educationStats);
@@ -157,6 +162,7 @@ function createEducationChart(educationStats) {
         },
         options: {
             maintainAspectRatio: false,
+            responsive: true,
             plugins: {
                 legend: {
                     position: 'bottom',
