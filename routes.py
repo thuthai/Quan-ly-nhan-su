@@ -15,14 +15,16 @@ from models import (User, Department, Employee, Attendance, LeaveRequest, Career
                    EmployeeStatus, UserRole, LeaveStatus, LeaveType, Award, AwardType, 
                    SalaryGrade, EmployeeSalary, PerformanceEvaluationCriteria, PerformanceEvaluation, 
                    PerformanceEvaluationDetail, PerformanceRatingPeriod, PerformanceRatingStatus,
-                   Position, CustomPosition)
+                   Position, CustomPosition, Task, TaskStatus, TaskPriority, TaskComment, 
+                   TaskAttachment, TaskDependency)
 from forms import (LoginForm, RegisterForm, DepartmentForm, EmployeeForm, EmployeeEditForm, 
                   LeaveRequestForm, CareerPathForm, AttendanceReportForm, EmployeeImportForm,
                   AwardForm, AwardEditForm, EmployeeFilterForm, 
                   SalaryGradeForm, SalaryGradeEditForm, EmployeeSalaryForm, EmployeeSalaryEditForm,
                   PerformanceCriteriaForm, PerformanceEvaluationForm, PerformanceCriteriaScoreForm,
                   EmployeePerformanceFeedbackForm, PerformanceApprovalForm, PerformanceFilterForm,
-                  CustomPositionForm, CustomPositionEditForm)
+                  CustomPositionForm, CustomPositionEditForm, TaskForm, TaskEditForm, TaskCommentForm,
+                  TaskSearchForm, TaskBulkActionForm)
 from utils import save_profile_image, export_employees_to_excel, export_attendance_to_excel, process_employee_import, create_sample_import_file
 
 
@@ -150,6 +152,18 @@ def admin():
     action_count = 78
     error_count = 2
     
+    # Số liệu Kanban
+    todo_count = Task.query.filter_by(status=TaskStatus.TODO).count()
+    in_progress_count = Task.query.filter_by(status=TaskStatus.IN_PROGRESS).count()
+    review_count = Task.query.filter_by(status=TaskStatus.REVIEW).count()
+    completed_count = Task.query.filter_by(status=TaskStatus.DONE).count()
+    
+    # Đếm số nhiệm vụ quá hạn
+    overdue_tasks = Task.query.filter(
+        Task.deadline < datetime.utcnow(),
+        Task.status.in_([TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.REVIEW])
+    ).count()
+    
     return render_template(
         'admin.html',
         user_count=user_count,
@@ -158,6 +172,11 @@ def admin():
         login_count=login_count,
         action_count=action_count,
         error_count=error_count,
+        todo_count=todo_count,
+        in_progress_count=in_progress_count,
+        review_count=review_count,
+        completed_count=completed_count,
+        overdue_tasks=overdue_tasks,
         today=date.today()
     )
 
@@ -1844,3 +1863,409 @@ def delete_custom_position(id):
     
     flash('Đã xóa chức vụ thành công!', 'success')
     return redirect(url_for('position_list'))
+
+
+# Kanban board routes
+@app.route('/tasks/kanban')
+@login_required
+def kanban_board():
+    """Hiển thị Kanban board cho quản lý nhiệm vụ"""
+    
+    # Lấy danh sách nhiệm vụ phân loại theo trạng thái
+    todo_tasks = Task.query.filter_by(status=TaskStatus.TODO).all()
+    in_progress_tasks = Task.query.filter_by(status=TaskStatus.IN_PROGRESS).all()
+    review_tasks = Task.query.filter_by(status=TaskStatus.REVIEW).all()
+    done_tasks = Task.query.filter_by(status=TaskStatus.DONE).order_by(Task.completed_at.desc()).limit(10).all()
+    
+    # Thêm form tìm kiếm
+    search_form = TaskSearchForm()
+    
+    # Lấy danh sách phòng ban và nhân viên cho bộ lọc
+    departments = Department.query.all()
+    employees = Employee.query.filter_by(status=EmployeeStatus.ACTIVE).all()
+    
+    return render_template(
+        'tasks/kanban.html',
+        todo_tasks=todo_tasks,
+        in_progress_tasks=in_progress_tasks,
+        review_tasks=review_tasks,
+        done_tasks=done_tasks,
+        search_form=search_form,
+        departments=departments,
+        employees=employees,
+        task_statuses=TaskStatus,
+        task_priorities=TaskPriority
+    )
+
+
+@app.route('/tasks/create', methods=['GET', 'POST'])
+@login_required
+def create_task():
+    """Tạo mới nhiệm vụ"""
+    form = TaskForm()
+    
+    if form.validate_on_submit():
+        # Xử lý dữ liệu nhãn (labels)
+        labels = []
+        if form.labels.data:
+            labels = [label.strip() for label in form.labels.data.split(',') if label.strip()]
+        
+        # Tạo nhiệm vụ mới
+        task = Task(
+            title=form.title.data,
+            description=form.description.data,
+            status=TaskStatus[form.status.data],
+            priority=TaskPriority[form.priority.data],
+            created_by_id=current_user.id,
+            department_id=form.department_id.data if form.department_id.data > 0 else None,
+            assigned_to_id=form.assigned_to.data if form.assigned_to.data > 0 else None,
+            deadline=form.deadline.data,
+            estimated_hours=form.estimated_hours.data,
+            progress=form.progress.data or 0,
+            labels=','.join(labels),
+            created_at=datetime.utcnow()
+        )
+        
+        # Liên kết với lịch công tác nếu có
+        if form.work_schedule_id.data and form.work_schedule_id.data > 0:
+            task.work_schedule_id = form.work_schedule_id.data
+        
+        db.session.add(task)
+        db.session.commit()
+        
+        # Tạo quan hệ phụ thuộc nhiệm vụ
+        if form.dependent_tasks.data:
+            for dep_task_id in form.dependent_tasks.data:
+                dependency = TaskDependency(
+                    task_id=task.id,
+                    dependent_on_id=dep_task_id
+                )
+                db.session.add(dependency)
+            
+            db.session.commit()
+        
+        flash('Đã tạo nhiệm vụ mới thành công!', 'success')
+        return redirect(url_for('kanban_board'))
+    
+    return render_template('tasks/create.html', form=form)
+
+
+@app.route('/tasks/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_task(id):
+    """Chỉnh sửa nhiệm vụ"""
+    task = Task.query.get_or_404(id)
+    
+    # Kiểm tra quyền: người tạo, người được giao, hoặc admin
+    if not current_user.is_admin() and current_user.id != task.created_by_id and current_user.id != task.assigned_to_id:
+        flash('Bạn không có quyền chỉnh sửa nhiệm vụ này!', 'danger')
+        return redirect(url_for('kanban_board'))
+    
+    form = TaskEditForm(obj=task)
+    form.task_id.data = task.id
+    
+    # Hiển thị nhãn dưới dạng chuỗi phân cách bằng dấu phẩy
+    if task.labels:
+        form.labels.data = task.labels
+    
+    # Hiển thị các nhiệm vụ phụ thuộc đã chọn
+    dependencies = TaskDependency.query.filter_by(task_id=task.id).all()
+    if dependencies:
+        form.dependent_tasks.data = [dep.dependent_on_id for dep in dependencies]
+    
+    if form.validate_on_submit():
+        # Cập nhật trạng thái trước đó trước khi thay đổi
+        old_status = task.status
+        
+        # Cập nhật thông tin nhiệm vụ
+        task.title = form.title.data
+        task.description = form.description.data
+        task.status = TaskStatus[form.status.data]
+        task.priority = TaskPriority[form.priority.data]
+        
+        # Xử lý trạng thái "Hoàn thành" (DONE)
+        if task.status == TaskStatus.DONE and old_status != TaskStatus.DONE:
+            task.completed_at = datetime.utcnow()
+        elif task.status != TaskStatus.DONE and old_status == TaskStatus.DONE:
+            task.completed_at = None
+        
+        # Cập nhật các thông tin khác
+        task.assigned_to_id = form.assigned_to.data if form.assigned_to.data > 0 else None
+        task.department_id = form.department_id.data if form.department_id.data > 0 else None
+        task.work_schedule_id = form.work_schedule_id.data if form.work_schedule_id.data > 0 else None
+        task.deadline = form.deadline.data
+        task.estimated_hours = form.estimated_hours.data
+        task.actual_hours = form.actual_hours.data
+        task.progress = form.progress.data or 0
+        
+        # Xử lý dữ liệu nhãn (labels)
+        if form.labels.data:
+            labels = [label.strip() for label in form.labels.data.split(',') if label.strip()]
+            task.labels = ','.join(labels)
+        else:
+            task.labels = ''
+        
+        # Cập nhật thời gian chỉnh sửa
+        task.updated_at = datetime.utcnow()
+        
+        # Cập nhật quan hệ phụ thuộc
+        # Xóa tất cả quan hệ phụ thuộc hiện tại
+        TaskDependency.query.filter_by(task_id=task.id).delete()
+        
+        # Thêm lại quan hệ phụ thuộc mới
+        if form.dependent_tasks.data:
+            for dep_task_id in form.dependent_tasks.data:
+                dependency = TaskDependency(
+                    task_id=task.id,
+                    dependent_on_id=dep_task_id
+                )
+                db.session.add(dependency)
+        
+        db.session.commit()
+        
+        flash('Đã cập nhật nhiệm vụ thành công!', 'success')
+        return redirect(url_for('kanban_board'))
+    
+    return render_template('tasks/edit.html', form=form, task=task)
+
+
+@app.route('/tasks/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_task(id):
+    """Xóa nhiệm vụ"""
+    task = Task.query.get_or_404(id)
+    
+    # Kiểm tra quyền: chỉ admin hoặc người tạo mới được xóa
+    if not current_user.is_admin() and current_user.id != task.created_by_id:
+        flash('Bạn không có quyền xóa nhiệm vụ này!', 'danger')
+        return redirect(url_for('kanban_board'))
+    
+    # Kiểm tra xem có nhiệm vụ nào phụ thuộc vào nhiệm vụ này không
+    dependent_tasks = TaskDependency.query.filter_by(dependent_on_id=task.id).all()
+    if dependent_tasks:
+        dependent_task_ids = [str(dep.task_id) for dep in dependent_tasks]
+        flash(f'Không thể xóa nhiệm vụ này vì có {len(dependent_tasks)} nhiệm vụ khác đang phụ thuộc vào nó (ID: {", ".join(dependent_task_ids)}).', 'danger')
+        return redirect(url_for('kanban_board'))
+    
+    # Xóa tất cả quan hệ phụ thuộc
+    TaskDependency.query.filter_by(task_id=task.id).delete()
+    
+    # Xóa tất cả bình luận
+    TaskComment.query.filter_by(task_id=task.id).delete()
+    
+    # Xóa tất cả tệp đính kèm
+    TaskAttachment.query.filter_by(task_id=task.id).delete()
+    
+    # Xóa nhiệm vụ
+    db.session.delete(task)
+    db.session.commit()
+    
+    flash('Đã xóa nhiệm vụ thành công!', 'success')
+    return redirect(url_for('kanban_board'))
+
+
+@app.route('/tasks/<int:id>/comments', methods=['GET', 'POST'])
+@login_required
+def task_comments(id):
+    """Quản lý bình luận cho nhiệm vụ"""
+    task = Task.query.get_or_404(id)
+    form = TaskCommentForm()
+    form.task_id.data = task.id
+    
+    if form.validate_on_submit():
+        comment = TaskComment(
+            task_id=task.id,
+            author_id=current_user.id,
+            content=form.content.data,
+            created_at=datetime.utcnow()
+        )
+        db.session.add(comment)
+        db.session.commit()
+        
+        flash('Đã thêm bình luận thành công!', 'success')
+        return redirect(url_for('task_comments', id=task.id))
+    
+    # Lấy tất cả bình luận cho nhiệm vụ này, sắp xếp theo thời gian mới nhất trước
+    comments = TaskComment.query.filter_by(task_id=task.id).order_by(TaskComment.created_at.desc()).all()
+    
+    return render_template(
+        'tasks/comments.html',
+        task=task,
+        comments=comments,
+        form=form
+    )
+
+
+@app.route('/tasks/search', methods=['GET', 'POST'])
+@login_required
+def search_tasks():
+    """Tìm kiếm nhiệm vụ"""
+    form = TaskSearchForm(request.args)
+    
+    # Tạo query cơ bản
+    query = Task.query
+    
+    # Áp dụng các bộ lọc từ form
+    if form.keyword.data:
+        query = query.filter(
+            db.or_(
+                Task.title.ilike(f'%{form.keyword.data}%'),
+                Task.description.ilike(f'%{form.keyword.data}%'),
+                Task.labels.ilike(f'%{form.keyword.data}%')
+            )
+        )
+    
+    if form.status.data:
+        query = query.filter_by(status=TaskStatus[form.status.data])
+    
+    if form.priority.data:
+        query = query.filter_by(priority=TaskPriority[form.priority.data])
+    
+    if form.assigned_to.data:
+        query = query.filter_by(assigned_to_id=form.assigned_to.data)
+    
+    if form.department_id.data:
+        query = query.filter_by(department_id=form.department_id.data)
+    
+    if form.label.data:
+        query = query.filter(Task.labels.ilike(f'%{form.label.data}%'))
+    
+    if form.overdue.data:
+        query = query.filter(
+            Task.deadline < datetime.utcnow(),
+            Task.status.in_([TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.REVIEW])
+        )
+    
+    # Sắp xếp kết quả theo thời gian tạo mới nhất
+    tasks = query.order_by(Task.created_at.desc()).all()
+    
+    # Lấy danh sách phòng ban và nhân viên cho bộ lọc
+    departments = Department.query.all()
+    employees = Employee.query.filter_by(status=EmployeeStatus.ACTIVE).all()
+    
+    return render_template(
+        'tasks/search.html',
+        tasks=tasks,
+        form=form,
+        departments=departments,
+        employees=employees,
+        task_statuses=TaskStatus,
+        task_priorities=TaskPriority
+    )
+
+
+@app.route('/tasks/update-status', methods=['POST'])
+@login_required
+def update_task_status():
+    """Cập nhật trạng thái nhiệm vụ (AJAX)"""
+    task_id = request.json.get('taskId')
+    new_status = request.json.get('status')
+    
+    task = Task.query.get_or_404(task_id)
+    
+    # Kiểm tra quyền: người tạo, người được giao, hoặc admin
+    if not current_user.is_admin() and current_user.id != task.created_by_id and current_user.id != task.assigned_to_id:
+        return jsonify({'success': False, 'message': 'Bạn không có quyền cập nhật nhiệm vụ này!'}), 403
+    
+    try:
+        # Lưu trạng thái trước khi thay đổi
+        old_status = task.status
+        
+        # Cập nhật trạng thái
+        task.status = TaskStatus[new_status]
+        
+        # Xử lý trạng thái "Hoàn thành" (DONE)
+        if task.status == TaskStatus.DONE and old_status != TaskStatus.DONE:
+            task.completed_at = datetime.utcnow()
+        elif task.status != TaskStatus.DONE and old_status == TaskStatus.DONE:
+            task.completed_at = None
+        
+        # Cập nhật thời gian chỉnh sửa
+        task.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Đã cập nhật trạng thái thành công!'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'}), 500
+
+
+@app.route('/tasks/bulk-action', methods=['POST'])
+@login_required
+def bulk_action_tasks():
+    """Thực hiện hành động hàng loạt trên nhiều nhiệm vụ"""
+    form = TaskBulkActionForm()
+    
+    if form.validate_on_submit():
+        task_ids = [int(task_id) for task_id in form.task_ids.data.split(',')]
+        action = form.action.data
+        
+        tasks = Task.query.filter(Task.id.in_(task_ids)).all()
+        
+        if action == 'status' and form.status.data:
+            for task in tasks:
+                old_status = task.status
+                task.status = TaskStatus[form.status.data]
+                
+                # Xử lý trạng thái "Hoàn thành" (DONE)
+                if task.status == TaskStatus.DONE and old_status != TaskStatus.DONE:
+                    task.completed_at = datetime.utcnow()
+                elif task.status != TaskStatus.DONE and old_status == TaskStatus.DONE:
+                    task.completed_at = None
+                
+                task.updated_at = datetime.utcnow()
+            
+            flash(f'Đã cập nhật trạng thái cho {len(tasks)} nhiệm vụ!', 'success')
+        
+        elif action == 'priority' and form.priority.data:
+            for task in tasks:
+                task.priority = TaskPriority[form.priority.data]
+                task.updated_at = datetime.utcnow()
+            
+            flash(f'Đã cập nhật mức độ ưu tiên cho {len(tasks)} nhiệm vụ!', 'success')
+        
+        elif action == 'assigned_to' and form.assigned_to.data is not None:
+            for task in tasks:
+                task.assigned_to_id = form.assigned_to.data if form.assigned_to.data > 0 else None
+                task.updated_at = datetime.utcnow()
+            
+            flash(f'Đã gán {len(tasks)} nhiệm vụ cho nhân viên mới!', 'success')
+        
+        elif action == 'department' and form.department_id.data is not None:
+            for task in tasks:
+                task.department_id = form.department_id.data if form.department_id.data > 0 else None
+                task.updated_at = datetime.utcnow()
+            
+            flash(f'Đã chuyển {len(tasks)} nhiệm vụ sang phòng ban mới!', 'success')
+        
+        elif action == 'delete':
+            deleted_count = 0
+            for task in tasks:
+                # Kiểm tra quyền: chỉ admin hoặc người tạo mới được xóa
+                if current_user.is_admin() or current_user.id == task.created_by_id:
+                    # Kiểm tra xem có nhiệm vụ nào phụ thuộc vào nhiệm vụ này không
+                    dependent_tasks = TaskDependency.query.filter_by(dependent_on_id=task.id).all()
+                    if not dependent_tasks:
+                        # Xóa tất cả quan hệ phụ thuộc
+                        TaskDependency.query.filter_by(task_id=task.id).delete()
+                        
+                        # Xóa tất cả bình luận
+                        TaskComment.query.filter_by(task_id=task.id).delete()
+                        
+                        # Xóa tất cả tệp đính kèm
+                        TaskAttachment.query.filter_by(task_id=task.id).delete()
+                        
+                        # Xóa nhiệm vụ
+                        db.session.delete(task)
+                        deleted_count += 1
+            
+            if deleted_count > 0:
+                flash(f'Đã xóa {deleted_count} nhiệm vụ thành công!', 'success')
+            else:
+                flash('Không thể xóa bất kỳ nhiệm vụ nào do không đủ quyền hoặc có nhiệm vụ khác phụ thuộc!', 'warning')
+        
+        db.session.commit()
+        
+        return redirect(url_for('kanban_board'))
+    
+    return redirect(url_for('kanban_board'))
