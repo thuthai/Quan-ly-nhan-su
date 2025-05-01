@@ -293,6 +293,23 @@ table.table tbody tr:nth-of-type(odd) td {
     background-color: rgba(0, 0, 0, 0.03) !important;
 }
 
+/* Fix cho các bảng trong admin card */
+.admin-card .list-group-item {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-color: #e9ecef !important;
+}
+
+.admin-card .list-group-item span {
+    color: #000000 !important;
+    font-weight: 700 !important;
+}
+
+.admin-card .list-group-item strong {
+    color: #000000 !important;
+    font-weight: 900 !important;
+}
+
 table.table thead th {
     background-color: #f8f9fa !important;
     border-bottom: 2px solid #dee2e6 !important;
