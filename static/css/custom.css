@@ -251,11 +251,18 @@ body, p, span, div, a, li, td, th, label, button, h1, h2, h3, h4, h5, h6, .card-
     font-weight: 600 !important;
 }
 
-/* Định dạng riêng cho các trường input để đảm bảo chữ đen trên nền trắng */
+/* Định dạng riêng cho các trường input để đảm bảo chữ đen đậm trên nền trắng */
 input, select, textarea, .form-control, .form-select {
     color: #000000 !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important;
     background-color: #ffffff !important;
+    border: 1px solid #ced4da !important; 
+}
+
+/* Thêm màu nền cho placeholder để tránh trùng màu */
+::placeholder {
+    color: #6c757d !important;
+    opacity: 0.8 !important;
 }
 
 /* Ngoại lệ cho các phần tử có background đặc biệt cần text màu trắng */
@@ -515,8 +522,8 @@ canvas {
 .form-control, .form-select {
     border-radius: 8px;
     padding: 0.6rem 1rem;
-    border: 1px solid rgba(0,0,0,0.1);
-    background-color: #ffffff;
+    border: 1px solid #95a5a6 !important;
+    background-color: #ffffff !important;
     color: #000000 !important;
     transition: all 0.3s;
 }
@@ -700,8 +707,9 @@ canvas {
 /* Enhanced date picker styles */
 input[type="date"], 
 input[type="datetime-local"] {
-    color: var(--bs-body-color) !important;
-    background-color: var(--bs-body-bg) !important;
+    color: #000000 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #95a5a6 !important;
 }
 
 /* Flatpickr styles */
