@@ -245,10 +245,17 @@ body {
 /* Style cho admin card và text trên toàn hệ thống */
 
 /* Đảm bảo mọi văn bản đều có màu đậm trên toàn hệ thống */
-body, p, span, div, a, li, td, th, label, input, select, textarea, button, h1, h2, h3, h4, h5, h6, .card-title, 
-.card-text, .card-header, .card-footer, .list-group-item, .nav-link, .form-label, .form-control, strong {
+body, p, span, div, a, li, td, th, label, button, h1, h2, h3, h4, h5, h6, .card-title, 
+.card-text, .card-header, .card-footer, .list-group-item, .nav-link, .form-label, strong {
     color: #000000 !important;
     font-weight: 600 !important;
+}
+
+/* Định dạng riêng cho các trường input để đảm bảo chữ đen trên nền trắng */
+input, select, textarea, .form-control, .form-select {
+    color: #000000 !important;
+    font-weight: 600 !important;
+    background-color: #ffffff !important;
 }
 
 /* Ngoại lệ cho các phần tử có background đặc biệt cần text màu trắng */
@@ -509,7 +516,8 @@ canvas {
     border-radius: 8px;
     padding: 0.6rem 1rem;
     border: 1px solid rgba(0,0,0,0.1);
-    background-color: #f8faff;
+    background-color: #ffffff;
+    color: #000000 !important;
     transition: all 0.3s;
 }
 
