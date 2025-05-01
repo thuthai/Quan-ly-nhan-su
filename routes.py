@@ -14,13 +14,15 @@ from app import app, db
 from models import (User, Department, Employee, Attendance, LeaveRequest, CareerPath, Gender, 
                    EmployeeStatus, UserRole, LeaveStatus, LeaveType, Award, AwardType, 
                    SalaryGrade, EmployeeSalary, PerformanceEvaluationCriteria, PerformanceEvaluation, 
-                   PerformanceEvaluationDetail, PerformanceRatingPeriod, PerformanceRatingStatus)
+                   PerformanceEvaluationDetail, PerformanceRatingPeriod, PerformanceRatingStatus,
+                   Position, CustomPosition)
 from forms import (LoginForm, RegisterForm, DepartmentForm, EmployeeForm, EmployeeEditForm, 
                   LeaveRequestForm, CareerPathForm, AttendanceReportForm, EmployeeImportForm,
                   AwardForm, AwardEditForm, EmployeeFilterForm, 
                   SalaryGradeForm, SalaryGradeEditForm, EmployeeSalaryForm, EmployeeSalaryEditForm,
                   PerformanceCriteriaForm, PerformanceEvaluationForm, PerformanceCriteriaScoreForm,
-                  EmployeePerformanceFeedbackForm, PerformanceApprovalForm, PerformanceFilterForm)
+                  EmployeePerformanceFeedbackForm, PerformanceApprovalForm, PerformanceFilterForm,
+                  CustomPositionForm, CustomPositionEditForm)
 from utils import save_profile_image, export_employees_to_excel, export_attendance_to_excel, process_employee_import, create_sample_import_file
 
 
