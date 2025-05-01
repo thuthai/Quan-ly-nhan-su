@@ -252,17 +252,35 @@ body, p, span, div, a, li, td, th, label, button, h1, h2, h3, h4, h5, h6, .card-
 }
 
 /* Định dạng riêng cho các trường input để đảm bảo chữ đen đậm trên nền trắng */
-input, select, textarea, .form-control, .form-select {
+input, select, textarea, .form-control, .form-select, .form-control-plaintext, .datepicker {
     color: #000000 !important;
-    font-weight: 700 !important;
+    font-weight: 900 !important; 
     background-color: #ffffff !important;
-    border: 1px solid #ced4da !important; 
+    border: 2px solid #6c757d !important; 
+    text-shadow: none !important;
 }
 
-/* Thêm màu nền cho placeholder để tránh trùng màu */
-::placeholder {
-    color: #6c757d !important;
-    opacity: 0.8 !important;
+/* Đảm bảo text thể hiện rõ trên các ô nhập liệu */
+.form-control::placeholder, 
+.form-select::placeholder, 
+input::placeholder, 
+textarea::placeholder {
+    color: #95a5a6 !important;
+    opacity: 0.7 !important;
+    font-weight: normal !important;
+}
+
+/* Đảm bảo tất cả các option trong select box có chữ đen */
+option {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+    font-weight: 900 !important;
+}
+
+/* Ép buộc tất cả form control có màu chữ đen đậm */
+input, select, textarea, .form-control, .form-select, .form-control-plaintext {
+    -webkit-text-fill-color: #000000 !important;
+    text-shadow: none !important;
 }
 
 /* Ngoại lệ cho các phần tử có background đặc biệt cần text màu trắng */
@@ -522,15 +540,18 @@ canvas {
 .form-control, .form-select {
     border-radius: 8px;
     padding: 0.6rem 1rem;
-    border: 1px solid #95a5a6 !important;
+    border: 2px solid #6c757d !important;
     background-color: #ffffff !important;
     color: #000000 !important;
+    font-weight: 900 !important;
     transition: all 0.3s;
 }
 
 .form-control:focus, .form-select:focus {
-    border-color: var(--bs-primary);
+    border-color: var(--bs-primary) !important;
     box-shadow: 0 0 0 3px rgba(var(--bs-primary-rgb), 0.2);
+    color: #000000 !important;
+    background-color: #ffffff !important;
 }
 
 .form-label {
@@ -709,7 +730,8 @@ input[type="date"],
 input[type="datetime-local"] {
     color: #000000 !important;
     background-color: #ffffff !important;
-    border: 1px solid #95a5a6 !important;
+    border: 2px solid #6c757d !important;
+    font-weight: 900 !important;
 }
 
 /* Flatpickr styles */
@@ -765,6 +787,8 @@ input[type="datetime-local"] {
     fill: white !important;
     border-radius: 8px 8px 0 0 !important;
     padding: 8px 0 !important;
+    font-weight: 700 !important;
+    border: none !important;
 }
 
 .flatpickr-months {
