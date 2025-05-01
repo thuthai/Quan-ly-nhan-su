@@ -792,7 +792,75 @@ input[type="datetime-local"] {
     font-weight: 900 !important;
 }
 
-/* Flatpickr styles */
+/* Litepicker styles - Modern datepicker mới */
+.modern-litepicker {
+    font-family: var(--bs-font-sans-serif) !important;
+    background-color: white !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+    border-radius: 12px !important;
+    border: none !important;
+    padding: 16px !important;
+    color: #333333 !important;
+    font-weight: 500 !important;
+}
+
+.modern-litepicker .container__months {
+    background-color: white !important;
+    color: #333333 !important;
+}
+
+.modern-litepicker .container__months .month-item-header {
+    background-color: var(--bs-primary) !important;
+    color: white !important;
+    padding: 15px !important;
+    border-radius: 8px 8px 0 0 !important;
+    font-weight: 700 !important;
+}
+
+.modern-litepicker .container__months .month-item-weekdays-row {
+    color: var(--bs-secondary) !important;
+    font-weight: 600 !important;
+}
+
+.modern-litepicker .container__days .day-item {
+    color: #333333 !important;
+    font-weight: 500 !important;
+    border-radius: 50% !important;
+}
+
+.modern-litepicker .container__days .day-item:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
+    color: var(--bs-primary) !important;
+}
+
+.modern-litepicker .container__days .day-item.is-start-date,
+.modern-litepicker .container__days .day-item.is-end-date {
+    background-color: var(--bs-primary) !important;
+    color: white !important;
+}
+
+.modern-litepicker .container__days .day-item.is-today {
+    border: 2px solid var(--bs-primary) !important;
+}
+
+.modern-litepicker .container__days .day-item.is-in-range {
+    background-color: rgba(var(--bs-primary-rgb), 0.2) !important;
+}
+
+.modern-litepicker .button-reset-custom {
+    background-color: var(--bs-danger) !important;
+    color: white !important;
+}
+
+.modern-litepicker .container__months .button-previous-month,
+.modern-litepicker .container__months .button-next-month {
+    color: white !important;
+    padding: 8px !important;
+    font-weight: bold !important;
+    font-size: 1.5rem !important;
+}
+
+/* Flatpickr styles - style cũ */
 .flatpickr-calendar {
     background-color: var(--bs-body-bg) !important;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
