@@ -1,0 +1,52 @@
+/* Datepicker Styles - Fix màu nền đen với chữ trắng  */
+.litepicker, .litepicker * {
+    box-sizing: border-box;
+    color: #000 !important;
+}
+
+.litepicker {
+    background-color: #fff !important;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.15) !important;
+    border-radius: 8px !important;
+    font-size: 0.9rem !important;
+    width: 300px !important;
+}
+
+.litepicker .container__months {
+    background-color: #fff !important;
+}
+
+.litepicker .container__days .day-item {
+    color: #333 !important;
+    background-color: #fff !important;
+}
+
+.litepicker .container__days .day-item:hover {
+    color: #fff !important;
+    background-color: #4a6cf7 !important;
+}
+
+.litepicker .container__days .day-item.is-start-date,
+.litepicker .container__days .day-item.is-end-date,
+.litepicker .container__days .day-item.is-in-range {
+    color: #fff !important;
+    background-color: #4a6cf7 !important;
+}
+
+.litepicker .container__months .month-item-header {
+    background-color: #6366f1 !important;
+    color: #fff !important;
+}
+
+.litepicker .container__months .month-item-header div {
+    color: #fff !important;
+}
+
+.litepicker .container__months .month-item-weekdays-row {
+    color: #333 !important;
+}
+
+.litepicker .container__months .month-item-header .button-previous-month,
+.litepicker .container__months .month-item-header .button-next-month {
+    color: #fff !important;
+}

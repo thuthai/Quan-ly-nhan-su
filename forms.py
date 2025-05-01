@@ -59,6 +59,8 @@ class EmployeeForm(FlaskForm):
     contract_start_date = DateField('Ngày bắt đầu hợp đồng', validators=[Optional()])
     contract_end_date = DateField('Ngày kết thúc hợp đồng', validators=[Optional()])
     education_level = SelectField('Trình độ học vấn', choices=[(e.name, e.value) for e in EducationLevel], validators=[Optional()])
+    university_name = StringField('Tên trường đại học', validators=[Optional()])
+    university_major = StringField('Chuyên ngành', validators=[Optional()])
     skills = TextAreaField('Kỹ năng', validators=[Optional()])
     profile_image = FileField('Ảnh đại diện', validators=[Optional(), FileAllowed(['jpg', 'png', 'jpeg'], 'Chỉ chấp nhận file hình ảnh')])
     status = SelectField('Trạng thái', choices=[(s.name, s.value) for s in EmployeeStatus], validators=[DataRequired(message='Vui lòng chọn trạng thái')])
