@@ -1,9 +1,10 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SelectField, DateField, DateTimeField, TextAreaField, FloatField, FileField, HiddenField, BooleanField, SelectMultipleField, SubmitField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, ValidationError
+from wtforms import StringField, PasswordField, SelectField, DateField, DateTimeField, TextAreaField, FloatField, FileField, HiddenField, BooleanField, SelectMultipleField, SubmitField, IntegerField
+from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, ValidationError, NumberRange
 from models import (Gender, EmployeeStatus, LeaveType, Department, User, Employee, 
               AwardType, EducationLevel, Position, VIETNAM_PROVINCES, SalaryGrade, WorkScheduleType, WorkScheduleStatus,
-              PerformanceRatingPeriod, PerformanceRatingStatus, PerformanceEvaluationCriteria, CustomPosition)
+              PerformanceRatingPeriod, PerformanceRatingStatus, PerformanceEvaluationCriteria, CustomPosition,
+              TaskStatus, TaskPriority, Task, WorkSchedule)
 from flask_wtf.file import FileAllowed
 from datetime import date, datetime, timedelta
 
@@ -482,27 +483,81 @@ class CustomPositionForm(FlaskForm):
             raise ValidationError('Tên chức vụ này đã tồn tại trong danh sách tùy chỉnh.')
 
 
-class CustomPositionEditForm(FlaskForm):
-    """Form cho việc chỉnh sửa chức vụ tùy chỉnh"""
-    name = StringField('Tên chức vụ', validators=[DataRequired(), Length(min=2, max=100)])
+# Lớp này đã bị trùng lặp nên đã được gỡ bỏ
+
+
+class TaskForm(FlaskForm):
+    """Form tạo nhiệm vụ mới cho Kanban board"""
+    title = StringField('Tiêu đề', validators=[DataRequired(message='Vui lòng nhập tiêu đề nhiệm vụ')])
     description = TextAreaField('Mô tả', validators=[Optional()])
-    submit = SubmitField('Cập nhật chức vụ')
+    status = SelectField('Trạng thái', choices=[(s.name, s.value) for s in TaskStatus], validators=[DataRequired(message='Vui lòng chọn trạng thái')])
+    priority = SelectField('Mức độ ưu tiên', choices=[(p.name, p.value) for p in TaskPriority], validators=[DataRequired(message='Vui lòng chọn mức độ ưu tiên')])
+    assigned_to = SelectField('Người được giao', coerce=int, validators=[Optional()])
+    department_id = SelectField('Phòng ban', coerce=int, validators=[Optional()])
+    work_schedule_id = SelectField('Lịch công tác liên quan', coerce=int, validators=[Optional()])
+    deadline = DateTimeField('Hạn chót', format='%Y-%m-%dT%H:%M', validators=[Optional()])
+    estimated_hours = FloatField('Số giờ dự kiến', validators=[Optional(), NumberRange(min=0, message='Số giờ phải lớn hơn hoặc bằng 0')])
+    labels = StringField('Nhãn', validators=[Optional()], description='Nhập các nhãn cách nhau bằng dấu phẩy (,)')
+    progress = IntegerField('Tiến độ (%)', validators=[Optional(), NumberRange(min=0, max=100, message='Tiến độ phải từ 0 đến 100%')])
+    dependent_tasks = SelectMultipleField('Nhiệm vụ phụ thuộc', coerce=int, validators=[Optional()])
     
     def __init__(self, *args, **kwargs):
-        super(CustomPositionEditForm, self).__init__(*args, **kwargs)
-        self.original_name = None
+        super(TaskForm, self).__init__(*args, **kwargs)
+        self.assigned_to.choices = [(0, 'Chưa phân công')] + [(e.id, f"{e.employee_code} - {e.full_name}") for e in Employee.query.filter_by(status=EmployeeStatus.ACTIVE).all()]
+        self.department_id.choices = [(0, 'Không thuộc phòng ban cụ thể')] + [(d.id, d.name) for d in Department.query.all()]
+        self.work_schedule_id.choices = [(0, 'Không liên kết với lịch công tác')] + [(w.id, f"{w.title} ({w.start_time.strftime('%d/%m/%Y')})") for w in WorkSchedule.query.filter(WorkSchedule.end_time > datetime.utcnow()).all()]
+        # Chỉ hiển thị các nhiệm vụ đang làm và đang xét duyệt để tránh phụ thuộc vòng
+        self.dependent_tasks.choices = [(t.id, f"{t.title} ({t.status_display})") for t in Task.query.filter(Task.status.in_([TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.REVIEW])).all()]
         
-    def validate_name(self, name):
-        """Xác nhận tên chức vụ không trùng lặp, trừ trường hợp tên không thay đổi"""
-        if self.original_name and self.original_name == name.data:
-            return
-            
-        # Kiểm tra xem tên chức vụ đã tồn tại trong các chức vụ mặc định hay chưa
-        for pos in Position:
-            if pos.value == name.data:
-                raise ValidationError('Tên chức vụ này đã tồn tại trong danh sách mặc định.')
-        
-        # Kiểm tra xem tên chức vụ đã tồn tại trong các chức vụ tùy chỉnh hay chưa
-        position = CustomPosition.query.filter_by(name=name.data).first()
-        if position:
-            raise ValidationError('Tên chức vụ này đã tồn tại trong danh sách tùy chỉnh.')
+    def validate_deadline(self, deadline):
+        if deadline.data and deadline.data < datetime.utcnow():
+            raise ValidationError('Hạn chót không thể là thời gian trong quá khứ.')
+
+
+class TaskEditForm(TaskForm):
+    """Form chỉnh sửa nhiệm vụ"""
+    task_id = HiddenField('ID')
+    actual_hours = FloatField('Số giờ thực tế', validators=[Optional(), NumberRange(min=0, message='Số giờ phải lớn hơn hoặc bằng 0')])
+    
+
+class TaskCommentForm(FlaskForm):
+    """Form thêm bình luận cho nhiệm vụ"""
+    content = TextAreaField('Bình luận', validators=[DataRequired(message='Vui lòng nhập nội dung bình luận')])
+    task_id = HiddenField('Task ID', validators=[DataRequired()])
+
+
+class TaskSearchForm(FlaskForm):
+    """Form tìm kiếm nhiệm vụ"""
+    keyword = StringField('Từ khóa', validators=[Optional()])
+    status = SelectField('Trạng thái', choices=[('', 'Tất cả')] + [(s.name, s.value) for s in TaskStatus], validators=[Optional()])
+    priority = SelectField('Mức độ ưu tiên', choices=[('', 'Tất cả')] + [(p.name, p.value) for p in TaskPriority], validators=[Optional()])
+    assigned_to = SelectField('Người được giao', coerce=int, validators=[Optional()])
+    department_id = SelectField('Phòng ban', coerce=int, validators=[Optional()])
+    label = StringField('Nhãn', validators=[Optional()])
+    overdue = BooleanField('Chỉ hiện nhiệm vụ quá hạn', default=False)
+    
+    def __init__(self, *args, **kwargs):
+        super(TaskSearchForm, self).__init__(*args, **kwargs)
+        self.assigned_to.choices = [('', 'Tất cả')] + [(e.id, f"{e.employee_code} - {e.full_name}") for e in Employee.query.all()]
+        self.department_id.choices = [('', 'Tất cả')] + [(d.id, d.name) for d in Department.query.all()]
+
+
+class TaskBulkActionForm(FlaskForm):
+    """Form thực hiện hành động hàng loạt trên nhiều nhiệm vụ"""
+    task_ids = HiddenField('Task IDs', validators=[DataRequired()])
+    action = SelectField('Hành động', choices=[
+        ('status', 'Cập nhật trạng thái'),
+        ('priority', 'Cập nhật mức độ ưu tiên'),
+        ('assigned_to', 'Gán người thực hiện'),
+        ('department', 'Chuyển phòng ban'),
+        ('delete', 'Xóa nhiệm vụ')
+    ], validators=[DataRequired()])
+    status = SelectField('Trạng thái mới', choices=[(s.name, s.value) for s in TaskStatus], validators=[Optional()])
+    priority = SelectField('Mức độ ưu tiên mới', choices=[(p.name, p.value) for p in TaskPriority], validators=[Optional()])
+    assigned_to = SelectField('Người được giao mới', coerce=int, validators=[Optional()])
+    department_id = SelectField('Phòng ban mới', coerce=int, validators=[Optional()])
+    
+    def __init__(self, *args, **kwargs):
+        super(TaskBulkActionForm, self).__init__(*args, **kwargs)
+        self.assigned_to.choices = [(0, 'Chưa phân công')] + [(e.id, f"{e.employee_code} - {e.full_name}") for e in Employee.query.filter_by(status=EmployeeStatus.ACTIVE).all()]
+        self.department_id.choices = [(0, 'Không thuộc phòng ban cụ thể')] + [(d.id, d.name) for d in Department.query.all()]

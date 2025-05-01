@@ -520,9 +520,6 @@ class Task(db.Model):
     work_schedule = db.relationship('WorkSchedule', backref='related_tasks')
     comments = db.relationship('TaskComment', backref='task', lazy=True, cascade="all, delete-orphan")
     attachments = db.relationship('TaskAttachment', backref='task', lazy=True, cascade="all, delete-orphan")
-    dependencies = db.relationship('TaskDependency', 
-                                  primaryjoin="or_(Task.id==TaskDependency.task_id, Task.id==TaskDependency.dependent_task_id)",
-                                  backref='tasks', lazy=True)
     
     @property
     def is_overdue(self):
@@ -555,6 +552,18 @@ class Task(db.Model):
         if not self.labels:
             return []
         return [label.strip() for label in self.labels.split(',')]
+        
+    def get_dependent_tasks(self):
+        """Lấy danh sách các nhiệm vụ phụ thuộc vào nhiệm vụ này"""
+        dependencies = TaskDependency.query.filter_by(task_id=self.id).all()
+        dependent_task_ids = [dep.dependent_task_id for dep in dependencies]
+        return Task.query.filter(Task.id.in_(dependent_task_ids)).all()
+    
+    def get_blocking_tasks(self):
+        """Lấy danh sách các nhiệm vụ mà nhiệm vụ này phụ thuộc vào"""
+        dependencies = TaskDependency.query.filter_by(dependent_task_id=self.id).all()
+        blocking_task_ids = [dep.task_id for dep in dependencies]
+        return Task.query.filter(Task.id.in_(blocking_task_ids)).all()
     
     def __repr__(self):
         return f'<Task {self.id}: {self.title} - {self.status_display}>'
@@ -601,10 +610,6 @@ class TaskDependency(db.Model):
     dependent_task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)  # Nhiệm vụ phụ thuộc
     dependency_type = db.Column(db.String(50), default="blocks")  # Loại phụ thuộc: 'blocks', 'relates_to', 'duplicates', etc.
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # Mối quan hệ
-    task = db.relationship('Task', foreign_keys=[task_id], backref='dependencies_as_source')
-    dependent_task = db.relationship('Task', foreign_keys=[dependent_task_id], backref='dependencies_as_target')
     
     def __repr__(self):
         return f'<TaskDependency {self.task_id} -> {self.dependent_task_id} ({self.dependency_type})>'
