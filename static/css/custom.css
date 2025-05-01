@@ -278,9 +278,34 @@ option {
 }
 
 /* Ép buộc tất cả form control có màu chữ đen đậm */
-input, select, textarea, .form-control, .form-select, .form-control-plaintext {
+input, select, textarea, .form-control, .form-select, .form-control-plaintext,
+.dropdown-menu, .dropdown-item, .list-group-item, .card-text,
+.table td, .table th {
     -webkit-text-fill-color: #000000 !important;
     text-shadow: none !important;
+}
+
+/* Đảm bảo chữ hiển thị trong các phần tử tối màu */
+.bg-dark, .text-bg-dark, .card.bg-dark, .dropdown-menu-dark, 
+.table-dark, [class*="bg-dark"], [style*="background-color: #212529"],
+.bg-secondary, .bg-primary, .bg-success, .bg-danger, .bg-info,
+.dropdown-menu, .list-group-item-dark, .list-group-item-secondary,
+[style*="background-color: #1e2126"], [style*="background-color: #212529"],
+[style*="background-color: #192a56"], .card-dark, 
+div[style*="background-color:#"] {
+    color: #ffffff !important;
+}
+
+.bg-dark *, .text-bg-dark *, .card.bg-dark *, .dropdown-menu-dark *, 
+.table-dark *, [class*="bg-dark"] *, [style*="background-color: #212529"] *,
+.bg-secondary *, .bg-primary *, .bg-success *, .bg-danger *, .bg-info *,
+.dropdown-menu *, .card-dark *,
+div[style*="background-color:#"] *, [style*="background-color: #1e2126"] *,
+[style*="background-color: #192a56"] * {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    font-weight: 700 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
 }
 
 /* Ngoại lệ cho các phần tử có background đặc biệt cần text màu trắng */
