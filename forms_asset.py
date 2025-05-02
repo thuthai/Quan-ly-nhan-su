@@ -34,6 +34,7 @@ class AssetForm(FlaskForm):
     warranty_expiry = DateField('Hết hạn bảo hành', validators=[Optional()])
     warranty_info = TextAreaField('Thông tin bảo hành', validators=[Optional()])
     department_id = SelectField('Phòng ban quản lý', coerce=int, validators=[Optional()])
+    assignee_id = SelectField('Người đang sử dụng', coerce=int, validators=[Optional()])
     description = TextAreaField('Mô tả', validators=[Optional()])
     notes = TextAreaField('Ghi chú', validators=[Optional()])
     image = FileField('Hình ảnh', validators=[
@@ -43,9 +44,11 @@ class AssetForm(FlaskForm):
     
     def __init__(self, *args, **kwargs):
         super(AssetForm, self).__init__(*args, **kwargs)
-        from models import Department
+        from models import Department, Employee
         # Lấy danh sách phòng ban
         self.department_id.choices = [(d.id, d.name) for d in Department.query.all()]
+        # Lấy danh sách nhân viên
+        self.assignee_id.choices = [(0, '-- Không có người sử dụng --')] + [(e.id, f"{e.employee_code} - {e.full_name}") for e in Employee.query.all()]
 
 
 class AssetEditForm(AssetForm):
