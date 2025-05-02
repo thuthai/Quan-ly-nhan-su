@@ -95,14 +95,20 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <span class="badge {% if contract.status.name == 'DRAFT' %}bg-secondary
-                                      {% elif contract.status.name == 'ACTIVE' %}bg-success
-                                      {% elif contract.status.name == 'EXPIRED' %}bg-danger
-                                      {% elif contract.status.name == 'TERMINATED' %}bg-danger
-                                      {% elif contract.status.name == 'PENDING' %}bg-warning
-                                      {% elif contract.status.name == 'COMPLETED' %}bg-info
+                                <span class="badge {% if contract.status == 'DRAFT' %}bg-secondary
+                                      {% elif contract.status == 'ACTIVE' %}bg-success
+                                      {% elif contract.status == 'EXPIRED' %}bg-danger
+                                      {% elif contract.status == 'TERMINATED' %}bg-danger
+                                      {% elif contract.status == 'PENDING' %}bg-warning
+                                      {% elif contract.status == 'COMPLETED' %}bg-info
                                       {% else %}bg-light text-dark{% endif %}">
-                                    {{ contract.status.value }}
+                                    {% if contract.status == 'DRAFT' %}Bản nháp
+                                    {% elif contract.status == 'ACTIVE' %}Đang hiệu lực
+                                    {% elif contract.status == 'EXPIRED' %}Hết hạn
+                                    {% elif contract.status == 'TERMINATED' %}Chấm dứt
+                                    {% elif contract.status == 'PENDING' %}Chờ phê duyệt
+                                    {% elif contract.status == 'COMPLETED' %}Hoàn thành
+                                    {% else %}{{ contract.status }}{% endif %}
                                 </span>
                             </td>
                             <td>
