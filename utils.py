@@ -6,6 +6,12 @@ from models import User, Department, Employee, Gender, EmployeeStatus, UserRole,
 from app import db
 import pandas as pd
 import uuid
+from flask import current_app
+
+
+def today_date():
+    """Return today's date as a datetime.date object"""
+    return datetime.now().date()
 
 def seed_database():
     """Seed the database with initial data if it's empty"""

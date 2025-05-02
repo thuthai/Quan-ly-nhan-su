@@ -156,10 +156,13 @@ def view(id):
     assignments = AssetAssignment.query.filter_by(asset_id=id).order_by(AssetAssignment.assigned_date.desc()).all()
     maintenance_records = AssetMaintenance.query.filter_by(asset_id=id).order_by(AssetMaintenance.maintenance_date.desc()).all()
     
+    from utils import today_date
+    
     return render_template('assets/view.html', 
                           asset=asset, 
                           assignments=assignments,
                           maintenance_records=maintenance_records,
+                          today_date=today_date,
                           title=f'Chi tiết tài sản: {asset.name}')
 
 
