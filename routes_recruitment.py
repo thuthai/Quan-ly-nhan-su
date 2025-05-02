@@ -658,7 +658,7 @@ def interview_view(id):
                           title=f'Chi tiết phỏng vấn: {interview.candidate.full_name}')
 
 
-@recruitment_bp.route('/recruitment/interviews/<int:id>/complete', methods=['POST'])
+@recruitment_bp.route('/interviews/<int:id>/complete', methods=['POST'])
 @login_required
 def interview_complete(id):
     interview = Interview.query.get_or_404(id)
@@ -680,7 +680,7 @@ def interview_complete(id):
     return redirect(url_for('recruitment.interview_view', id=id))
 
 
-@recruitment_bp.route('/recruitment/interviews/<int:id>/cancel', methods=['POST'])
+@recruitment_bp.route('/interviews/<int:id>/cancel', methods=['POST'])
 @login_required
 def interview_cancel(id):
     interview = Interview.query.get_or_404(id)
@@ -696,7 +696,7 @@ def interview_cancel(id):
 
 
 # API endpoints
-@recruitment_bp.route('/api/recruitment/positions')
+@recruitment_bp.route('/api/positions')
 @login_required
 def api_positions():
     positions = JobPosition.query.filter_by(is_active=True).all()
@@ -709,7 +709,7 @@ def api_positions():
     } for position in positions])
 
 
-@recruitment_bp.route('/api/recruitment/candidates/<int:opening_id>')
+@recruitment_bp.route('/api/candidates/<int:opening_id>')
 @login_required
 def api_candidates_by_opening(opening_id):
     candidates = Candidate.query.filter_by(job_opening_id=opening_id).all()
