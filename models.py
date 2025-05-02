@@ -106,8 +106,9 @@ class Department(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationship with Employee
+    # Relationships
     employees = db.relationship('Employee', backref='department', lazy=True)
+    job_positions = db.relationship('JobPosition', back_populates='department', lazy='dynamic')
     
     def __repr__(self):
         return f'<Department {self.name}>'
@@ -145,6 +146,15 @@ class Employee(db.Model):
     leave_requests = db.relationship('LeaveRequest', backref='employee', lazy=True)
     career_paths = db.relationship('CareerPath', backref='employee', lazy=True)
     awards = db.relationship('Award', backref='employee', lazy=True)
+    
+    # Asset Management relationships
+    asset_assignments = db.relationship('AssetAssignment', back_populates='employee', lazy='dynamic')
+    
+    # Contract Management relationships
+    contracts = db.relationship('Contract', back_populates='employee', lazy='dynamic')
+    
+    # Document Management relationships
+    documents = db.relationship('Document', back_populates='employee', lazy='dynamic')
     
     def is_contract_expiring_soon(self):
         if not self.contract_end_date:
@@ -613,3 +623,323 @@ class TaskDependency(db.Model):
     
     def __repr__(self):
         return f'<TaskDependency {self.task_id} -> {self.dependent_task_id} ({self.dependency_type})>'
+
+
+# Asset Management Models
+class AssetCategory(enum.Enum):
+    COMPUTER = "Máy tính"
+    LAPTOP = "Laptop"
+    SMARTPHONE = "Điện thoại"
+    TABLET = "Máy tính bảng"
+    PRINTER = "Máy in"
+    SCANNER = "Máy quét"
+    FURNITURE = "Nội thất văn phòng"
+    OTHER = "Khác"
+
+
+class AssetStatus(enum.Enum):
+    AVAILABLE = "Sẵn sàng sử dụng"
+    ASSIGNED = "Đã bàn giao"
+    UNDER_MAINTENANCE = "Đang bảo trì"
+    BROKEN = "Hỏng"
+    DISCARDED = "Đã thanh lý"
+
+
+class Asset(db.Model):
+    __tablename__ = 'assets'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    asset_code = db.Column(db.String(20), unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    category = db.Column(db.Enum(AssetCategory), nullable=False)
+    status = db.Column(db.Enum(AssetStatus), default=AssetStatus.AVAILABLE, nullable=False)
+    serial_number = db.Column(db.String(50), nullable=True)
+    purchase_date = db.Column(db.Date, nullable=True)
+    purchase_price = db.Column(db.Float, nullable=True)
+    warranty_expiry = db.Column(db.Date, nullable=True)
+    description = db.Column(db.Text, nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Relationships
+    assignments = db.relationship('AssetAssignment', back_populates='asset', lazy='dynamic')
+    maintenance_records = db.relationship('AssetMaintenance', back_populates='asset', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<Asset {self.asset_code}: {self.name}>'
+
+
+class AssetAssignment(db.Model):
+    __tablename__ = 'asset_assignments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    asset_id = db.Column(db.Integer, db.ForeignKey('assets.id'), nullable=False)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
+    assigned_date = db.Column(db.Date, nullable=False, default=date.today)
+    return_date = db.Column(db.Date, nullable=True)
+    assigned_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    condition_on_assignment = db.Column(db.Text, nullable=True)
+    condition_on_return = db.Column(db.Text, nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+    is_returned = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Relationships
+    asset = db.relationship('Asset', back_populates='assignments')
+    employee = db.relationship('Employee', back_populates='asset_assignments')
+    assigned_by = db.relationship('User')
+    
+    def __repr__(self):
+        return f'<AssetAssignment {self.asset.name} to {self.employee.full_name}>'
+
+
+class AssetMaintenance(db.Model):
+    __tablename__ = 'asset_maintenance'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    asset_id = db.Column(db.Integer, db.ForeignKey('assets.id'), nullable=False)
+    maintenance_date = db.Column(db.Date, nullable=False)
+    maintenance_type = db.Column(db.String(50), nullable=False)
+    performed_by = db.Column(db.String(100), nullable=True)
+    cost = db.Column(db.Float, nullable=True)
+    description = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(50), default="Hoàn thành", nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Relationships
+    asset = db.relationship('Asset', back_populates='maintenance_records')
+    
+    def __repr__(self):
+        return f'<AssetMaintenance {self.asset.name} on {self.maintenance_date}>'
+
+
+# Recruitment Management Models
+class RecruitmentStatus(enum.Enum):
+    OPEN = "Đang tuyển"
+    INTERVIEWING = "Đang phỏng vấn"
+    CLOSED = "Đã đóng"
+    ON_HOLD = "Tạm hoãn"
+
+
+class JobPosition(db.Model):
+    __tablename__ = 'job_positions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    department_id = db.Column(db.Integer, db.ForeignKey('department.id'), nullable=False)
+    required_experience = db.Column(db.String(100), nullable=True)
+    education_requirement = db.Column(db.String(100), nullable=True)
+    job_description = db.Column(db.Text, nullable=True)
+    responsibilities = db.Column(db.Text, nullable=True)
+    skills_required = db.Column(db.Text, nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Relationships
+    department = db.relationship('Department', back_populates='job_positions')
+    job_openings = db.relationship('JobOpening', back_populates='position', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<JobPosition {self.title}>'
+
+
+class JobOpening(db.Model):
+    __tablename__ = 'job_openings'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    position_id = db.Column(db.Integer, db.ForeignKey('job_positions.id'), nullable=False)
+    number_of_openings = db.Column(db.Integer, default=1, nullable=False)
+    status = db.Column(db.Enum(RecruitmentStatus), default=RecruitmentStatus.OPEN, nullable=False)
+    start_date = db.Column(db.Date, nullable=False, default=date.today)
+    end_date = db.Column(db.Date, nullable=True)
+    salary_range = db.Column(db.String(100), nullable=True)
+    work_location = db.Column(db.String(100), nullable=True)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Relationships
+    position = db.relationship('JobPosition', back_populates='job_openings')
+    created_by = db.relationship('User')
+    candidates = db.relationship('Candidate', back_populates='job_opening', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<JobOpening {self.position.title} - {self.status.value}>'
+
+
+class CandidateStatus(enum.Enum):
+    APPLIED = "Đã ứng tuyển"
+    SCREENING = "Đang sàng lọc"
+    INTERVIEW_SCHEDULED = "Đã lên lịch phỏng vấn"
+    INTERVIEWED = "Đã phỏng vấn"
+    OFFER_SENT = "Đã gửi đề nghị"
+    HIRED = "Đã tuyển dụng"
+    REJECTED = "Từ chối"
+    WITHDRAWN = "Ứng viên rút lui"
+
+
+class Candidate(db.Model):
+    __tablename__ = 'candidates'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    job_opening_id = db.Column(db.Integer, db.ForeignKey('job_openings.id'), nullable=False)
+    full_name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(20), nullable=True)
+    cv_file = db.Column(db.String(255), nullable=True)
+    cover_letter = db.Column(db.Text, nullable=True)
+    status = db.Column(db.Enum(CandidateStatus), default=CandidateStatus.APPLIED, nullable=False)
+    application_date = db.Column(db.Date, default=date.today, nullable=False)
+    evaluation = db.Column(db.Text, nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Relationships
+    job_opening = db.relationship('JobOpening', back_populates='candidates')
+    interviews = db.relationship('Interview', back_populates='candidate', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<Candidate {self.full_name} for {self.job_opening.position.title}>'
+
+
+class InterviewStatus(enum.Enum):
+    SCHEDULED = "Đã lên lịch"
+    COMPLETED = "Đã hoàn thành"
+    CANCELED = "Đã hủy"
+    RESCHEDULED = "Đã lên lịch lại"
+
+
+class Interview(db.Model):
+    __tablename__ = 'interviews'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    candidate_id = db.Column(db.Integer, db.ForeignKey('candidates.id'), nullable=False)
+    scheduled_date = db.Column(db.DateTime, nullable=False)
+    interview_type = db.Column(db.String(50), nullable=False)  # Phone, Video, In-person
+    interviewers = db.Column(db.String(255), nullable=True)
+    location = db.Column(db.String(100), nullable=True)
+    status = db.Column(db.Enum(InterviewStatus), default=InterviewStatus.SCHEDULED, nullable=False)
+    feedback = db.Column(db.Text, nullable=True)
+    rating = db.Column(db.Integer, nullable=True)  # 1-5 rating
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Relationships
+    candidate = db.relationship('Candidate', back_populates='interviews')
+    
+    def __repr__(self):
+        return f'<Interview for {self.candidate.full_name} on {self.scheduled_date}>'
+
+
+# Contract Management Models
+class ContractType(enum.Enum):
+    PROBATION = "Thử việc"
+    FIXED_TERM = "Xác định thời hạn"
+    INDEFINITE = "Không xác định thời hạn"
+    PART_TIME = "Bán thời gian"
+    SEASONAL = "Thời vụ"
+
+
+class ContractStatus(enum.Enum):
+    DRAFT = "Bản nháp"
+    ACTIVE = "Đang hiệu lực"
+    EXPIRED = "Hết hạn"
+    TERMINATED = "Chấm dứt"
+
+
+class Contract(db.Model):
+    __tablename__ = 'contracts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    contract_number = db.Column(db.String(50), unique=True, nullable=False)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
+    contract_type = db.Column(db.Enum(ContractType), nullable=False)
+    status = db.Column(db.Enum(ContractStatus), default=ContractStatus.DRAFT, nullable=False)
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=True)
+    job_title = db.Column(db.String(100), nullable=False)
+    department_id = db.Column(db.Integer, db.ForeignKey('department.id'), nullable=False)
+    base_salary = db.Column(db.Float, nullable=False)
+    working_hours = db.Column(db.String(50), nullable=True)
+    contract_file = db.Column(db.String(255), nullable=True)
+    signed_date = db.Column(db.Date, nullable=True)
+    terminated_date = db.Column(db.Date, nullable=True)
+    termination_reason = db.Column(db.Text, nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Relationships
+    employee = db.relationship('Employee', back_populates='contracts')
+    department = db.relationship('Department')
+    created_by = db.relationship('User')
+    amendments = db.relationship('ContractAmendment', back_populates='contract', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<Contract {self.contract_number} for {self.employee.full_name}>'
+
+
+class ContractAmendment(db.Model):
+    __tablename__ = 'contract_amendments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    contract_id = db.Column(db.Integer, db.ForeignKey('contracts.id'), nullable=False)
+    amendment_number = db.Column(db.String(50), nullable=False)
+    amendment_date = db.Column(db.Date, nullable=False)
+    effective_date = db.Column(db.Date, nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    changes = db.Column(db.Text, nullable=False)
+    amendment_file = db.Column(db.String(255), nullable=True)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Relationships
+    contract = db.relationship('Contract', back_populates='amendments')
+    created_by = db.relationship('User')
+    
+    def __repr__(self):
+        return f'<ContractAmendment {self.amendment_number} for Contract {self.contract.contract_number}>'
+
+
+class DocumentType(enum.Enum):
+    CV = "Sơ yếu lý lịch"
+    ID_CARD = "CMND/CCCD"
+    DEGREE = "Bằng cấp"
+    CERTIFICATE = "Chứng chỉ"
+    HEALTH_CERTIFICATE = "Giấy khám sức khỏe"
+    TAX_CODE = "Mã số thuế"
+    INSURANCE_CARD = "Thẻ bảo hiểm"
+    OTHER = "Khác"
+
+
+class Document(db.Model):
+    __tablename__ = 'documents'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
+    document_type = db.Column(db.Enum(DocumentType), nullable=False)
+    document_number = db.Column(db.String(100), nullable=True)
+    issue_date = db.Column(db.Date, nullable=True)
+    expiry_date = db.Column(db.Date, nullable=True)
+    issue_place = db.Column(db.String(100), nullable=True)
+    file_path = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    is_verified = db.Column(db.Boolean, default=False)
+    verified_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    verified_date = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Relationships
+    employee = db.relationship('Employee', back_populates='documents')
+    verified_by = db.relationship('User')
+    
+    def __repr__(self):
+        return f'<Document {self.document_type.value} for {self.employee.full_name}>'
