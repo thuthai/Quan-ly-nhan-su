@@ -1,0 +1,174 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h1 class="h3 mb-0">Quản lý email nhận thông báo</h1>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Email</th>
+                                    <th>Tên</th>
+                                    <th>Loại thông báo</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for email in emails %}
+                                <tr>
+                                    <td>{{ email.email }}</td>
+                                    <td>{{ email.name or '' }}</td>
+                                    <td>
+                                        {% if email.notification_types == 'all' %}
+                                            <span class="badge bg-info">Tất cả</span>
+                                        {% elif email.notification_types == 'contracts' %}
+                                            <span class="badge bg-primary">Hợp đồng</span>
+                                        {% elif email.notification_types == 'employees' %}
+                                            <span class="badge bg-success">Nhân viên</span>
+                                        {% elif email.notification_types == 'performance' %}
+                                            <span class="badge bg-warning">Đánh giá</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if email.is_active %}
+                                            <span class="badge bg-success">Đang hoạt động</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Ngừng hoạt động</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('notification.edit_email', id=email.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                    data-bs-toggle="modal" data-bs-target="#deleteModal-{{ email.id }}">
+                                                <i class="bi bi-trash"></i> Xóa
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Modal xác nhận xóa -->
+                                <div class="modal fade" id="deleteModal-{{ email.id }}" tabindex="-1" aria-labelledby="deleteModalLabel-{{ email.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="deleteModalLabel-{{ email.id }}">Xác nhận xóa</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                Bạn có chắc chắn muốn xóa email <strong>{{ email.email }}</strong> khỏi danh sách nhận thông báo không?
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                                <form action="{{ url_for('notification.delete_email', id=email.id) }}" method="post">
+                                                    <button type="submit" class="btn btn-danger">Xóa</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Kết thúc modal -->
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center">Chưa có email nào trong danh sách nhận thông báo.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Form thêm email mới -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h5 mb-0">Thêm email mới</h2>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('notification.create_email') }}" method="post">
+                        {{ form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control", placeholder="Nhập địa chỉ email") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control", placeholder="Nhập tên người nhận") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.notification_types.label(class="form-label") }}
+                            {{ form.notification_types(class="form-select") }}
+                        </div>
+                        <div class="mb-3 form-check">
+                            {{ form.is_active(class="form-check-input") }}
+                            {{ form.is_active.label(class="form-check-label") }}
+                        </div>
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Form gửi email thử nghiệm -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h2 class="h5 mb-0">Gửi email thử nghiệm</h2>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('notification.send_test_email') }}" method="post">
+                        {{ test_form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ test_form.email.label(class="form-label") }}
+                            {{ test_form.email(class="form-control", placeholder="Nhập địa chỉ email") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ test_form.subject.label(class="form-label") }}
+                            {{ test_form.subject(class="form-control") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ test_form.message.label(class="form-label") }}
+                            {{ test_form.message(class="form-control", rows=3) }}
+                        </div>
+                        <div class="d-grid">
+                            {{ test_form.submit(class="btn btn-info text-white") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Hướng dẫn thiết lập API keys -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h2 class="h5 mb-0">Thiết lập thông báo</h2>
+                </div>
+                <div class="card-body">
+                    <p>Để sử dụng tính năng thông báo, bạn cần cấu hình các API key sau:</p>
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item">
+                            <strong>SENDGRID_API_KEY:</strong> Cho thông báo email
+                        </li>
+                        <li class="list-group-item">
+                            <strong>TELEGRAM_BOT_TOKEN:</strong> Cho thông báo qua Telegram
+                        </li>
+                        <li class="list-group-item">
+                            <strong>TELEGRAM_CHAT_ID:</strong> ID của chat/group nhận thông báo
+                        </li>
+                    </ul>
+                    <a href="{{ url_for('notification.help') }}" class="btn btn-warning w-100">Xem hướng dẫn</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

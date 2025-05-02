@@ -974,3 +974,23 @@ class Document(db.Model):
     
     def __repr__(self):
         return f'<Document {self.document_type.value} for {self.employee.full_name}>'
+
+
+class NotificationEmail(db.Model):
+    """Model để lưu danh sách email nhận thông báo"""
+    __tablename__ = 'notification_emails'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+    notification_types = db.Column(db.String(255), nullable=False, default="all")  # all, contracts, employees, etc.
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    
+    # Relationships
+    created_by = db.relationship('User')
+    
+    def __repr__(self):
+        return f'<NotificationEmail {self.email}>'
+
