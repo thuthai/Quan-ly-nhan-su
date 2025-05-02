@@ -235,22 +235,55 @@ def send_contract_notification(contract_id, event_type):
             logger.error(f"Loại sự kiện không hợp lệ: {event_type}")
             return False
         
-        # Gửi email đến admin HR
-        email_sent = False
-        if SENDGRID_API_KEY:
-            # Trong một hệ thống thực tế, bạn sẽ lấy email của HR manager từ db
-            email_sent = send_email_notification(
-                to_email="hr@example.com",  # Thay bằng email thực tế của HR manager
-                subject=subject,
-                html_content=html_content
-            )
-        
-        # Gửi thông báo Telegram
+        # Ưu tiên gửi thông báo qua Telegram 
         telegram_sent = False
         if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID:
             telegram_sent = send_telegram_notification(telegram_message)
+            if telegram_sent:
+                logger.info(f"Đã gửi thông báo Telegram cho sự kiện: {event_type}")
         
-        return email_sent or telegram_sent
+        # Nếu không có Telegram hoặc gửi Telegram thất bại, thử gửi email
+        email_sent = False
+        if (not telegram_sent) and SENDGRID_API_KEY:
+            try:
+                # Lấy danh sách email nhận thông báo từ database
+                from models import NotificationEmail
+                notification_type = 'all'
+                
+                # Xác định loại thông báo dựa trên event_type
+                if event_type in ['new', 'updated', 'terminated', 'expiring']:
+                    notification_type = 'contracts'
+                
+                # Lấy danh sách email đang hoạt động cần nhận loại thông báo này
+                notification_emails = NotificationEmail.query.filter(
+                    (NotificationEmail.is_active == True) & (
+                        (NotificationEmail.notification_types == 'all') | 
+                        (NotificationEmail.notification_types == notification_type)
+                    )
+                ).all()
+                
+                # Nếu không có email nào trong danh sách, vẫn gửi đến email mặc định
+                if not notification_emails:
+                    email_sent = send_email_notification(
+                        to_email="hr@example.com",  # Email mặc định
+                        subject=subject,
+                        html_content=html_content
+                    )
+                else:
+                    # Gửi email đến tất cả các địa chỉ trong danh sách
+                    for notification_email in notification_emails:
+                        result = send_email_notification(
+                            to_email=notification_email.email,
+                            subject=subject,
+                            html_content=html_content
+                        )
+                        if result:
+                            email_sent = True
+                            logger.info(f"Đã gửi thông báo email đến {notification_email.email}")
+            except Exception as e:
+                logger.error(f"Lỗi khi gửi thông báo email: {e}")
+        
+        return telegram_sent or email_sent
     
     except Exception as e:
         logger.error(f"Lỗi khi gửi thông báo hợp đồng: {e}")

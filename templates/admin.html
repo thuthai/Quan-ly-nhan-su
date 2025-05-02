@@ -78,10 +78,13 @@
                 </ul>
             </div>
             <div class="card-footer bg-transparent">
-                <div class="d-grid">
-                    <button class="btn btn-outline-info" disabled>
-                        <i class="bi bi-gear me-1"></i>Thiết lập cấu hình
-                    </button>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('notification.email_list') }}" class="btn btn-outline-info">
+                        <i class="bi bi-envelope me-1"></i>Quản lý email thông báo
+                    </a>
+                    <a href="{{ url_for('notification.help') }}" class="btn btn-outline-info">
+                        <i class="bi bi-bell me-1"></i>Hướng dẫn cấu hình thông báo
+                    </a>
                 </div>
             </div>
         </div>
