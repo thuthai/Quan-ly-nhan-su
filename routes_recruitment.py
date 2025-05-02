@@ -252,7 +252,7 @@ def opening_create():
                           title='Thêm tin tuyển dụng')
 
 
-@recruitment_bp.route('/recruitment/openings/<int:id>/edit', methods=['GET', 'POST'])
+@recruitment_bp.route('/openings/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def opening_edit(id):
     opening = JobOpening.query.get_or_404(id)
@@ -285,7 +285,7 @@ def opening_edit(id):
                           title='Chỉnh sửa tin tuyển dụng')
 
 
-@recruitment_bp.route('/recruitment/openings/<int:id>')
+@recruitment_bp.route('/openings/<int:id>')
 @login_required
 def opening_view(id):
     opening = JobOpening.query.get_or_404(id)
@@ -306,7 +306,7 @@ def opening_view(id):
                           title=f'Chi tiết tin tuyển dụng: {opening.position.title}')
 
 
-@recruitment_bp.route('/recruitment/openings/<int:id>/close', methods=['POST'])
+@recruitment_bp.route('/openings/<int:id>/close', methods=['POST'])
 @login_required
 def opening_close(id):
     opening = JobOpening.query.get_or_404(id)
