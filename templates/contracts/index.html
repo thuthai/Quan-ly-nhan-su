@@ -1,0 +1,166 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-5">Quản lý hợp đồng</h1>
+        <a href="{{ url_for('contract.contract_create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Thêm hợp đồng mới
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white p-3">
+            <form method="get" action="{{ url_for('contract.index') }}">
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <select name="type" class="form-select">
+                            <option value="">Tất cả loại</option>
+                            <option value="LABOR" {% if type == 'LABOR' %}selected{% endif %}>Hợp đồng lao động</option>
+                            <option value="PROBATION" {% if type == 'PROBATION' %}selected{% endif %}>Hợp đồng thử việc</option>
+                            <option value="SERVICE" {% if type == 'SERVICE' %}selected{% endif %}>Hợp đồng dịch vụ</option>
+                            <option value="CONSULTANT" {% if type == 'CONSULTANT' %}selected{% endif %}>Hợp đồng tư vấn</option>
+                            <option value="OTHER" {% if type == 'OTHER' %}selected{% endif %}>Khác</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="status" class="form-select">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="DRAFT" {% if status == 'DRAFT' %}selected{% endif %}>Bản nháp</option>
+                            <option value="PENDING" {% if status == 'PENDING' %}selected{% endif %}>Chờ phê duyệt</option>
+                            <option value="ACTIVE" {% if status == 'ACTIVE' %}selected{% endif %}>Có hiệu lực</option>
+                            <option value="EXPIRED" {% if status == 'EXPIRED' %}selected{% endif %}>Hết hạn</option>
+                            <option value="TERMINATED" {% if status == 'TERMINATED' %}selected{% endif %}>Chấm dứt</option>
+                            <option value="COMPLETED" {% if status == 'COMPLETED' %}selected{% endif %}>Hoàn thành</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" name="search" class="form-control" placeholder="Tìm kiếm..." value="{{ search }}">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Tìm kiếm
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="px-4">#</th>
+                            <th>Mã hợp đồng</th>
+                            <th>Loại hợp đồng</th>
+                            <th>Nhân viên</th>
+                            <th>Ngày bắt đầu</th>
+                            <th>Ngày kết thúc</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for contract in contracts %}
+                        <tr>
+                            <td class="px-4">{{ loop.index + (page-1) * per_page }}</td>
+                            <td>{{ contract.contract_code }}</td>
+                            <td>
+                                {% if contract.type == 'LABOR' %}
+                                <span class="badge bg-primary">Hợp đồng lao động</span>
+                                {% elif contract.type == 'PROBATION' %}
+                                <span class="badge bg-info">Hợp đồng thử việc</span>
+                                {% elif contract.type == 'SERVICE' %}
+                                <span class="badge bg-secondary">Hợp đồng dịch vụ</span>
+                                {% elif contract.type == 'CONSULTANT' %}
+                                <span class="badge bg-secondary">Hợp đồng tư vấn</span>
+                                {% else %}
+                                <span class="badge bg-light text-dark">Khác</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if contract.employee %}
+                                <a href="{{ url_for('employee.view', id=contract.employee.id) }}">{{ contract.employee.fullname }}</a>
+                                {% else %}
+                                <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ contract.start_date.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                {% if contract.end_date %}
+                                {{ contract.end_date.strftime('%d/%m/%Y') }}
+                                {% else %}
+                                <span class="text-muted">Không giới hạn</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if contract.status == 'DRAFT' %}
+                                <span class="badge bg-secondary">Bản nháp</span>
+                                {% elif contract.status == 'PENDING' %}
+                                <span class="badge bg-warning">Chờ phê duyệt</span>
+                                {% elif contract.status == 'ACTIVE' %}
+                                <span class="badge bg-success">Có hiệu lực</span>
+                                {% elif contract.status == 'EXPIRED' %}
+                                <span class="badge bg-danger">Hết hạn</span>
+                                {% elif contract.status == 'TERMINATED' %}
+                                <span class="badge bg-danger">Chấm dứt</span>
+                                {% elif contract.status == 'COMPLETED' %}
+                                <span class="badge bg-info">Hoàn thành</span>
+                                {% else %}
+                                <span class="badge bg-light text-dark">{{ contract.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('contract.contract_view', id=contract.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('contract.contract_edit', id=contract.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    {% if contract.document_url %}
+                                    <a href="{{ contract.document_url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-file-pdf"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <p class="text-muted mb-0">Không tìm thấy hợp đồng nào</p>
+                                <a href="{{ url_for('contract.contract_create') }}" class="btn btn-sm btn-primary mt-2">
+                                    <i class="bi bi-plus-lg"></i> Thêm hợp đồng mới
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% if pagination.pages > 1 %}
+    <nav>
+        <ul class="pagination justify-content-center">
+            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('contract.index', page=page-1, type=type, status=status, search=search) }}" tabindex="-1">Trước</a>
+            </li>
+            
+            {% for p in range(1, pagination.pages + 1) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('contract.index', page=p, type=type, status=status, search=search) }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+            
+            <li class="page-item {% if page == pagination.pages %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('contract.index', page=page+1, type=type, status=status, search=search) }}">Tiếp</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

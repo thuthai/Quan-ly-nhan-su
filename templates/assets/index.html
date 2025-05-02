@@ -1,0 +1,180 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-5">Quản lý tài sản</h1>
+        <a href="{{ url_for('asset.asset_create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Thêm tài sản mới
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white p-3">
+            <form method="get" action="{{ url_for('asset.index') }}">
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <select name="category" class="form-select">
+                            <option value="">Tất cả danh mục</option>
+                            <option value="COMPUTER" {% if category == 'COMPUTER' %}selected{% endif %}>Máy tính</option>
+                            <option value="LAPTOP" {% if category == 'LAPTOP' %}selected{% endif %}>Laptop</option>
+                            <option value="PHONE" {% if category == 'PHONE' %}selected{% endif %}>Điện thoại</option>
+                            <option value="FURNITURE" {% if category == 'FURNITURE' %}selected{% endif %}>Nội thất</option>
+                            <option value="OFFICE" {% if category == 'OFFICE' %}selected{% endif %}>Thiết bị văn phòng</option>
+                            <option value="VEHICLE" {% if category == 'VEHICLE' %}selected{% endif %}>Phương tiện</option>
+                            <option value="OTHER" {% if category == 'OTHER' %}selected{% endif %}>Khác</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="status" class="form-select">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="AVAILABLE" {% if status == 'AVAILABLE' %}selected{% endif %}>Sẵn sàng</option>
+                            <option value="ASSIGNED" {% if status == 'ASSIGNED' %}selected{% endif %}>Đã giao</option>
+                            <option value="UNDER_MAINTENANCE" {% if status == 'UNDER_MAINTENANCE' %}selected{% endif %}>Đang bảo trì</option>
+                            <option value="RETIRED" {% if status == 'RETIRED' %}selected{% endif %}>Ngừng sử dụng</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" name="search" class="form-control" placeholder="Tìm kiếm..." value="{{ search }}">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Tìm kiếm
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="px-4">#</th>
+                            <th>Tên tài sản</th>
+                            <th>Danh mục</th>
+                            <th>Mã số</th>
+                            <th>Ngày mua</th>
+                            <th>Trạng thái</th>
+                            <th>Người sử dụng</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for asset in assets %}
+                        <tr>
+                            <td class="px-4">{{ loop.index + (page-1) * per_page }}</td>
+                            <td>{{ asset.name }}</td>
+                            <td>
+                                {% if asset.category == 'COMPUTER' %}
+                                <span class="badge bg-primary">Máy tính</span>
+                                {% elif asset.category == 'LAPTOP' %}
+                                <span class="badge bg-primary">Laptop</span>
+                                {% elif asset.category == 'PHONE' %}
+                                <span class="badge bg-info">Điện thoại</span>
+                                {% elif asset.category == 'FURNITURE' %}
+                                <span class="badge bg-secondary">Nội thất</span>
+                                {% elif asset.category == 'OFFICE' %}
+                                <span class="badge bg-secondary">Thiết bị văn phòng</span>
+                                {% elif asset.category == 'VEHICLE' %}
+                                <span class="badge bg-warning">Phương tiện</span>
+                                {% else %}
+                                <span class="badge bg-light text-dark">Khác</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ asset.serial_number }}</td>
+                            <td>{{ asset.purchase_date.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                {% if asset.status == 'AVAILABLE' %}
+                                <span class="badge bg-success">Sẵn sàng</span>
+                                {% elif asset.status == 'ASSIGNED' %}
+                                <span class="badge bg-primary">Đã giao</span>
+                                {% elif asset.status == 'UNDER_MAINTENANCE' %}
+                                <span class="badge bg-warning">Đang bảo trì</span>
+                                {% elif asset.status == 'RETIRED' %}
+                                <span class="badge bg-danger">Ngừng sử dụng</span>
+                                {% else %}
+                                <span class="badge bg-light text-dark">{{ asset.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if asset.assignee %}
+                                <a href="{{ url_for('employee.view', id=asset.assignee.id) }}">{{ asset.assignee.fullname }}</a>
+                                {% else %}
+                                <span class="text-muted">Chưa gán</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('asset.asset_view', id=asset.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('asset.asset_edit', id=asset.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ asset.id }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Modal xóa -->
+                                <div class="modal fade" id="deleteModal{{ asset.id }}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="deleteModalLabel">Xác nhận xóa</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Bạn có chắc chắn muốn xóa tài sản "{{ asset.name }}"?</p>
+                                                <p class="text-danger">Lưu ý: Hành động này không thể hoàn tác.</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                                <form action="{{ url_for('asset.asset_delete', id=asset.id) }}" method="post">
+                                                    <button type="submit" class="btn btn-danger">Xóa</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <p class="text-muted mb-0">Không tìm thấy tài sản nào</p>
+                                <a href="{{ url_for('asset.asset_create') }}" class="btn btn-sm btn-primary mt-2">
+                                    <i class="bi bi-plus-lg"></i> Thêm tài sản mới
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% if pagination.pages > 1 %}
+    <nav>
+        <ul class="pagination justify-content-center">
+            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('asset.index', page=page-1, category=category, status=status, search=search) }}" tabindex="-1">Trước</a>
+            </li>
+            
+            {% for p in range(1, pagination.pages + 1) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('asset.index', page=p, category=category, status=status, search=search) }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+            
+            <li class="page-item {% if page == pagination.pages %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('asset.index', page=page+1, category=category, status=status, search=search) }}">Tiếp</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
