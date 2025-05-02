@@ -222,3 +222,39 @@ function togglePasswordVisibility(inputId, toggleBtnId) {
     }
   });
 }
+
+// Function to initialize date pickers (used in templates)
+function initDatepickers(selector) {
+  const datepickers = document.querySelectorAll(selector || '.datepicker');
+  if (datepickers.length > 0) {
+    datepickers.forEach(function(element) {
+      // Ensure we have flatpickr loaded
+      if (typeof flatpickr === 'function') {
+        // Khởi tạo bảng chọn ngày tháng với cấu hình cải tiến
+        flatpickr(element, {
+          dateFormat: 'Y-m-d',
+          locale: 'vn',
+          altInput: true,
+          altFormat: 'd/m/Y',
+          allowInput: true,
+          disableMobile: "true", // Đặt thành string để tránh lỗi trên mobile
+          monthSelectorType: 'dropdown',
+          animate: true,
+          showMonths: 1,
+          position: "auto center",
+          nextArrow: '<i class="bi bi-arrow-right-circle-fill"></i>',
+          prevArrow: '<i class="bi bi-arrow-left-circle-fill"></i>'
+        });
+        
+        // Đảm bảo rằng các input có giá trị ban đầu được hiển thị chính xác
+        if (element.value) {
+          const date = new Date(element.value);
+          if (!isNaN(date.getTime())) {
+            // Cập nhật lại giá trị để đảm bảo hiển thị hợp lệ
+            element._flatpickr.setDate(date);
+          }
+        }
+      }
+    });
+  }
+}
