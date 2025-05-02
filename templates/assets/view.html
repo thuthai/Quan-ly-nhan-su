@@ -111,10 +111,20 @@
                         </div>
                     </div>
                     <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Phòng ban:</div>
+                        <div class="col-md-8">
+                            {% if asset.department %}
+                            <a href="{{ url_for('view_department', id=asset.department.id) }}">{{ asset.department.name }}</a>
+                            {% else %}
+                            <span class="text-muted">Chưa gán phòng ban</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
                         <div class="col-md-4 fw-bold">Người đang sử dụng:</div>
                         <div class="col-md-8">
                             {% if asset.assignee %}
-                            <a href="{{ url_for('view_employee', id=asset.assignee.id) }}">{{ asset.assignee.fullname }}</a>
+                            <a href="{{ url_for('view_employee', id=asset.assignee.id) }}">{{ asset.assignee.full_name }}</a>
                             {% else %}
                             <span class="text-muted">Chưa gán</span>
                             {% endif %}

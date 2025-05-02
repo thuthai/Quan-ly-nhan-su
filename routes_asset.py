@@ -70,6 +70,9 @@ def create():
             purchase_date=form.purchase_date.data,
             purchase_price=form.purchase_price.data,
             warranty_expiry=form.warranty_expiry.data,
+            warranty_info=form.warranty_info.data,
+            department_id=form.department_id.data if form.department_id.data != 0 else None,
+            assignee_id=form.assignee_id.data if form.assignee_id.data != 0 else None,
             description=form.description.data,
             notes=form.notes.data
         )
@@ -115,6 +118,9 @@ def edit(id):
         asset.purchase_date = form.purchase_date.data
         asset.purchase_price = form.purchase_price.data
         asset.warranty_expiry = form.warranty_expiry.data
+        asset.warranty_info = form.warranty_info.data
+        asset.department_id = form.department_id.data if form.department_id.data != 0 else None
+        asset.assignee_id = form.assignee_id.data if form.assignee_id.data != 0 else None
         asset.description = form.description.data
         asset.notes = form.notes.data
         

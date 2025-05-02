@@ -685,6 +685,8 @@ class Asset(db.Model):
     # Relationships
     assignments = db.relationship('AssetAssignment', back_populates='asset', lazy='dynamic')
     maintenance_records = db.relationship('AssetMaintenance', back_populates='asset', lazy='dynamic')
+    department = db.relationship('Department', backref=db.backref('assets', lazy='dynamic'))
+    assignee = db.relationship('Employee', backref=db.backref('assigned_assets', lazy='dynamic'))
     
     def __repr__(self):
         return f'<Asset {self.asset_code}: {self.name}>'
