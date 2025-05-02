@@ -124,6 +124,7 @@ class Employee(db.Model):
     home_town = db.Column(db.String(100))
     address = db.Column(db.String(200))
     phone_number = db.Column(db.String(20))
+    id_card_number = db.Column(db.String(20), unique=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     department_id = db.Column(db.Integer, db.ForeignKey('department.id'), nullable=False)
     position = db.Column(db.String(100), default="Nhân viên")

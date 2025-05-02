@@ -91,6 +91,7 @@ class EmployeeForm(FlaskForm):
     home_town = SelectField('Quê quán', validators=[Optional()])
     address = StringField('Địa chỉ', validators=[Optional()])
     phone_number = StringField('Số điện thoại', validators=[Optional()])
+    id_card_number = StringField('Số căn cước công dân', validators=[Optional()])
     email = StringField('Email', validators=[DataRequired(message='Vui lòng nhập email'), Email(message='Email không hợp lệ')])
     department_id = SelectField('Phòng ban', coerce=int, validators=[DataRequired(message='Vui lòng chọn phòng ban')])
     position = SelectField('Chức vụ', validators=[Optional()])
