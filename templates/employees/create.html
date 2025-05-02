@@ -107,17 +107,24 @@
             </div>
             
             <div class="row mb-3">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label for="email" class="form-label">{{ form.email.label }} <span class="text-danger">*</span></label>
                     {{ form.email(class="form-control", id="email", placeholder="Nhập địa chỉ email") }}
                     {% for error in form.email.errors %}
                         <div class="text-danger">{{ error }}</div>
                     {% endfor %}
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label for="phone_number" class="form-label">{{ form.phone_number.label }}</label>
                     {{ form.phone_number(class="form-control", id="phone_number", placeholder="Nhập số điện thoại") }}
                     {% for error in form.phone_number.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-4">
+                    <label for="id_card_number" class="form-label">{{ form.id_card_number.label }}</label>
+                    {{ form.id_card_number(class="form-control", id="id_card_number", placeholder="Nhập số căn cước công dân") }}
+                    {% for error in form.id_card_number.errors %}
                         <div class="text-danger">{{ error }}</div>
                     {% endfor %}
                 </div>
