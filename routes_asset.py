@@ -121,8 +121,8 @@ def edit(id):
         # Xử lý upload ảnh mới nếu có
         if form.image.data:
             # Xóa ảnh cũ nếu có
-            if asset.image_path:
-                old_image_path = os.path.join(current_app.root_path, 'static', asset.image_path)
+            if hasattr(asset, 'image') and asset.image:
+                old_image_path = os.path.join(current_app.root_path, 'static', asset.image)
                 if os.path.exists(old_image_path):
                     os.remove(old_image_path)
             
@@ -136,7 +136,7 @@ def edit(id):
                 
             image_path = os.path.join(uploads_dir, new_filename)
             form.image.data.save(image_path)
-            asset.image_path = f"uploads/assets/{new_filename}"
+            asset.image = f"uploads/assets/{new_filename}"
         
         db.session.commit()
         

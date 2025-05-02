@@ -673,8 +673,12 @@ class Asset(db.Model):
     purchase_date = db.Column(db.Date, nullable=True)
     purchase_price = db.Column(db.Float, nullable=True)
     warranty_expiry = db.Column(db.Date, nullable=True)
+    warranty_info = db.Column(db.Text, nullable=True)
     description = db.Column(db.Text, nullable=True)
     notes = db.Column(db.Text, nullable=True)
+    image = db.Column(db.String(255), nullable=True)
+    department_id = db.Column(db.Integer, db.ForeignKey('department.id'), nullable=True)
+    assignee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     
