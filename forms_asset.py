@@ -33,12 +33,19 @@ class AssetForm(FlaskForm):
     ])
     warranty_expiry = DateField('Hết hạn bảo hành', validators=[Optional()])
     warranty_info = TextAreaField('Thông tin bảo hành', validators=[Optional()])
+    department_id = SelectField('Phòng ban quản lý', coerce=int, validators=[Optional()])
     description = TextAreaField('Mô tả', validators=[Optional()])
     notes = TextAreaField('Ghi chú', validators=[Optional()])
     image = FileField('Hình ảnh', validators=[
         Optional(),
         FileAllowed(['jpg', 'jpeg', 'png'], 'Chỉ chấp nhận file hình ảnh (jpg, jpeg, png)')
     ])
+    
+    def __init__(self, *args, **kwargs):
+        super(AssetForm, self).__init__(*args, **kwargs)
+        from models import Department
+        # Lấy danh sách phòng ban
+        self.department_id.choices = [(d.id, d.name) for d in Department.query.all()]
 
 
 class AssetEditForm(AssetForm):
