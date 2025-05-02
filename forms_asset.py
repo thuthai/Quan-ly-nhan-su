@@ -32,6 +32,7 @@ class AssetForm(FlaskForm):
         NumberRange(min=0, message='Giá không được âm')
     ])
     warranty_expiry = DateField('Hết hạn bảo hành', validators=[Optional()])
+    warranty_info = TextAreaField('Thông tin bảo hành', validators=[Optional()])
     description = TextAreaField('Mô tả', validators=[Optional()])
     notes = TextAreaField('Ghi chú', validators=[Optional()])
     image = FileField('Hình ảnh', validators=[
