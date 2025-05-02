@@ -200,6 +200,30 @@ def edit(id):
                           title='Chỉnh sửa hợp đồng')
 
 
+@contract_bp.route('/<int:id>/delete_file', methods=['POST'])
+@login_required
+def delete_contract_file(id):
+    """Xóa file đính kèm của hợp đồng"""
+    contract = Contract.query.get_or_404(id)
+    
+    # Kiểm tra nếu có file
+    if not contract.contract_file:
+        flash('Không có file đính kèm để xóa!', 'warning')
+        return redirect(url_for('contract.edit', id=id))
+    
+    # Xóa file khỏi hệ thống
+    file_path = os.path.join(current_app.root_path, 'static', contract.contract_file)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+    
+    # Cập nhật thông tin hợp đồng
+    contract.contract_file = None
+    db.session.commit()
+    
+    flash('Đã xóa file đính kèm hợp đồng thành công!', 'success')
+    return redirect(url_for('contract.edit', id=id))
+
+
 @contract_bp.route('/<int:id>')
 @login_required
 def view(id):
@@ -382,6 +406,30 @@ def amendment_edit(id):
                           form=form,
                           amendment=amendment,
                           title='Chỉnh sửa phụ lục hợp đồng')
+
+
+@contract_bp.route('/amendments/<int:id>/delete_file', methods=['POST'])
+@login_required
+def delete_amendment_file(id):
+    """Xóa file đính kèm của phụ lục hợp đồng"""
+    amendment = ContractAmendment.query.get_or_404(id)
+    
+    # Kiểm tra nếu có file
+    if not amendment.amendment_file:
+        flash('Không có file đính kèm để xóa!', 'warning')
+        return redirect(url_for('contract.amendment_edit', id=id))
+    
+    # Xóa file khỏi hệ thống
+    file_path = os.path.join(current_app.root_path, 'static', amendment.amendment_file)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+    
+    # Cập nhật thông tin phụ lục
+    amendment.amendment_file = None
+    db.session.commit()
+    
+    flash('Đã xóa file đính kèm phụ lục hợp đồng thành công!', 'success')
+    return redirect(url_for('contract.amendment_edit', id=id))
 
 
 @contract_bp.route('/amendments/<int:id>')

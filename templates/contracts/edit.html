@@ -211,10 +211,15 @@
                     {% endif %}
                     <div class="form-text">Để trống nếu không muốn thay đổi file hiện tại.</div>
                     {% if contract.contract_file %}
-                    <div class="mt-2">
+                    <div class="mt-2 d-flex gap-2">
                         <a href="{{ url_for('static', filename=contract.contract_file) }}" target="_blank" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-file-earmark-text"></i> Xem file hiện tại
                         </a>
+                        <form action="{{ url_for('contract.delete_contract_file', id=contract.id) }}" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa file này?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i> Xóa file
+                            </button>
+                        </form>
                     </div>
                     {% endif %}
                 </div>
