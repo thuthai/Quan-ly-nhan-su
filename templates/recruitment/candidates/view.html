@@ -1,0 +1,333 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('recruitment.index') }}">Tuyển dụng</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('recruitment.candidate_list') }}">Ứng viên</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ candidate.full_name }}</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-5">{{ candidate.full_name }}</h1>
+        <div>
+            <a href="{{ url_for('recruitment.interview_create', candidate_id=candidate.id) }}" class="btn btn-success">
+                <i class="bi bi-calendar-plus"></i> Lên lịch phỏng vấn
+            </a>
+            <a href="{{ url_for('recruitment.candidate_edit', id=candidate.id) }}" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Chỉnh sửa
+            </a>
+            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
+                <i class="bi bi-arrow-repeat"></i> Cập nhật trạng thái
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Thông tin ứng viên</h5>
+                    <span class="badge 
+                        {% if candidate.status == 'APPLIED' %}bg-info
+                        {% elif candidate.status == 'SCREENING' %}bg-primary
+                        {% elif candidate.status == 'INTERVIEW_SCHEDULED' %}bg-warning
+                        {% elif candidate.status == 'INTERVIEWED' %}bg-secondary
+                        {% elif candidate.status == 'OFFERED' %}bg-success
+                        {% elif candidate.status == 'HIRED' %}bg-success
+                        {% elif candidate.status == 'REJECTED' %}bg-danger
+                        {% else %}bg-light text-dark
+                        {% endif %}">
+                        {% if candidate.status == 'APPLIED' %}Mới ứng tuyển
+                        {% elif candidate.status == 'SCREENING' %}Đang sàng lọc
+                        {% elif candidate.status == 'INTERVIEW_SCHEDULED' %}Đã lên lịch phỏng vấn
+                        {% elif candidate.status == 'INTERVIEWED' %}Đã phỏng vấn
+                        {% elif candidate.status == 'OFFERED' %}Đã đề xuất
+                        {% elif candidate.status == 'HIRED' %}Đã tuyển
+                        {% elif candidate.status == 'REJECTED' %}Từ chối
+                        {% else %}{{ candidate.status }}
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Vị trí ứng tuyển:</div>
+                        <div class="col-md-8">
+                            {% if candidate.job_opening %}
+                            <a href="{{ url_for('recruitment.opening_view', id=candidate.job_opening.id) }}">{{ candidate.job_opening.title }}</a>
+                            {% else %}
+                            <span class="text-muted">Không có</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Email:</div>
+                        <div class="col-md-8">
+                            <a href="mailto:{{ candidate.email }}">{{ candidate.email }}</a>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Số điện thoại:</div>
+                        <div class="col-md-8">
+                            <a href="tel:{{ candidate.phone }}">{{ candidate.phone }}</a>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Ngày nộp đơn:</div>
+                        <div class="col-md-8">{{ candidate.application_date.strftime('%d/%m/%Y') }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Kinh nghiệm:</div>
+                        <div class="col-md-8">{{ candidate.years_of_experience }} năm</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Giới thiệu bản thân:</div>
+                        <div class="col-md-8">
+                            {% if candidate.summary %}
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    {{ candidate.summary|nl2br }}
+                                </div>
+                            </div>
+                            {% else %}
+                            <em class="text-muted">Không có giới thiệu bản thân</em>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Kỹ năng:</div>
+                        <div class="col-md-8">
+                            {% if candidate.skills %}
+                            {% for skill in candidate.skills.split(',') %}
+                            <span class="badge bg-primary me-1 mb-1">{{ skill.strip() }}</span>
+                            {% endfor %}
+                            {% else %}
+                            <em class="text-muted">Không có kỹ năng nào được liệt kê</em>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Ghi chú:</div>
+                        <div class="col-md-8">
+                            {% if candidate.notes %}
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    {{ candidate.notes|nl2br }}
+                                </div>
+                            </div>
+                            {% else %}
+                            <em class="text-muted">Không có ghi chú</em>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Lịch sử phỏng vấn</h5>
+                    <a href="{{ url_for('recruitment.interview_create', candidate_id=candidate.id) }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-lg"></i> Lên lịch phỏng vấn
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if interviews %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="px-4">Ngày phỏng vấn</th>
+                                    <th>Loại phỏng vấn</th>
+                                    <th>Người phỏng vấn</th>
+                                    <th>Địa điểm</th>
+                                    <th>Trạng thái</th>
+                                    <th>Đánh giá</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for interview in interviews %}
+                                <tr>
+                                    <td class="px-4">{{ interview.scheduled_date.strftime('%d/%m/%Y %H:%M') }}</td>
+                                    <td>
+                                        {% if interview.interview_type == 'PHONE' %}
+                                        Phỏng vấn qua điện thoại
+                                        {% elif interview.interview_type == 'VIDEO' %}
+                                        Phỏng vấn video
+                                        {% elif interview.interview_type == 'ONSITE' %}
+                                        Phỏng vấn trực tiếp
+                                        {% elif interview.interview_type == 'TECHNICAL' %}
+                                        Phỏng vấn kỹ thuật
+                                        {% elif interview.interview_type == 'CULTURE' %}
+                                        Phỏng vấn văn hóa
+                                        {% else %}
+                                        {{ interview.interview_type }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ interview.interviewers }}</td>
+                                    <td>{{ interview.location }}</td>
+                                    <td>
+                                        {% if interview.status == 'SCHEDULED' %}
+                                        <span class="badge bg-warning">Đã lên lịch</span>
+                                        {% elif interview.status == 'COMPLETED' %}
+                                        <span class="badge bg-success">Đã hoàn thành</span>
+                                        {% elif interview.status == 'CANCELED' %}
+                                        <span class="badge bg-danger">Đã hủy</span>
+                                        {% else %}
+                                        <span class="badge bg-light text-dark">{{ interview.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if interview.rating %}
+                                        <div class="text-warning">
+                                            {% for i in range(interview.rating) %}
+                                            <i class="bi bi-star-fill"></i>
+                                            {% endfor %}
+                                            {% for i in range(5 - interview.rating) %}
+                                            <i class="bi bi-star"></i>
+                                            {% endfor %}
+                                        </div>
+                                        {% else %}
+                                        <span class="text-muted">Chưa đánh giá</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('recruitment.interview_view', id=interview.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted mb-2">Chưa có lịch phỏng vấn nào</p>
+                        <a href="{{ url_for('recruitment.interview_create', candidate_id=candidate.id) }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-lg"></i> Lên lịch phỏng vấn
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Đổi trạng thái ứng viên</h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('recruitment.candidate_update_status', id=candidate.id) }}" method="post">
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Trạng thái mới</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="APPLIED" {% if candidate.status == 'APPLIED' %}selected{% endif %}>Mới ứng tuyển</option>
+                                <option value="SCREENING" {% if candidate.status == 'SCREENING' %}selected{% endif %}>Đang sàng lọc</option>
+                                <option value="INTERVIEW_SCHEDULED" {% if candidate.status == 'INTERVIEW_SCHEDULED' %}selected{% endif %}>Đã lên lịch phỏng vấn</option>
+                                <option value="INTERVIEWED" {% if candidate.status == 'INTERVIEWED' %}selected{% endif %}>Đã phỏng vấn</option>
+                                <option value="OFFERED" {% if candidate.status == 'OFFERED' %}selected{% endif %}>Đã đề xuất</option>
+                                <option value="HIRED" {% if candidate.status == 'HIRED' %}selected{% endif %}>Đã tuyển</option>
+                                <option value="REJECTED" {% if candidate.status == 'REJECTED' %}selected{% endif %}>Từ chối</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Cập nhật trạng thái</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Thông tin tệp đính kèm</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>CV/Sơ yếu lý lịch:</span>
+                        {% if candidate.resume_url %}
+                        <a href="{{ candidate.resume_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-file-earmark-text"></i> Xem CV
+                        </a>
+                        {% else %}
+                        <span class="badge bg-secondary">Không có</span>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Thư giới thiệu:</span>
+                        {% if candidate.cover_letter_url %}
+                        <a href="{{ candidate.cover_letter_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-file-earmark-text"></i> Xem thư
+                        </a>
+                        {% else %}
+                        <span class="badge bg-secondary">Không có</span>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Tài liệu khác:</span>
+                        {% if candidate.additional_docs_url %}
+                        <a href="{{ candidate.additional_docs_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-file-earmark-text"></i> Xem tài liệu
+                        </a>
+                        {% else %}
+                        <span class="badge bg-secondary">Không có</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Thao tác nhanh</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('recruitment.interview_create', candidate_id=candidate.id) }}" class="btn btn-outline-primary">
+                            <i class="bi bi-calendar-plus"></i> Lên lịch phỏng vấn
+                        </a>
+                        <a href="mailto:{{ candidate.email }}" class="btn btn-outline-primary">
+                            <i class="bi bi-envelope"></i> Gửi email
+                        </a>
+                        <a href="{{ url_for('recruitment.candidate_edit', id=candidate.id) }}" class="btn btn-outline-primary">
+                            <i class="bi bi-pencil"></i> Chỉnh sửa thông tin
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal cập nhật trạng thái -->
+<div class="modal fade" id="updateStatusModal" tabindex="-1" aria-labelledby="updateStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updateStatusModalLabel">Cập nhật trạng thái ứng viên</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('recruitment.candidate_update_status', id=candidate.id) }}" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="modal-status" class="form-label">Trạng thái mới</label>
+                        <select name="status" id="modal-status" class="form-select">
+                            <option value="APPLIED" {% if candidate.status == 'APPLIED' %}selected{% endif %}>Mới ứng tuyển</option>
+                            <option value="SCREENING" {% if candidate.status == 'SCREENING' %}selected{% endif %}>Đang sàng lọc</option>
+                            <option value="INTERVIEW_SCHEDULED" {% if candidate.status == 'INTERVIEW_SCHEDULED' %}selected{% endif %}>Đã lên lịch phỏng vấn</option>
+                            <option value="INTERVIEWED" {% if candidate.status == 'INTERVIEWED' %}selected{% endif %}>Đã phỏng vấn</option>
+                            <option value="OFFERED" {% if candidate.status == 'OFFERED' %}selected{% endif %}>Đã đề xuất</option>
+                            <option value="HIRED" {% if candidate.status == 'HIRED' %}selected{% endif %}>Đã tuyển</option>
+                            <option value="REJECTED" {% if candidate.status == 'REJECTED' %}selected{% endif %}>Từ chối</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Cập nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

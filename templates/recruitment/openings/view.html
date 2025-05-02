@@ -1,0 +1,303 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('recruitment.index') }}">Tuyển dụng</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('recruitment.opening_list') }}">Đợt tuyển dụng</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ opening.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-5">{{ opening.title }}</h1>
+        <div>
+            <a href="{{ url_for('recruitment.opening_edit', id=opening.id) }}" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Chỉnh sửa
+            </a>
+            {% if opening.status == 'OPEN' %}
+            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#closeOpeningModal">
+                <i class="bi bi-x-circle"></i> Đóng đợt tuyển dụng
+            </button>
+            {% else %}
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#reopenOpeningModal">
+                <i class="bi bi-arrow-repeat"></i> Mở lại đợt tuyển dụng
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Thông tin đợt tuyển dụng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Vị trí tuyển dụng:</div>
+                        <div class="col-md-8">
+                            <a href="{{ url_for('recruitment.position_view', id=opening.position_id) }}">{{ opening.position.title }}</a>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Số lượng cần tuyển:</div>
+                        <div class="col-md-8">{{ opening.number_of_positions }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Thời gian tuyển dụng:</div>
+                        <div class="col-md-8">
+                            {{ opening.start_date.strftime('%d/%m/%Y') }} - 
+                            {% if opening.end_date %}
+                            {{ opening.end_date.strftime('%d/%m/%Y') }}
+                            {% else %}
+                            Không giới hạn
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Trạng thái:</div>
+                        <div class="col-md-8">
+                            {% if opening.status == 'OPEN' %}
+                            <span class="badge bg-success">Đang mở</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Đã đóng</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Mô tả chi tiết:</div>
+                        <div class="col-md-8">
+                            {% if opening.description %}
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    {{ opening.description|nl2br }}
+                                </div>
+                            </div>
+                            {% else %}
+                            <em class="text-muted">Không có mô tả chi tiết</em>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Danh sách ứng viên</h5>
+                    <a href="{{ url_for('recruitment.candidate_create', opening_id=opening.id) }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-lg"></i> Thêm ứng viên
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="px-4">#</th>
+                                    <th>Họ tên</th>
+                                    <th>Email</th>
+                                    <th>Ngày ứng tuyển</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for candidate in candidates %}
+                                <tr>
+                                    <td class="px-4">{{ loop.index }}</td>
+                                    <td>{{ candidate.full_name }}</td>
+                                    <td>{{ candidate.email }}</td>
+                                    <td>{{ candidate.application_date.strftime('%d/%m/%Y') }}</td>
+                                    <td>
+                                        {% if candidate.status == 'APPLIED' %}
+                                        <span class="badge bg-info">Mới ứng tuyển</span>
+                                        {% elif candidate.status == 'SCREENING' %}
+                                        <span class="badge bg-primary">Đang sàng lọc</span>
+                                        {% elif candidate.status == 'INTERVIEW_SCHEDULED' %}
+                                        <span class="badge bg-warning">Đã lên lịch phỏng vấn</span>
+                                        {% elif candidate.status == 'INTERVIEWED' %}
+                                        <span class="badge bg-secondary">Đã phỏng vấn</span>
+                                        {% elif candidate.status == 'OFFERED' %}
+                                        <span class="badge bg-success">Đã đề xuất</span>
+                                        {% elif candidate.status == 'HIRED' %}
+                                        <span class="badge bg-success">Đã tuyển</span>
+                                        {% elif candidate.status == 'REJECTED' %}
+                                        <span class="badge bg-danger">Từ chối</span>
+                                        {% else %}
+                                        <span class="badge bg-light text-dark">{{ candidate.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{{ url_for('recruitment.candidate_view', id=candidate.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('recruitment.candidate_edit', id=candidate.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a href="{{ url_for('recruitment.interview_create', candidate_id=candidate.id) }}" class="btn btn-sm btn-outline-success">
+                                                <i class="bi bi-calendar-plus"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <p class="text-muted mb-0">Chưa có ứng viên nào trong đợt tuyển dụng này</p>
+                                        <a href="{{ url_for('recruitment.candidate_create', opening_id=opening.id) }}" class="btn btn-sm btn-primary mt-2">
+                                            <i class="bi bi-plus-lg"></i> Thêm ứng viên mới
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Thống kê ứng viên</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Tổng số ứng viên:</span>
+                        <span class="badge bg-primary rounded-pill">{{ candidates|length }}</span>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h6 class="mb-3">Trạng thái ứng viên:</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Mới ứng tuyển:</span>
+                        <span class="badge bg-info rounded-pill">{{ candidates|selectattr('status', 'equalto', 'APPLIED')|list|length }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Đang sàng lọc:</span>
+                        <span class="badge bg-primary rounded-pill">{{ candidates|selectattr('status', 'equalto', 'SCREENING')|list|length }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Đã lên lịch phỏng vấn:</span>
+                        <span class="badge bg-warning rounded-pill">{{ candidates|selectattr('status', 'equalto', 'INTERVIEW_SCHEDULED')|list|length }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Đã phỏng vấn:</span>
+                        <span class="badge bg-secondary rounded-pill">{{ candidates|selectattr('status', 'equalto', 'INTERVIEWED')|list|length }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Đã đề xuất:</span>
+                        <span class="badge bg-success rounded-pill">{{ candidates|selectattr('status', 'equalto', 'OFFERED')|list|length }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Đã tuyển:</span>
+                        <span class="badge bg-success rounded-pill">{{ candidates|selectattr('status', 'equalto', 'HIRED')|list|length }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Từ chối:</span>
+                        <span class="badge bg-danger rounded-pill">{{ candidates|selectattr('status', 'equalto', 'REJECTED')|list|length }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Lịch phỏng vấn gần đây</h5>
+                </div>
+                <div class="card-body">
+                    {% if interviews %}
+                    <ul class="list-group list-group-flush">
+                        {% for interview in interviews %}
+                        <li class="list-group-item px-0">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="mb-1">
+                                        <a href="{{ url_for('recruitment.interview_view', id=interview.id) }}">{{ interview.candidate.full_name }}</a>
+                                    </h6>
+                                    <p class="text-muted small mb-1">
+                                        <i class="bi bi-calendar"></i> {{ interview.scheduled_date.strftime('%d/%m/%Y %H:%M') }}
+                                    </p>
+                                    <p class="small mb-0">
+                                        <i class="bi bi-geo-alt"></i> {{ interview.location }}
+                                    </p>
+                                </div>
+                                <div>
+                                    {% if interview.status == 'SCHEDULED' %}
+                                    <span class="badge bg-warning">Đã lên lịch</span>
+                                    {% elif interview.status == 'COMPLETED' %}
+                                    <span class="badge bg-success">Đã hoàn thành</span>
+                                    {% elif interview.status == 'CANCELED' %}
+                                    <span class="badge bg-danger">Đã hủy</span>
+                                    {% else %}
+                                    <span class="badge bg-light text-dark">{{ interview.status }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted text-center py-3 mb-0">Chưa có lịch phỏng vấn nào</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-white">
+                    <a href="{{ url_for('recruitment.interview_list') }}" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-calendar3"></i> Xem tất cả lịch phỏng vấn
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal đóng đợt tuyển dụng -->
+{% if opening.status == 'OPEN' %}
+<div class="modal fade" id="closeOpeningModal" tabindex="-1" aria-labelledby="closeOpeningModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="closeOpeningModalLabel">Xác nhận đóng đợt tuyển dụng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn đóng đợt tuyển dụng "{{ opening.title }}" không?</p>
+                <p>Sau khi đóng, đợt tuyển dụng sẽ không nhận thêm ứng viên mới.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form action="{{ url_for('recruitment.opening_close', id=opening.id) }}" method="post">
+                    <button type="submit" class="btn btn-warning">Đóng đợt tuyển dụng</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<!-- Modal mở lại đợt tuyển dụng -->
+<div class="modal fade" id="reopenOpeningModal" tabindex="-1" aria-labelledby="reopenOpeningModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reopenOpeningModalLabel">Xác nhận mở lại đợt tuyển dụng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn mở lại đợt tuyển dụng "{{ opening.title }}" không?</p>
+                <p>Sau khi mở lại, đợt tuyển dụng sẽ tiếp tục nhận ứng viên mới.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form action="{{ url_for('recruitment.opening_reopen', id=opening.id) }}" method="post">
+                    <button type="submit" class="btn btn-success">Mở lại đợt tuyển dụng</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

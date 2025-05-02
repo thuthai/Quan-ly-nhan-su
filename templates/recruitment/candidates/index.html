@@ -1,0 +1,144 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-5">Danh sách ứng viên</h1>
+        <a href="{{ url_for('recruitment.candidate_create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Thêm ứng viên mới
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white p-3">
+            <form method="get" action="{{ url_for('recruitment.candidate_list') }}">
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <select name="status" class="form-select">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="APPLIED" {% if status == 'APPLIED' %}selected{% endif %}>Mới ứng tuyển</option>
+                            <option value="SCREENING" {% if status == 'SCREENING' %}selected{% endif %}>Đang sàng lọc</option>
+                            <option value="INTERVIEW_SCHEDULED" {% if status == 'INTERVIEW_SCHEDULED' %}selected{% endif %}>Đã lên lịch phỏng vấn</option>
+                            <option value="INTERVIEWED" {% if status == 'INTERVIEWED' %}selected{% endif %}>Đã phỏng vấn</option>
+                            <option value="OFFERED" {% if status == 'OFFERED' %}selected{% endif %}>Đã đề xuất</option>
+                            <option value="HIRED" {% if status == 'HIRED' %}selected{% endif %}>Đã tuyển</option>
+                            <option value="REJECTED" {% if status == 'REJECTED' %}selected{% endif %}>Từ chối</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="opening_id" class="form-select">
+                            <option value="">Tất cả đợt tuyển dụng</option>
+                            {% for opening in openings %}
+                            <option value="{{ opening.id }}" {% if opening_id|int == opening.id %}selected{% endif %}>{{ opening.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" name="search" class="form-control" placeholder="Tìm theo tên, email..." value="{{ search }}">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Tìm kiếm
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="px-4">#</th>
+                            <th>Họ tên</th>
+                            <th>Email</th>
+                            <th>Số điện thoại</th>
+                            <th>Vị trí ứng tuyển</th>
+                            <th>Ngày ứng tuyển</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for candidate in candidates %}
+                        <tr>
+                            <td class="px-4">{{ loop.index + (page-1) * per_page }}</td>
+                            <td>{{ candidate.full_name }}</td>
+                            <td>{{ candidate.email }}</td>
+                            <td>{{ candidate.phone }}</td>
+                            <td>
+                                {% if candidate.job_opening %}
+                                <a href="{{ url_for('recruitment.opening_view', id=candidate.job_opening.id) }}">{{ candidate.job_opening.title }}</a>
+                                {% else %}
+                                <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ candidate.application_date.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                {% if candidate.status == 'APPLIED' %}
+                                <span class="badge bg-info">Mới ứng tuyển</span>
+                                {% elif candidate.status == 'SCREENING' %}
+                                <span class="badge bg-primary">Đang sàng lọc</span>
+                                {% elif candidate.status == 'INTERVIEW_SCHEDULED' %}
+                                <span class="badge bg-warning">Đã lên lịch phỏng vấn</span>
+                                {% elif candidate.status == 'INTERVIEWED' %}
+                                <span class="badge bg-secondary">Đã phỏng vấn</span>
+                                {% elif candidate.status == 'OFFERED' %}
+                                <span class="badge bg-success">Đã đề xuất</span>
+                                {% elif candidate.status == 'HIRED' %}
+                                <span class="badge bg-success">Đã tuyển</span>
+                                {% elif candidate.status == 'REJECTED' %}
+                                <span class="badge bg-danger">Từ chối</span>
+                                {% else %}
+                                <span class="badge bg-light text-dark">{{ candidate.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('recruitment.candidate_view', id=candidate.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('recruitment.candidate_edit', id=candidate.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{{ url_for('recruitment.interview_create', candidate_id=candidate.id) }}" class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-calendar-plus"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <p class="text-muted mb-0">Không tìm thấy ứng viên nào.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% if pagination.pages > 1 %}
+    <nav>
+        <ul class="pagination justify-content-center">
+            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('recruitment.candidate_list', page=page-1, status=status, opening_id=opening_id, search=search) }}" tabindex="-1">Trước</a>
+            </li>
+            
+            {% for p in range(1, pagination.pages + 1) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('recruitment.candidate_list', page=p, status=status, opening_id=opening_id, search=search) }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+            
+            <li class="page-item {% if page == pagination.pages %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('recruitment.candidate_list', page=page+1, status=status, opening_id=opening_id, search=search) }}">Tiếp</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

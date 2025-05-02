@@ -1,0 +1,172 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-5">Đợt tuyển dụng</h1>
+        <a href="{{ url_for('recruitment.opening_create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Thêm đợt tuyển dụng
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white p-3">
+            <form method="get" action="{{ url_for('recruitment.opening_list') }}">
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <select name="status" class="form-select">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="OPEN" {% if status == 'OPEN' %}selected{% endif %}>Đang mở</option>
+                            <option value="CLOSED" {% if status == 'CLOSED' %}selected{% endif %}>Đã đóng</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" name="date_from" class="form-control" placeholder="Từ ngày" value="{{ date_from }}">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" name="date_to" class="form-control" placeholder="Đến ngày" value="{{ date_to }}">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Tìm kiếm
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="px-4">#</th>
+                            <th>Tên đợt tuyển dụng</th>
+                            <th>Vị trí</th>
+                            <th>Số lượng</th>
+                            <th>Ngày bắt đầu</th>
+                            <th>Ngày kết thúc</th>
+                            <th>Trạng thái</th>
+                            <th>Ứng viên</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for opening in openings %}
+                        <tr>
+                            <td class="px-4">{{ loop.index + (page-1) * per_page }}</td>
+                            <td>{{ opening.title }}</td>
+                            <td>{{ opening.position.title }}</td>
+                            <td>{{ opening.number_of_positions }}</td>
+                            <td>{{ opening.start_date.strftime('%d/%m/%Y') }}</td>
+                            <td>{{ opening.end_date.strftime('%d/%m/%Y') if opening.end_date else 'Không giới hạn' }}</td>
+                            <td>
+                                {% if opening.status == 'OPEN' %}
+                                <span class="badge bg-success">Đang mở</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Đã đóng</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-info rounded-pill">{{ opening.candidates|length }}</span>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('recruitment.opening_view', id=opening.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('recruitment.opening_edit', id=opening.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    {% if opening.status == 'OPEN' %}
+                                    <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#closeModal{{ opening.id }}">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                    {% else %}
+                                    <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#reopenModal{{ opening.id }}">
+                                        <i class="bi bi-arrow-repeat"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Modal đóng đợt tuyển dụng -->
+                                {% if opening.status == 'OPEN' %}
+                                <div class="modal fade" id="closeModal{{ opening.id }}" tabindex="-1" aria-labelledby="closeModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="closeModalLabel">Xác nhận đóng đợt tuyển dụng</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Bạn có chắc chắn muốn đóng đợt tuyển dụng "{{ opening.title }}" không?</p>
+                                                <p>Sau khi đóng, đợt tuyển dụng sẽ không nhận thêm ứng viên mới.</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                                <form action="{{ url_for('recruitment.opening_close', id=opening.id) }}" method="post">
+                                                    <button type="submit" class="btn btn-warning">Đóng đợt tuyển dụng</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <!-- Modal mở lại đợt tuyển dụng -->
+                                <div class="modal fade" id="reopenModal{{ opening.id }}" tabindex="-1" aria-labelledby="reopenModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="reopenModalLabel">Xác nhận mở lại đợt tuyển dụng</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Bạn có chắc chắn muốn mở lại đợt tuyển dụng "{{ opening.title }}" không?</p>
+                                                <p>Sau khi mở lại, đợt tuyển dụng sẽ tiếp tục nhận ứng viên mới.</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                                <form action="{{ url_for('recruitment.opening_reopen', id=opening.id) }}" method="post">
+                                                    <button type="submit" class="btn btn-success">Mở lại đợt tuyển dụng</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4">
+                                <p class="text-muted mb-0">Chưa có đợt tuyển dụng nào. Hãy thêm đợt tuyển dụng mới.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% if pagination.pages > 1 %}
+    <nav>
+        <ul class="pagination justify-content-center">
+            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('recruitment.opening_list', page=page-1, status=status, date_from=date_from, date_to=date_to) }}" tabindex="-1">Trước</a>
+            </li>
+            
+            {% for p in range(1, pagination.pages + 1) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('recruitment.opening_list', page=p, status=status, date_from=date_from, date_to=date_to) }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+            
+            <li class="page-item {% if page == pagination.pages %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('recruitment.opening_list', page=page+1, status=status, date_from=date_from, date_to=date_to) }}">Tiếp</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
