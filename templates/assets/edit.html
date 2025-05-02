@@ -108,11 +108,11 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <div class="form-group mb-3">
-                            <label for="warranty_end" class="form-label">Ngày hết hạn bảo hành</label>
-                            {{ form.warranty_end(class="form-control datepicker" + (" is-invalid" if form.warranty_end.errors else ""), placeholder="Chọn ngày hết hạn bảo hành") }}
-                            {% if form.warranty_end.errors %}
+                            <label for="warranty_expiry" class="form-label">Ngày hết hạn bảo hành</label>
+                            {{ form.warranty_expiry(class="form-control datepicker" + (" is-invalid" if form.warranty_expiry.errors else ""), placeholder="Chọn ngày hết hạn bảo hành") }}
+                            {% if form.warranty_expiry.errors %}
                             <div class="invalid-feedback">
-                                {% for error in form.warranty_end.errors %}
+                                {% for error in form.warranty_expiry.errors %}
                                 {{ error }}
                                 {% endfor %}
                             </div>

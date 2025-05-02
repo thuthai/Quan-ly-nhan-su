@@ -323,15 +323,15 @@
                     <div class="d-flex align-items-center mb-3">
                         <div class="flex-shrink-0">
                             {% if contract.employee.avatar %}
-                            <img src="{{ url_for('static', filename=contract.employee.avatar) }}" alt="{{ contract.employee.fullname }}" class="rounded-circle" width="60" height="60">
+                            <img src="{{ url_for('static', filename=contract.employee.avatar) }}" alt="{{ contract.employee.full_name }}" class="rounded-circle" width="60" height="60">
                             {% else %}
                             <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 60px; height: 60px;">
-                                {{ contract.employee.fullname[0] }}
+                                {{ contract.employee.full_name[0] }}
                             </div>
                             {% endif %}
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h5 class="mb-0">{{ contract.employee.fullname }}</h5>
+                            <h5 class="mb-0">{{ contract.employee.full_name }}</h5>
                             <p class="text-muted mb-0">{{ contract.job_title }}</p>
                         </div>
                     </div>

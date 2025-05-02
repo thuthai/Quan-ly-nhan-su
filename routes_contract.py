@@ -204,10 +204,13 @@ def view(id):
     amendments = ContractAmendment.query.filter_by(contract_id=id).order_by(ContractAmendment.amendment_date.desc()).all()
     documents = Document.query.filter_by(employee_id=contract.employee_id).all()
     
+    from utils import today_date
+    
     return render_template('contracts/view.html',
                           contract=contract,
                           amendments=amendments,
                           documents=documents,
+                          now=today_date(),
                           title=f'Chi tiết hợp đồng: {contract.contract_number}')
 
 
