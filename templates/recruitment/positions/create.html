@@ -5,22 +5,23 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ url_for('recruitment.index') }}">Tuyển dụng</a></li>
-            <li class="breadcrumb-item"><a href="{{ url_for('recruitment.position_list') }}">Vị trí tuyển dụng</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('recruitment.position_list') }}">Vị trí công việc</a></li>
             <li class="breadcrumb-item active" aria-current="page">Thêm vị trí mới</li>
         </ol>
     </nav>
 
-    <h1 class="display-5 mb-4">Thêm vị trí tuyển dụng mới</h1>
-
-    <div class="card border-0 shadow-sm">
-        <div class="card-body p-4">
-            <form method="post" action="{{ url_for('recruitment.position_create') }}">
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Thêm vị trí công việc mới</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('recruitment.position_create') }}" method="post">
                 {{ form.csrf_token }}
                 
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <div class="form-group mb-3">
-                            <label for="title" class="form-label fw-bold">Tên vị trí <span class="text-danger">*</span></label>
+                            <label for="title" class="form-label">Tên vị trí <span class="text-danger">*</span></label>
                             {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), placeholder="Nhập tên vị trí") }}
                             {% if form.title.errors %}
                             <div class="invalid-feedback">
@@ -29,11 +30,11 @@
                                 {% endfor %}
                             </div>
                             {% endif %}
-                            <small class="form-text text-muted">Nhập tên đầy đủ của vị trí công việc</small>
                         </div>
-
+                    </div>
+                    <div class="col-md-6">
                         <div class="form-group mb-3">
-                            <label for="department_id" class="form-label fw-bold">Phòng ban <span class="text-danger">*</span></label>
+                            <label for="department_id" class="form-label">Phòng ban <span class="text-danger">*</span></label>
                             {{ form.department_id(class="form-select" + (" is-invalid" if form.department_id.errors else "")) }}
                             {% if form.department_id.errors %}
                             <div class="invalid-feedback">
@@ -43,10 +44,14 @@
                             </div>
                             {% endif %}
                         </div>
+                    </div>
+                </div>
 
+                <div class="row mb-3">
+                    <div class="col-md-6">
                         <div class="form-group mb-3">
-                            <label for="required_experience" class="form-label fw-bold">Yêu cầu kinh nghiệm</label>
-                            {{ form.required_experience(class="form-control" + (" is-invalid" if form.required_experience.errors else ""), placeholder="VD: 2-3 năm kinh nghiệm") }}
+                            <label for="required_experience" class="form-label">Kinh nghiệm yêu cầu</label>
+                            {{ form.required_experience(class="form-control" + (" is-invalid" if form.required_experience.errors else ""), placeholder="Ví dụ: 2-3 năm kinh nghiệm") }}
                             {% if form.required_experience.errors %}
                             <div class="invalid-feedback">
                                 {% for error in form.required_experience.errors %}
@@ -55,45 +60,77 @@
                             </div>
                             {% endif %}
                         </div>
-
-                        <div class="form-group mb-3">
-                            <label for="salary_range" class="form-label fw-bold">Mức lương</label>
-                            {{ form.salary_range(class="form-control" + (" is-invalid" if form.salary_range.errors else ""), placeholder="VD: 10-15 triệu đồng") }}
-                            {% if form.salary_range.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.salary_range.errors %}
-                                {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                            <small class="form-text text-muted">Nhập khoảng lương cho vị trí này</small>
-                        </div>
-
-                        <div class="form-check form-switch mb-3">
-                            {{ form.is_active(class="form-check-input", checked=true) }}
-                            <label class="form-check-label" for="is_active">Vị trí đang hoạt động</label>
-                        </div>
                     </div>
-
                     <div class="col-md-6">
                         <div class="form-group mb-3">
-                            <label for="description" class="form-label fw-bold">Mô tả công việc</label>
-                            {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=10, placeholder="Nhập mô tả chi tiết công việc") }}
-                            {% if form.description.errors %}
+                            <label for="education_requirement" class="form-label">Yêu cầu học vấn</label>
+                            {{ form.education_requirement(class="form-control" + (" is-invalid" if form.education_requirement.errors else ""), placeholder="Ví dụ: Tốt nghiệp Đại học") }}
+                            {% if form.education_requirement.errors %}
                             <div class="invalid-feedback">
-                                {% for error in form.description.errors %}
+                                {% for error in form.education_requirement.errors %}
                                 {{ error }}
                                 {% endfor %}
                             </div>
                             {% endif %}
-                            <small class="form-text text-muted">Nhập mô tả chi tiết về trách nhiệm, yêu cầu và quyền lợi của vị trí</small>
                         </div>
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-end">
-                    <a href="{{ url_for('recruitment.position_list') }}" class="btn btn-outline-secondary me-2">Hủy</a>
-                    <button type="submit" class="btn btn-primary">Lưu vị trí</button>
+                <div class="form-group mb-3">
+                    <label for="job_description" class="form-label">Mô tả công việc</label>
+                    {{ form.job_description(class="form-control" + (" is-invalid" if form.job_description.errors else ""), rows=5, placeholder="Nhập mô tả chi tiết về công việc") }}
+                    {% if form.job_description.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.job_description.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="responsibilities" class="form-label">Trách nhiệm công việc</label>
+                    {{ form.responsibilities(class="form-control" + (" is-invalid" if form.responsibilities.errors else ""), rows=4, placeholder="Nhập danh sách trách nhiệm công việc") }}
+                    {% if form.responsibilities.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.responsibilities.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">Gợi ý: Sử dụng dấu gạch đầu dòng để liệt kê trách nhiệm công việc</div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="skills_required" class="form-label">Kỹ năng yêu cầu</label>
+                    {{ form.skills_required(class="form-control" + (" is-invalid" if form.skills_required.errors else ""), rows=4, placeholder="Nhập danh sách kỹ năng yêu cầu") }}
+                    {% if form.skills_required.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.skills_required.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">Gợi ý: Sử dụng dấu gạch đầu dòng để liệt kê kỹ năng yêu cầu</div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="is_active" class="form-label">Trạng thái <span class="text-danger">*</span></label>
+                    {{ form.is_active(class="form-select" + (" is-invalid" if form.is_active.errors else "")) }}
+                    {% if form.is_active.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.is_active.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group text-end">
+                    <a href="{{ url_for('recruitment.position_list') }}" class="btn btn-secondary">Hủy</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Lưu thông tin
+                    </button>
                 </div>
             </form>
         </div>

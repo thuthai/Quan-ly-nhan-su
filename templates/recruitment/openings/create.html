@@ -6,33 +6,22 @@
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ url_for('recruitment.index') }}">Tuyển dụng</a></li>
             <li class="breadcrumb-item"><a href="{{ url_for('recruitment.opening_list') }}">Đợt tuyển dụng</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Thêm đợt tuyển dụng mới</li>
+            <li class="breadcrumb-item active" aria-current="page">Thêm tin tuyển dụng</li>
         </ol>
     </nav>
 
-    <h1 class="display-5 mb-4">Thêm đợt tuyển dụng mới</h1>
-
-    <div class="card border-0 shadow-sm">
-        <div class="card-body p-4">
-            <form method="post" action="{{ url_for('recruitment.opening_create') }}">
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Thêm tin tuyển dụng mới</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('recruitment.opening_create') }}" method="post">
                 {{ form.csrf_token }}
                 
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <div class="form-group mb-3">
-                            <label for="title" class="form-label fw-bold">Tiêu đề đợt tuyển dụng <span class="text-danger">*</span></label>
-                            {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), placeholder="Ví dụ: Tuyển dụng Nhân viên kinh doanh Q2/2023") }}
-                            {% if form.title.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.title.errors %}
-                                {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label for="position_id" class="form-label fw-bold">Vị trí tuyển dụng <span class="text-danger">*</span></label>
+                            <label for="position_id" class="form-label">Vị trí công việc <span class="text-danger">*</span></label>
                             {{ form.position_id(class="form-select" + (" is-invalid" if form.position_id.errors else "")) }}
                             {% if form.position_id.errors %}
                             <div class="invalid-feedback">
@@ -42,57 +31,14 @@
                             </div>
                             {% endif %}
                         </div>
-
-                        <div class="form-group mb-3">
-                            <label for="number_of_positions" class="form-label fw-bold">Số lượng cần tuyển <span class="text-danger">*</span></label>
-                            {{ form.number_of_positions(class="form-control" + (" is-invalid" if form.number_of_positions.errors else ""), type="number", min="1") }}
-                            {% if form.number_of_positions.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.number_of_positions.errors %}
-                                {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="start_date" class="form-label fw-bold">Ngày bắt đầu <span class="text-danger">*</span></label>
-                                    {{ form.start_date(class="form-control" + (" is-invalid" if form.start_date.errors else ""), type="date") }}
-                                    {% if form.start_date.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.start_date.errors %}
-                                        {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="end_date" class="form-label fw-bold">Ngày kết thúc</label>
-                                    {{ form.end_date(class="form-control" + (" is-invalid" if form.end_date.errors else ""), type="date") }}
-                                    {% if form.end_date.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.end_date.errors %}
-                                        {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                    {% endif %}
-                                    <small class="form-text text-muted">Để trống nếu không giới hạn thời gian</small>
-                                </div>
-                            </div>
-                        </div>
                     </div>
-
                     <div class="col-md-6">
                         <div class="form-group mb-3">
-                            <label for="description" class="form-label fw-bold">Mô tả chi tiết</label>
-                            {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows="10", placeholder="Nhập thông tin chi tiết về đợt tuyển dụng, yêu cầu cụ thể, quy trình ứng tuyển...") }}
-                            {% if form.description.errors %}
+                            <label for="number_of_openings" class="form-label">Số lượng cần tuyển <span class="text-danger">*</span></label>
+                            {{ form.number_of_openings(class="form-control" + (" is-invalid" if form.number_of_openings.errors else ""), placeholder="Nhập số lượng cần tuyển") }}
+                            {% if form.number_of_openings.errors %}
                             <div class="invalid-feedback">
-                                {% for error in form.description.errors %}
+                                {% for error in form.number_of_openings.errors %}
                                 {{ error }}
                                 {% endfor %}
                             </div>
@@ -101,12 +47,124 @@
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-end">
-                    <a href="{{ url_for('recruitment.opening_list') }}" class="btn btn-outline-secondary me-2">Hủy</a>
-                    <button type="submit" class="btn btn-primary">Tạo đợt tuyển dụng</button>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="start_date" class="form-label">Ngày bắt đầu <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                {{ form.start_date(class="form-control datepicker" + (" is-invalid" if form.start_date.errors else ""), placeholder="DD/MM/YYYY") }}
+                                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                {% if form.start_date.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.start_date.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="end_date" class="form-label">Ngày kết thúc</label>
+                            <div class="input-group">
+                                {{ form.end_date(class="form-control datepicker" + (" is-invalid" if form.end_date.errors else ""), placeholder="DD/MM/YYYY") }}
+                                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                {% if form.end_date.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.end_date.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="form-text">Để trống nếu không có thời hạn kết thúc</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="salary_range" class="form-label">Mức lương</label>
+                            {{ form.salary_range(class="form-control" + (" is-invalid" if form.salary_range.errors else ""), placeholder="Ví dụ: 10-15 triệu") }}
+                            {% if form.salary_range.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.salary_range.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="work_location" class="form-label">Địa điểm làm việc</label>
+                            {{ form.work_location(class="form-control" + (" is-invalid" if form.work_location.errors else ""), placeholder="Nhập địa điểm làm việc") }}
+                            {% if form.work_location.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.work_location.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="status" class="form-label">Trạng thái <span class="text-danger">*</span></label>
+                            {{ form.status(class="form-select" + (" is-invalid" if form.status.errors else "")) }}
+                            {% if form.status.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.status.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Thông tin chi tiết</label>
+                            <div class="alert alert-info p-2 mb-0">
+                                <small><i class="bi bi-info-circle"></i> Thông tin chi tiết về yêu cầu và mô tả công việc được 
+                                lấy từ vị trí công việc đã chọn.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group text-end">
+                    <a href="{{ url_for('recruitment.opening_list') }}" class="btn btn-secondary">Hủy</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Lưu thông tin
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const datepickers = document.querySelectorAll('.datepicker');
+        datepickers.forEach(function(input) {
+            new Litepicker({
+                element: input,
+                format: 'DD/MM/YYYY',
+                lang: 'vi-VN',
+                autoRefresh: true
+            });
+        });
+    } catch (error) {
+        console.error("Litepicker chưa được load. Đang sử dụng datepicker mặc định.");
+    }
+});
+</script>
 {% endblock %}

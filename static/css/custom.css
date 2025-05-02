@@ -217,6 +217,27 @@ body {
     padding: 1.25rem;
 }
 
+/* Tăng độ tương phản cho các card trong module */
+.card .card-body h2,
+.card .card-body h4,
+.card .card-body .h4,
+.card .card-body a.btn {
+    color: #000 !important;
+    font-weight: 800 !important;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.card .card-body p {
+    color: #000 !important;
+    font-weight: 700 !important;
+    text-shadow: none;
+}
+
+.card .card-body p.text-muted {
+    color: #333 !important;
+    font-weight: 600 !important;
+}
+
 /* Đảm bảo chữ trong các thẻ thống kê có màu đen */
 .dashboard-card h5.card-title,
 .dashboard-card .card-text,
