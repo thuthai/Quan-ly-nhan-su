@@ -1,0 +1,234 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('asset.index') }}">Quản lý tài sản</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('asset.view', id=asset.id) }}">{{ asset.name }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Chỉnh sửa tài sản</li>
+        </ol>
+    </nav>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Chỉnh sửa tài sản</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('asset.edit', id=asset.id) }}" method="post" enctype="multipart/form-data">
+                {{ form.csrf_token }}
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="asset_code" class="form-label">Mã tài sản <span class="text-danger">*</span></label>
+                            {{ form.asset_code(class="form-control" + (" is-invalid" if form.asset_code.errors else ""), placeholder="Nhập mã tài sản") }}
+                            {% if form.asset_code.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.asset_code.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="name" class="form-label">Tên tài sản <span class="text-danger">*</span></label>
+                            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), placeholder="Nhập tên tài sản") }}
+                            {% if form.name.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.name.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="category" class="form-label">Loại tài sản</label>
+                            {{ form.category(class="form-select" + (" is-invalid" if form.category.errors else "")) }}
+                            {% if form.category.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.category.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="status" class="form-label">Trạng thái</label>
+                            {{ form.status(class="form-select" + (" is-invalid" if form.status.errors else "")) }}
+                            {% if form.status.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.status.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="purchase_date" class="form-label">Ngày mua</label>
+                            {{ form.purchase_date(class="form-control datepicker" + (" is-invalid" if form.purchase_date.errors else ""), placeholder="Chọn ngày mua") }}
+                            {% if form.purchase_date.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.purchase_date.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="purchase_price" class="form-label">Giá mua (VND)</label>
+                            {{ form.purchase_price(class="form-control" + (" is-invalid" if form.purchase_price.errors else ""), placeholder="Nhập giá mua") }}
+                            {% if form.purchase_price.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.purchase_price.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="warranty_end" class="form-label">Ngày hết hạn bảo hành</label>
+                            {{ form.warranty_end(class="form-control datepicker" + (" is-invalid" if form.warranty_end.errors else ""), placeholder="Chọn ngày hết hạn bảo hành") }}
+                            {% if form.warranty_end.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.warranty_end.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="warranty_info" class="form-label">Thông tin bảo hành</label>
+                            {{ form.warranty_info(class="form-control" + (" is-invalid" if form.warranty_info.errors else ""), placeholder="Nhập thông tin bảo hành") }}
+                            {% if form.warranty_info.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.warranty_info.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="department_id" class="form-label">Phòng ban quản lý</label>
+                            {{ form.department_id(class="form-select" + (" is-invalid" if form.department_id.errors else "")) }}
+                            {% if form.department_id.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.department_id.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="assignee_id" class="form-label">Người đang sử dụng</label>
+                            {{ form.assignee_id(class="form-select" + (" is-invalid" if form.assignee_id.errors else "")) }}
+                            {% if form.assignee_id.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.assignee_id.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="image" class="form-label">Hình ảnh tài sản</label>
+                    <div class="input-group">
+                        {{ form.image(class="form-control" + (" is-invalid" if form.image.errors else "")) }}
+                        {% if asset.image_path %}
+                        <span class="input-group-text">Đã có hình ảnh</span>
+                        {% endif %}
+                    </div>
+                    {% if form.image.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.image.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">Để trống nếu không muốn thay đổi hình ảnh hiện tại.</div>
+                    {% if asset.image_path %}
+                    <div class="mt-2">
+                        <img src="{{ url_for('static', filename=asset.image_path) }}" alt="{{ asset.name }}" class="img-thumbnail" style="max-height: 150px;">
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Mô tả</label>
+                    {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=3, placeholder="Nhập mô tả tài sản") }}
+                    {% if form.description.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.description.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="notes" class="form-label">Ghi chú</label>
+                    {{ form.notes(class="form-control" + (" is-invalid" if form.notes.errors else ""), rows=3, placeholder="Nhập ghi chú") }}
+                    {% if form.notes.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.notes.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('asset.view', id=asset.id) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Quay lại
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        initDatepickers('.datepicker');
+    });
+</script>
+{% endblock %}
