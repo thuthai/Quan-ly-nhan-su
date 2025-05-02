@@ -64,7 +64,7 @@
                     <tbody>
                         {% for asset in assets %}
                         <tr>
-                            <td class="px-4">{{ loop.index + (page-1) * per_page }}</td>
+                            <td class="px-4">{{ loop.index + (pagination.page-1) * pagination.per_page }}</td>
                             <td>{{ asset.name }}</td>
                             <td>
                                 {% if asset.category == 'COMPUTER' %}
@@ -100,7 +100,7 @@
                             </td>
                             <td>
                                 {% if asset.assignee %}
-                                <a href="{{ url_for('employee.view', id=asset.assignee.id) }}">{{ asset.assignee.fullname }}</a>
+                                <a href="{{ url_for('view_employee', id=asset.assignee.id) }}">{{ asset.assignee.fullname }}</a>
                                 {% else %}
                                 <span class="text-muted">Chưa gán</span>
                                 {% endif %}
@@ -160,18 +160,18 @@
     {% if pagination.pages > 1 %}
     <nav>
         <ul class="pagination justify-content-center">
-            <li class="page-item {% if page == 1 %}disabled{% endif %}">
-                <a class="page-link" href="{{ url_for('asset.index', page=page-1, category=category, status=status, search=search) }}" tabindex="-1">Trước</a>
+            <li class="page-item {% if pagination.page == 1 %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('asset.index', page=pagination.prev_num, category=category, status=status, search=search) }}" tabindex="-1">Trước</a>
             </li>
             
             {% for p in range(1, pagination.pages + 1) %}
-            <li class="page-item {% if p == page %}active{% endif %}">
+            <li class="page-item {% if p == pagination.page %}active{% endif %}">
                 <a class="page-link" href="{{ url_for('asset.index', page=p, category=category, status=status, search=search) }}">{{ p }}</a>
             </li>
             {% endfor %}
             
-            <li class="page-item {% if page == pagination.pages %}disabled{% endif %}">
-                <a class="page-link" href="{{ url_for('asset.index', page=page+1, category=category, status=status, search=search) }}">Tiếp</a>
+            <li class="page-item {% if pagination.page == pagination.pages %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('asset.index', page=pagination.next_num, category=category, status=status, search=search) }}">Tiếp</a>
             </li>
         </ul>
     </nav>
