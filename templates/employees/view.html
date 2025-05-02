@@ -91,7 +91,7 @@
                         </li>
                         <li class="list-group-item bg-white">
                             <strong><i class="bi bi-book me-2"></i>Trình độ học vấn:</strong>
-                            <span class="float-end">{{ employee.education_level or 'Chưa cập nhật' }}</span>
+                            <span class="float-end">{{ employee.education_level.value if employee.education_level else 'Chưa cập nhật' }}</span>
                         </li>
                     </ul>
                 </div>
