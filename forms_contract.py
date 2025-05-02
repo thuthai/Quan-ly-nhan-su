@@ -70,6 +70,7 @@ class ContractForm(FlaskForm):
 class ContractEditForm(ContractForm):
     """Form để chỉnh sửa hợp đồng"""
     contract_id = HiddenField('ID')
+    termination_reason = StringField('Lý do chấm dứt', validators=[Optional()])
     
     def validate_status(self, status):
         contract = Contract.query.get(self.contract_id.data)

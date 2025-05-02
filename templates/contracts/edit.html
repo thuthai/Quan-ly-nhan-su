@@ -167,11 +167,11 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <div class="form-group mb-3">
-                            <label for="terminated_date" class="form-label">Ngày chấm dứt</label>
-                            {{ form.terminated_date(class="form-control datepicker" + (" is-invalid" if form.terminated_date.errors else ""), placeholder="Chọn ngày chấm dứt") }}
-                            {% if form.terminated_date.errors %}
+                            <label for="status" class="form-label">Trạng thái</label>
+                            {{ form.status(class="form-select" + (" is-invalid" if form.status.errors else "")) }}
+                            {% if form.status.errors %}
                             <div class="invalid-feedback">
-                                {% for error in form.terminated_date.errors %}
+                                {% for error in form.status.errors %}
                                 {{ error }}
                                 {% endfor %}
                             </div>
