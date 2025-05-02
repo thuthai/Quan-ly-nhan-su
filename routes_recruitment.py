@@ -321,7 +321,7 @@ def opening_close(id):
     return redirect(url_for('recruitment.opening_view', id=id))
 
 
-@recruitment_bp.route('/recruitment/openings/<int:id>/reopen', methods=['POST'])
+@recruitment_bp.route('/openings/<int:id>/reopen', methods=['POST'])
 @login_required
 def opening_reopen(id):
     opening = JobOpening.query.get_or_404(id)
@@ -337,7 +337,7 @@ def opening_reopen(id):
 
 
 # Candidates
-@recruitment_bp.route('/recruitment/candidates')
+@recruitment_bp.route('/candidates')
 @login_required
 def candidate_list():
     page = request.args.get('page', 1, type=int)
@@ -378,7 +378,7 @@ def candidate_list():
                           title='Danh sách ứng viên')
 
 
-@recruitment_bp.route('/recruitment/candidates/create', methods=['GET', 'POST'])
+@recruitment_bp.route('/candidates/create', methods=['GET', 'POST'])
 @login_required
 def candidate_create():
     form = CandidateForm()
@@ -421,7 +421,7 @@ def candidate_create():
                           title='Thêm ứng viên mới')
 
 
-@recruitment_bp.route('/recruitment/candidates/<int:id>/edit', methods=['GET', 'POST'])
+@recruitment_bp.route('/candidates/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def candidate_edit(id):
     candidate = Candidate.query.get_or_404(id)
@@ -470,7 +470,7 @@ def candidate_edit(id):
                           title='Chỉnh sửa hồ sơ ứng viên')
 
 
-@recruitment_bp.route('/recruitment/candidates/<int:id>')
+@recruitment_bp.route('/candidates/<int:id>')
 @login_required
 def candidate_view(id):
     candidate = Candidate.query.get_or_404(id)
@@ -482,7 +482,7 @@ def candidate_view(id):
                           title=f'Chi tiết ứng viên: {candidate.full_name}')
 
 
-@recruitment_bp.route('/recruitment/candidates/<int:id>/update-status', methods=['POST'])
+@recruitment_bp.route('/candidates/<int:id>/update-status', methods=['POST'])
 @login_required
 def candidate_update_status(id):
     candidate = Candidate.query.get_or_404(id)
@@ -500,7 +500,7 @@ def candidate_update_status(id):
 
 
 # Interviews
-@recruitment_bp.route('/recruitment/interviews')
+@recruitment_bp.route('/interviews')
 @login_required
 def interview_list():
     page = request.args.get('page', 1, type=int)
@@ -543,7 +543,7 @@ def interview_list():
                           title='Lịch phỏng vấn')
 
 
-@recruitment_bp.route('/recruitment/interviews/create', methods=['GET', 'POST'])
+@recruitment_bp.route('/interviews/create', methods=['GET', 'POST'])
 @login_required
 def interview_create():
     form = InterviewForm()
@@ -595,7 +595,7 @@ def interview_create():
                           title='Lên lịch phỏng vấn')
 
 
-@recruitment_bp.route('/recruitment/interviews/<int:id>/edit', methods=['GET', 'POST'])
+@recruitment_bp.route('/interviews/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def interview_edit(id):
     interview = Interview.query.get_or_404(id)
@@ -648,7 +648,7 @@ def interview_edit(id):
                           title='Chỉnh sửa lịch phỏng vấn')
 
 
-@recruitment_bp.route('/recruitment/interviews/<int:id>')
+@recruitment_bp.route('/interviews/<int:id>')
 @login_required
 def interview_view(id):
     interview = Interview.query.get_or_404(id)
