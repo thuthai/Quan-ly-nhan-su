@@ -1,0 +1,116 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h1 class="h3 mb-0"><i class="bi bi-pencil-square me-2"></i>Chỉnh sửa quyền hạn</h1>
+                    <a href="{{ url_for('permission.permission_list') }}" class="btn btn-light">
+                        <i class="bi bi-arrow-left me-1"></i> Quay lại
+                    </a>
+                </div>
+                
+                <div class="card-body">
+                    <form method="post">
+                        {{ form.hidden_tag() }}
+                        {{ form.permission_id() }}
+                        
+                        <div class="mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control", placeholder="Nhập tên quyền hạn") }}
+                            {% if form.name.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.name.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.code.label(class="form-label") }}
+                            {{ form.code(class="form-control", readonly=true) }}
+                            <small class="form-text text-muted">
+                                Mã quyền không thể thay đổi sau khi đã tạo.
+                            </small>
+                            {% if form.code.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.code.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control", rows=3, placeholder="Nhập mô tả quyền hạn") }}
+                            {% if form.description.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.description.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.module.label(class="form-label") }}
+                            {{ form.module(class="form-select") }}
+                            <small class="form-text text-muted">
+                                Module là phân loại chính cho quyền này trong hệ thống.
+                            </small>
+                            {% if form.module.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.module.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Được sử dụng trong các vai trò:</label>
+                            {% if permission.roles.count() > 0 %}
+                                <ul class="list-group">
+                                    {% for role in permission.roles %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            {{ role.name }}
+                                            <span class="badge bg-primary rounded-pill">
+                                                <a href="{{ url_for('permission.edit_role', id=role.id) }}" class="text-white text-decoration-none">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            </span>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <div class="alert alert-light">
+                                    <i class="bi bi-info-circle"></i> Quyền này chưa được sử dụng trong vai trò nào.
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i> Cập nhật quyền
+                            </button>
+                            <a href="{{ url_for('permission.permission_list') }}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-1"></i> Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Đã tạo: {{ permission.created_at.strftime('%d/%m/%Y %H:%M') if permission.created_at else 'N/A' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

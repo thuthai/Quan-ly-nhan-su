@@ -1,0 +1,90 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h1 class="h3 mb-0"><i class="bi bi-person-gear me-2"></i>Phân quyền cho người dùng</h1>
+                    <a href="{{ url_for('permission.user_list') }}" class="btn btn-light">
+                        <i class="bi bi-arrow-left me-1"></i> Quay lại
+                    </a>
+                </div>
+                
+                <div class="card-body">
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="me-3">
+                                <div class="avatar-container" style="width: 64px; height: 64px; background-color: #e9ecef; border-radius: 50%; display: flex; justify-content: center; align-items: center;">
+                                    <i class="bi bi-person-fill" style="font-size: 2rem;"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h2 class="h4 mb-1">{{ user.username }}</h2>
+                                <p class="mb-1 text-muted">{{ user.email }}</p>
+                                {% if user.is_admin() %}
+                                    <span class="badge bg-danger">Admin</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ user.role.value }}</span>
+                                {% endif %}
+                                
+                                {% if user.employee %}
+                                    <span class="badge bg-info ms-1">{{ user.employee.full_name }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if user.is_admin() %}
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <strong>Lưu ý:</strong> Đây là tài khoản Admin, đã có tất cả các quyền trong hệ thống. Các vai trò tùy chỉnh sẽ không ảnh hưởng đến quyền của người dùng này.
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <form method="post">
+                        {{ form.hidden_tag() }}
+                        {{ form.user_id() }}
+                        
+                        <div class="mb-3">
+                            {{ form.roles.label(class="form-label") }}
+                            <div class="alert alert-light">
+                                <i class="bi bi-info-circle me-2"></i> Chọn các vai trò cho người dùng này. Giữ phím Ctrl (hoặc Command trên Mac) để chọn nhiều vai trò.
+                            </div>
+                            <div class="border rounded p-3 bg-light">
+                                {{ form.roles(class="form-select", size=10, multiple=true) }}
+                            </div>
+                            {% if form.roles.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.roles.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i> Cập nhật vai trò
+                            </button>
+                            <a href="{{ url_for('permission.user_list') }}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-1"></i> Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="card-footer bg-light d-flex justify-content-between align-items-center">
+                    <a href="{{ url_for('permission.user_permissions', id=user.id) }}" class="btn btn-sm btn-outline-info">
+                        <i class="bi bi-shield-lock me-1"></i> Xem tất cả quyền của người dùng
+                    </a>
+                    <a href="{{ url_for('permission.user_list') }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h1 class="h3 mb-0"><i class="bi bi-pencil-square me-2"></i>Chỉnh sửa vai trò</h1>
+                    <a href="{{ url_for('permission.role_list') }}" class="btn btn-light">
+                        <i class="bi bi-arrow-left me-1"></i> Quay lại
+                    </a>
+                </div>
+                
+                <div class="card-body">
+                    <form method="post">
+                        {{ form.hidden_tag() }}
+                        {{ form.role_id() }}
+                        
+                        <div class="mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control", placeholder="Nhập tên vai trò") }}
+                            {% if form.name.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.name.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control", rows=3, placeholder="Nhập mô tả vai trò") }}
+                            {% if form.description.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.description.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            {{ form.is_active(class="form-check-input") }}
+                            {{ form.is_active.label(class="form-check-label") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.permissions.label(class="form-label") }}
+                            <div class="alert alert-light">
+                                <i class="bi bi-info-circle"></i> Chọn các quyền hạn cho vai trò này. Giữ phím Ctrl (hoặc Command trên Mac) để chọn nhiều quyền.
+                            </div>
+                            <div class="border rounded p-3 bg-light">
+                                {{ form.permissions(class="form-select", size=10, multiple=true) }}
+                            </div>
+                            {% if form.permissions.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.permissions.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i> Cập nhật vai trò
+                            </button>
+                            <a href="{{ url_for('permission.role_list') }}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-1"></i> Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Đã tạo: {{ role.created_at.strftime('%d/%m/%Y %H:%M') if role.created_at else 'N/A' }}</span>
+                        <span class="text-muted">
+                            {% if role.created_by %}
+                                Người tạo: {{ role.created_by.username }}
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
