@@ -1,12 +1,52 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SelectField, DateField, DateTimeField, TextAreaField, FloatField, FileField, HiddenField, BooleanField, SelectMultipleField, SubmitField, IntegerField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, ValidationError, NumberRange
-from models import (Gender, EmployeeStatus, LeaveType, Department, User, Employee, 
+from models import (Gender, EmployeeStatus, LeaveType, Department, User, Employee, UserRole,
               AwardType, EducationLevel, Position, VIETNAM_PROVINCES, SalaryGrade, WorkScheduleType, WorkScheduleStatus,
               PerformanceRatingPeriod, PerformanceRatingStatus, PerformanceEvaluationCriteria, CustomPosition,
               TaskStatus, TaskPriority, Task, WorkSchedule)
+from app import db
 from flask_wtf.file import FileAllowed
 from datetime import date, datetime, timedelta
+
+
+class EditUserForm(FlaskForm):
+    username = StringField('Tên đăng nhập', validators=[DataRequired(message='Vui lòng nhập tên đăng nhập'), Length(min=4, max=64, message='Tên đăng nhập phải có từ 4-64 ký tự')])
+    email = StringField('Email', validators=[DataRequired(message='Vui lòng nhập email'), Email(message='Email không hợp lệ')])
+    password = PasswordField('Mật khẩu mới', validators=[Optional(), Length(min=6, message='Mật khẩu phải có ít nhất 6 ký tự')])
+    confirm_password = PasswordField('Xác nhận mật khẩu mới', validators=[EqualTo('password', message='Mật khẩu xác nhận không khớp')])
+    role = SelectField('Vai trò', choices=[(role.name, role.value) for role in UserRole], validators=[DataRequired(message='Vui lòng chọn vai trò')])
+    employee_id = SelectField('Liên kết với nhân viên', coerce=int, validators=[Optional()])
+    
+    def __init__(self, original_username, original_email, *args, **kwargs):
+        super(EditUserForm, self).__init__(*args, **kwargs)
+        self.original_username = original_username
+        self.original_email = original_email
+        
+        # Lấy danh sách nhân viên chưa có tài khoản (+ nhân viên hiện tại nếu có)
+        current_employee_id = kwargs.get('obj') and kwargs['obj'].employee and kwargs['obj'].employee.id
+        
+        query = Employee.query.filter(
+            db.or_(
+                Employee.user_id.is_(None),
+                Employee.user_id == kwargs.get('obj', {}).id if kwargs.get('obj') else False
+            )
+        )
+        
+        employees = query.all()
+        self.employee_id.choices = [(0, '-- Không liên kết --')] + [(e.id, f"{e.employee_code} - {e.full_name}") for e in employees]
+    
+    def validate_username(self, username):
+        if username.data != self.original_username:
+            user = User.query.filter_by(username=username.data).first()
+            if user:
+                raise ValidationError('Tên đăng nhập đã tồn tại.')
+    
+    def validate_email(self, email):
+        if email.data != self.original_email:
+            user = User.query.filter_by(email=email.data).first()
+            if user:
+                raise ValidationError('Email này đã được đăng ký.')
 
 
 class LoginForm(FlaskForm):

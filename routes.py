@@ -25,7 +25,7 @@ from models import (User, Department, Employee, Attendance, LeaveRequest, Career
                    PerformanceEvaluationDetail, PerformanceRatingPeriod, PerformanceRatingStatus,
                    Position, CustomPosition, Task, TaskStatus, TaskPriority, TaskComment, 
                    TaskAttachment, TaskDependency)
-from forms import (LoginForm, RegisterForm, DepartmentForm, EmployeeForm, EmployeeEditForm, 
+from forms import (LoginForm, RegisterForm, DepartmentForm, EmployeeForm, EmployeeEditForm, EditUserForm,
                   LeaveRequestForm, CareerPathForm, AttendanceReportForm, EmployeeImportForm,
                   AwardForm, AwardEditForm, EmployeeFilterForm, 
                   SalaryGradeForm, SalaryGradeEditForm, EmployeeSalaryForm, EmployeeSalaryEditForm,
@@ -265,6 +265,88 @@ def delete_position(id):
 def users():
     users = User.query.all()
     return render_template('users.html', users=users)
+
+
+@app.route('/edit_user/<int:id>', methods=['GET', 'POST'])
+@admin_required
+def edit_user(id):
+    user = User.query.get_or_404(id)
+    form = EditUserForm(user.username, user.email, obj=user)
+    
+    if form.validate_on_submit():
+        user.username = form.username.data
+        user.email = form.email.data
+        user.role = UserRole[form.role.data]
+        
+        # Cập nhật mật khẩu nếu được cung cấp
+        if form.password.data:
+            user.set_password(form.password.data)
+        
+        # Xử lý liên kết với nhân viên
+        if form.employee_id.data == 0:
+            # Nếu trước đó đã liên kết, cần hủy liên kết
+            if user.employee:
+                employee = user.employee
+                employee.user_id = None
+                db.session.add(employee)
+        else:
+            # Liên kết với nhân viên mới
+            employee = Employee.query.get(form.employee_id.data)
+            if employee:
+                # Nếu nhân viên này đã liên kết với một người dùng khác, cần hủy liên kết đó
+                if employee.user_id and employee.user_id != user.id:
+                    old_employee = Employee.query.filter_by(user_id=employee.user_id).first()
+                    if old_employee:
+                        old_employee.user_id = None
+                        db.session.add(old_employee)
+                
+                # Cập nhật liên kết mới
+                employee.user_id = user.id
+                db.session.add(employee)
+        
+        db.session.add(user)
+        db.session.commit()
+        flash('Thông tin người dùng đã được cập nhật thành công!', 'success')
+        return redirect(url_for('users'))
+    
+    # Đặt giá trị ban đầu cho employee_id
+    if user.employee:
+        form.employee_id.data = user.employee.id
+    else:
+        form.employee_id.data = 0
+    
+    return render_template('edit_user.html', form=form, user=user)
+
+
+@app.route('/delete_user/<int:id>')
+@admin_required
+def delete_user(id):
+    user = User.query.get_or_404(id)
+    
+    # Không cho phép xóa tài khoản admin cuối cùng
+    if user.role == UserRole.ADMIN:
+        admin_count = User.query.filter_by(role=UserRole.ADMIN).count()
+        if admin_count <= 1:
+            flash('Không thể xóa tài khoản admin cuối cùng!', 'danger')
+            return redirect(url_for('users'))
+    
+    # Không cho phép xóa tài khoản đang đăng nhập
+    if user.id == current_user.id:
+        flash('Không thể tự xóa tài khoản đang sử dụng!', 'danger')
+        return redirect(url_for('users'))
+    
+    # Hủy liên kết với nhân viên
+    if user.employee:
+        employee = user.employee
+        employee.user_id = None
+        db.session.add(employee)
+    
+    username = user.username
+    db.session.delete(user)
+    db.session.commit()
+    
+    flash(f'Người dùng "{username}" đã được xóa thành công!', 'success')
+    return redirect(url_for('users'))
 
 
 @app.route('/dashboard')
