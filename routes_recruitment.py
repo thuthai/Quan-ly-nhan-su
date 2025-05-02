@@ -55,7 +55,7 @@ def index():
 
 
 # Job Positions
-@recruitment_bp.route('/recruitment/positions')
+@recruitment_bp.route('/positions')
 @login_required
 def position_list():
     page = request.args.get('page', 1, type=int)

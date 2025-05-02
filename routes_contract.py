@@ -197,7 +197,7 @@ def edit(id):
                           title='Chỉnh sửa hợp đồng')
 
 
-@contract_bp.route('/contracts/<int:id>')
+@contract_bp.route('/<int:id>')
 @login_required
 def view(id):
     contract = Contract.query.get_or_404(id)
@@ -211,7 +211,7 @@ def view(id):
                           title=f'Chi tiết hợp đồng: {contract.contract_number}')
 
 
-@contract_bp.route('/contracts/<int:id>/terminate', methods=['GET', 'POST'])
+@contract_bp.route('/<int:id>/terminate', methods=['GET', 'POST'])
 @login_required
 def terminate(id):
     contract = Contract.query.get_or_404(id)
@@ -245,7 +245,7 @@ def terminate(id):
                           title='Chấm dứt hợp đồng')
 
 
-@contract_bp.route('/contracts/amendments')
+@contract_bp.route('/amendments')
 @login_required
 def amendment_list():
     page = request.args.get('page', 1, type=int)
@@ -275,7 +275,7 @@ def amendment_list():
                           title='Danh sách phụ lục hợp đồng')
 
 
-@contract_bp.route('/contracts/amendments/create', methods=['GET', 'POST'])
+@contract_bp.route('/amendments/create', methods=['GET', 'POST'])
 @login_required
 def amendment_create():
     form = ContractAmendmentForm()
@@ -326,7 +326,7 @@ def amendment_create():
                           title='Thêm phụ lục hợp đồng')
 
 
-@contract_bp.route('/contracts/amendments/<int:id>/edit', methods=['GET', 'POST'])
+@contract_bp.route('/amendments/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def amendment_edit(id):
     amendment = ContractAmendment.query.get_or_404(id)
@@ -378,7 +378,7 @@ def amendment_edit(id):
                           title='Chỉnh sửa phụ lục hợp đồng')
 
 
-@contract_bp.route('/contracts/amendments/<int:id>')
+@contract_bp.route('/amendments/<int:id>')
 @login_required
 def amendment_view(id):
     amendment = ContractAmendment.query.get_or_404(id)
@@ -598,7 +598,7 @@ def document_unverify(id):
 
 
 # Tải file tài liệu
-@contract_bp.route('/contracts/download/<int:id>')
+@contract_bp.route('/download/<int:id>')
 @login_required
 def download_contract(id):
     contract = Contract.query.get_or_404(id)
