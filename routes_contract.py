@@ -69,9 +69,12 @@ def index():
 def create():
     form = ContractForm()
     
-    # Pre-fill employee_id from URL parameter
+    # Chỉ điền thông tin nhân viên nếu được cung cấp rõ ràng qua tham số URL
     employee_id = request.args.get('employee_id', type=int)
-    if employee_id and request.method == 'GET':
+    from_employee_profile = request.args.get('from_profile', type=int)
+    
+    # Chỉ điền sẵn thông tin nếu tham số from_profile được cung cấp
+    if employee_id and from_employee_profile and request.method == 'GET':
         form.employee_id.data = employee_id
         employee = Employee.query.get(employee_id)
         if employee:
