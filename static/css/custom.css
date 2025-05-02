@@ -123,11 +123,17 @@ body {
 /* Làm rõ chữ trong card thống kê trên dashboard */
 .stats-card .card-title,
 .stats-card .stats-number,
-.stats-card .card-text {
-    color: #000000;
+.stats-card .card-text,
+.stats-card h2,
+.stats-card p,
+.stats-card span,
+.stats-card small,
+.stats-card strong {
+    color: #000000 !important;
     text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7), 0px 0px 2px rgba(0, 0, 0, 0.3);
     font-weight: 900 !important;
     letter-spacing: 0.3px;
+    -webkit-text-fill-color: #000000 !important;
 }
 
 .stats-card {
@@ -242,10 +248,15 @@ body {
 .dashboard-card h5.card-title,
 .dashboard-card .card-text,
 .dashboard-card .stats-number,
+.dashboard-card h2.display-4,
+.dashboard-card small,
+.dashboard-card span,
+.dashboard-card p,
 .dashboard-card .card-body {
     color: #000000 !important;
-    font-weight: 600;
+    font-weight: 900 !important;
     text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+    -webkit-text-fill-color: #000000 !important;
 }
 
 .bg-primary .card-title,
