@@ -129,20 +129,8 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize modern datepicker for all date fields
-        const dateInputs = document.querySelectorAll('input[type="date"]');
-        dateInputs.forEach(function(input) {
-            if (window.Litepicker) {
-                new Litepicker({
-                    element: input,
-                    lang: 'vi-VN',
-                    format: 'DD/MM/YYYY',
-                    autoRefresh: true
-                });
-            } else {
-                console.log("Litepicker chưa được load. Đang sử dụng datepicker mặc định.");
-            }
-        });
+        // Không có trường ngày tháng trong form này nên không cần khởi tạo Litepicker
+        console.log("Form chỉnh sửa người dùng đã sẵn sàng");
     });
 </script>
 {% endblock %}

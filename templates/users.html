@@ -111,14 +111,23 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize DataTable
-        new DataTable('.datatable', {
-            language: {
-                url: '//cdn.datatables.net/plug-ins/1.13.1/i18n/vi.json'
-            },
-            order: [[0, 'asc']], // Sort by ID asc
-            pageLength: 10
-        });
+        // Kiểm tra nếu DataTable đã được khởi tạo
+        if ($.fn.DataTable) {
+            try {
+                // Initialize DataTable
+                $('.datatable').DataTable({
+                    language: {
+                        url: '//cdn.datatables.net/plug-ins/1.13.1/i18n/vi.json'
+                    },
+                    order: [[0, 'asc']], // Sort by ID asc
+                    pageLength: 10
+                });
+            } catch (e) {
+                console.error("Lỗi khởi tạo DataTable:", e);
+            }
+        } else {
+            console.warn("DataTable không được tải");
+        }
         
         // Xử lý xóa người dùng
         document.querySelectorAll('.delete-user').forEach(button => {
