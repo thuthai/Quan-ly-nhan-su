@@ -81,7 +81,7 @@
                             </td>
                             <td>
                                 {% if contract.employee %}
-                                <a href="{{ url_for('employees.view', id=contract.employee.id) }}">{{ contract.employee.fullname }}</a>
+                                <a href="{{ url_for('view_employee', id=contract.employee.id) }}">{{ contract.employee.fullname }}</a>
                                 {% else %}
                                 <span class="text-muted">N/A</span>
                                 {% endif %}
