@@ -63,7 +63,7 @@
                         <div class="col-md-4 fw-bold">Nhân viên:</div>
                         <div class="col-md-8">
                             {% if contract.employee %}
-                            <a href="{{ url_for('employees.view', id=contract.employee.id) }}">{{ contract.employee.fullname }}</a>
+                            <a href="{{ url_for('view_employee', id=contract.employee.id) }}">{{ contract.employee.fullname }}</a>
                             {% else %}
                             <span class="text-muted">Không xác định</span>
                             {% endif %}
