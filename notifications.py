@@ -1,63 +1,51 @@
 """
-Module quản lý thông báo: email và Telegram
+Module xử lý gửi thông báo qua email và Telegram
 """
 import os
-import sys
 import logging
 from datetime import datetime, date, timedelta
+import json
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, Email, To, Content
-from telegram import Bot
+import telegram
 from telegram.error import TelegramError
-from models import Contract, ContractStatus, Employee, Department, User
-from app import app, db
+from app import db
+from models import Contract, Employee, ContractStatus
 
-# Cấu hình logging
-logging.basicConfig(level=logging.INFO)
+
 logger = logging.getLogger(__name__)
 
-# Đọc API keys từ môi trường
+# Kiểm tra xem các API key có tồn tại không
 SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
 TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID')
 
-# Email mặc định của người gửi
-DEFAULT_FROM_EMAIL = "no-reply@admin.com"
 
-async def send_telegram_message(message):
+def send_email_notification(to_email, subject, text_content=None, html_content=None):
     """
-    Gửi tin nhắn qua Telegram
-    """
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        logger.warning("Các biến môi trường TELEGRAM_BOT_TOKEN hoặc TELEGRAM_CHAT_ID không được cấu hình")
-        return False
+    Gửi thông báo qua email sử dụng SendGrid
     
-    try:
-        bot = Bot(token=TELEGRAM_BOT_TOKEN)
-        await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message, parse_mode='HTML')
-        logger.info(f"Đã gửi tin nhắn Telegram thành công")
-        return True
-    except TelegramError as e:
-        logger.error(f"Lỗi khi gửi tin nhắn Telegram: {e}")
-        return False
-
-def send_email(to_email, subject, html_content=None, text_content=None):
-    """
-    Gửi email qua SendGrid
+    Args:
+        to_email (str): Địa chỉ email người nhận
+        subject (str): Tiêu đề email
+        text_content (str, optional): Nội dung email dạng text
+        html_content (str, optional): Nội dung email dạng HTML
+    
+    Returns:
+        bool: True nếu gửi thành công, False nếu có lỗi
     """
     if not SENDGRID_API_KEY:
-        logger.warning("Biến môi trường SENDGRID_API_KEY không được cấu hình")
-        return False
-    
-    if not html_content and not text_content:
-        logger.error("Cần cung cấp nội dung email (HTML hoặc text)")
+        logger.warning("Không thể gửi email: SENDGRID_API_KEY không tồn tại.")
         return False
     
     try:
         sg = SendGridAPIClient(SENDGRID_API_KEY)
         
+        # Email người gửi
+        from_email = Email("noreply@hrmanager.vn")
+        
         message = Mail(
-            from_email=Email(DEFAULT_FROM_EMAIL),
+            from_email=from_email,
             to_emails=To(to_email),
             subject=subject
         )
@@ -68,172 +56,238 @@ def send_email(to_email, subject, html_content=None, text_content=None):
             message.content = Content("text/plain", text_content)
         
         response = sg.send(message)
-        logger.info(f"Đã gửi email thành công đến {to_email}, mã trạng thái: {response.status_code}")
+        logger.info(f"Đã gửi email đến {to_email}: {subject} (Status: {response.status_code})")
         return True
     except Exception as e:
         logger.error(f"Lỗi khi gửi email: {e}")
         return False
 
-def check_expiring_contracts(days_threshold=30):
+
+def send_telegram_notification(message):
     """
-    Kiểm tra và thông báo các hợp đồng sắp hết hạn trong ngưỡng ngày được chỉ định
+    Gửi thông báo qua Telegram
+    
+    Args:
+        message (str): Nội dung tin nhắn
+    
+    Returns:
+        bool: True nếu gửi thành công, False nếu có lỗi
     """
-    today = date.today()
-    expiry_date = today + timedelta(days=days_threshold)
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        logger.warning("Không thể gửi Telegram: TELEGRAM_BOT_TOKEN hoặc TELEGRAM_CHAT_ID không tồn tại.")
+        return False
     
-    # Lấy danh sách hợp đồng sắp hết hạn
-    expiring_contracts = Contract.query.filter(
-        Contract.status == ContractStatus.ACTIVE.name,
-        Contract.end_date.isnot(None),  # Chỉ kiểm tra hợp đồng có ngày kết thúc
-        Contract.end_date <= expiry_date,  # Sắp hết hạn trong ngưỡng ngày
-        Contract.end_date > today  # Chưa hết hạn
-    ).all()
+    try:
+        bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
+        bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message, parse_mode="HTML")
+        logger.info(f"Đã gửi thông báo Telegram: {message[:50]}...")
+        return True
+    except TelegramError as e:
+        logger.error(f"Lỗi khi gửi Telegram: {e}")
+        return False
+
+
+def send_contract_notification(contract_id, event_type):
+    """
+    Gửi thông báo liên quan đến hợp đồng
     
-    if not expiring_contracts:
-        logger.info(f"Không có hợp đồng nào sắp hết hạn trong {days_threshold} ngày tới")
-        return
+    Args:
+        contract_id (int): ID của hợp đồng
+        event_type (str): Loại sự kiện ('new', 'updated', 'terminated', 'expiring')
     
-    # Tạo thông báo cho từng hợp đồng
-    for contract in expiring_contracts:
-        days_remaining = (contract.end_date - today).days
+    Returns:
+        bool: True nếu gửi thành công, False nếu có lỗi
+    """
+    try:
+        contract = Contract.query.get(contract_id)
+        if not contract:
+            logger.error(f"Không tìm thấy hợp đồng với ID {contract_id}")
+            return False
         
-        # Lấy thông tin nhân viên
-        employee = contract.employee
+        employee = Employee.query.get(contract.employee_id)
         if not employee:
-            logger.warning(f"Không tìm thấy nhân viên cho hợp đồng {contract.contract_number}")
-            continue
+            logger.error(f"Không tìm thấy nhân viên cho hợp đồng {contract_id}")
+            return False
         
-        # Lấy thông tin người quản lý
-        managers = User.query.filter_by(role="admin").all()
-        manager_emails = [manager.email for manager in managers]
+        # Thông tin chung
+        contract_info = {
+            "id": contract.id,
+            "contract_number": contract.contract_number,
+            "employee_name": employee.full_name if employee else "Unknown",
+            "employee_id": employee.employee_id if employee else "N/A",
+            "contract_type": contract.contract_type, 
+            "start_date": contract.start_date.strftime("%d/%m/%Y") if contract.start_date else "N/A",
+            "end_date": contract.end_date.strftime("%d/%m/%Y") if contract.end_date else "Không xác định",
+            "job_title": contract.job_title or "N/A",
+            "base_salary": f"{contract.base_salary:,.0f} VND" if contract.base_salary else "N/A",
+            "status": contract.status
+        }
         
-        # Tạo nội dung email
-        subject = f"CẢNH BÁO: Hợp đồng của {employee.full_name} sắp hết hạn"
-        html_content = f"""
-        <h2>Thông báo hợp đồng sắp hết hạn</h2>
-        <p>Kính gửi Ban Quản lý,</p>
-        <p>Hệ thống phát hiện một hợp đồng sắp hết hạn trong <strong>{days_remaining}</strong> ngày tới.</p>
-        <h3>Chi tiết hợp đồng:</h3>
-        <ul>
-            <li><strong>Mã hợp đồng:</strong> {contract.contract_number}</li>
-            <li><strong>Nhân viên:</strong> {employee.full_name} (Mã: {employee.employee_code})</li>
-            <li><strong>Phòng ban:</strong> {employee.department.name if employee.department else 'N/A'}</li>
-            <li><strong>Vị trí:</strong> {contract.job_title}</li>
-            <li><strong>Ngày bắt đầu:</strong> {contract.start_date.strftime('%d/%m/%Y')}</li>
-            <li><strong>Ngày kết thúc:</strong> {contract.end_date.strftime('%d/%m/%Y')}</li>
-        </ul>
-        <p>Vui lòng xem xét gia hạn hoặc chấm dứt hợp đồng trước ngày hết hạn.</p>
-        <p>Trân trọng,<br>Hệ thống Quản lý Nhân sự</p>
-        """
+        # Email và thông báo Telegram dựa trên loại sự kiện
+        if event_type == 'new':
+            subject = f"Hợp đồng mới: {contract.contract_number} - {employee.full_name}"
+            html_content = f"""
+            <h2>Hợp đồng mới đã được tạo</h2>
+            <p><strong>Số hợp đồng:</strong> {contract_info['contract_number']}</p>
+            <p><strong>Nhân viên:</strong> {contract_info['employee_name']} ({contract_info['employee_id']})</p>
+            <p><strong>Loại hợp đồng:</strong> {contract_info['contract_type']}</p>
+            <p><strong>Ngày bắt đầu:</strong> {contract_info['start_date']}</p>
+            <p><strong>Ngày kết thúc:</strong> {contract_info['end_date']}</p>
+            <p><strong>Vị trí:</strong> {contract_info['job_title']}</p>
+            <p><strong>Lương cơ bản:</strong> {contract_info['base_salary']}</p>
+            <p>Vui lòng kiểm tra thông tin và xác nhận trong hệ thống.</p>
+            """
+            
+            telegram_message = f"""
+            🔔 <b>Hợp đồng mới đã được tạo</b>
+            
+            📄 Số hợp đồng: {contract_info['contract_number']}
+            👤 Nhân viên: {contract_info['employee_name']} ({contract_info['employee_id']})
+            📋 Loại hợp đồng: {contract_info['contract_type']}
+            📅 Thời hạn: {contract_info['start_date']} - {contract_info['end_date']}
+            💼 Vị trí: {contract_info['job_title']}
+            💰 Lương: {contract_info['base_salary']}
+            """
         
-        # Tạo nội dung telegram
-        telegram_message = f"""
-<b>⚠️ CẢNH BÁO: Hợp đồng sắp hết hạn</b>
-
-Hợp đồng của <b>{employee.full_name}</b> sẽ hết hạn trong <b>{days_remaining}</b> ngày.
-
-<b>Chi tiết:</b>
-• Mã hợp đồng: {contract.contract_number}
-• Nhân viên: {employee.full_name} (Mã: {employee.employee_code})
-• Phòng ban: {employee.department.name if employee.department else 'N/A'} 
-• Vị trí: {contract.job_title}
-• Ngày kết thúc: {contract.end_date.strftime('%d/%m/%Y')}
-
-Vui lòng xem xét gia hạn hoặc chấm dứt hợp đồng.
-        """
+        elif event_type == 'updated':
+            subject = f"Cập nhật hợp đồng: {contract.contract_number} - {employee.full_name}"
+            html_content = f"""
+            <h2>Hợp đồng đã được cập nhật</h2>
+            <p><strong>Số hợp đồng:</strong> {contract_info['contract_number']}</p>
+            <p><strong>Nhân viên:</strong> {contract_info['employee_name']} ({contract_info['employee_id']})</p>
+            <p><strong>Loại hợp đồng:</strong> {contract_info['contract_type']}</p>
+            <p><strong>Ngày bắt đầu:</strong> {contract_info['start_date']}</p>
+            <p><strong>Ngày kết thúc:</strong> {contract_info['end_date']}</p>
+            <p><strong>Vị trí:</strong> {contract_info['job_title']}</p>
+            <p><strong>Lương cơ bản:</strong> {contract_info['base_salary']}</p>
+            <p><strong>Trạng thái:</strong> {contract_info['status']}</p>
+            <p>Vui lòng kiểm tra thông tin cập nhật trong hệ thống.</p>
+            """
+            
+            telegram_message = f"""
+            🔄 <b>Hợp đồng đã được cập nhật</b>
+            
+            📄 Số hợp đồng: {contract_info['contract_number']}
+            👤 Nhân viên: {contract_info['employee_name']} ({contract_info['employee_id']})
+            📋 Loại hợp đồng: {contract_info['contract_type']}
+            📅 Thời hạn: {contract_info['start_date']} - {contract_info['end_date']}
+            💼 Vị trí: {contract_info['job_title']}
+            💰 Lương: {contract_info['base_salary']}
+            ⚙️ Trạng thái: {contract_info['status']}
+            """
         
-        # Gửi email đến tất cả quản lý
-        for email in manager_emails:
-            send_email(email, subject, html_content=html_content)
+        elif event_type == 'terminated':
+            subject = f"Chấm dứt hợp đồng: {contract.contract_number} - {employee.full_name}"
+            html_content = f"""
+            <h2>Hợp đồng đã bị chấm dứt</h2>
+            <p><strong>Số hợp đồng:</strong> {contract_info['contract_number']}</p>
+            <p><strong>Nhân viên:</strong> {contract_info['employee_name']} ({contract_info['employee_id']})</p>
+            <p><strong>Loại hợp đồng:</strong> {contract_info['contract_type']}</p>
+            <p><strong>Ngày bắt đầu:</strong> {contract_info['start_date']}</p>
+            <p><strong>Ngày kết thúc ban đầu:</strong> {contract_info['end_date']}</p>
+            <p><strong>Ngày chấm dứt thực tế:</strong> {contract.terminated_date.strftime("%d/%m/%Y") if contract.terminated_date else "N/A"}</p>
+            <p><strong>Lý do chấm dứt:</strong> {contract.termination_reason or "Không có thông tin"}</p>
+            <p>Vui lòng kiểm tra thông tin và cập nhật trong hệ thống.</p>
+            """
+            
+            telegram_message = f"""
+            ❌ <b>Hợp đồng đã bị chấm dứt</b>
+            
+            📄 Số hợp đồng: {contract_info['contract_number']}
+            👤 Nhân viên: {contract_info['employee_name']} ({contract_info['employee_id']})
+            📋 Loại hợp đồng: {contract_info['contract_type']}
+            📅 Bắt đầu: {contract_info['start_date']}
+            🛑 Ngày chấm dứt: {contract.terminated_date.strftime("%d/%m/%Y") if contract.terminated_date else "N/A"}
+            📝 Lý do: {contract.termination_reason or "Không có thông tin"}
+            """
+        
+        elif event_type == 'expiring':
+            # Tính số ngày còn lại
+            days_remaining = (contract.end_date - date.today()).days
+            
+            subject = f"Cảnh báo hợp đồng sắp hết hạn: {contract.contract_number} - {employee.full_name}"
+            html_content = f"""
+            <h2>Cảnh báo: Hợp đồng sắp hết hạn</h2>
+            <p><strong>Số hợp đồng:</strong> {contract_info['contract_number']}</p>
+            <p><strong>Nhân viên:</strong> {contract_info['employee_name']} ({contract_info['employee_id']})</p>
+            <p><strong>Loại hợp đồng:</strong> {contract_info['contract_type']}</p>
+            <p><strong>Ngày bắt đầu:</strong> {contract_info['start_date']}</p>
+            <p><strong>Ngày kết thúc:</strong> {contract_info['end_date']}</p>
+            <p><strong>Số ngày còn lại:</strong> {days_remaining} ngày</p>
+            <p><strong>Vị trí:</strong> {contract_info['job_title']}</p>
+            <p>Vui lòng xem xét gia hạn hoặc tạo hợp đồng mới.</p>
+            """
+            
+            telegram_message = f"""
+            ⚠️ <b>Cảnh báo: Hợp đồng sắp hết hạn</b>
+            
+            📄 Số hợp đồng: {contract_info['contract_number']}
+            👤 Nhân viên: {contract_info['employee_name']} ({contract_info['employee_id']})
+            📋 Loại hợp đồng: {contract_info['contract_type']}
+            📅 Hết hạn: {contract_info['end_date']}
+            ⏱️ Còn lại: {days_remaining} ngày
+            💼 Vị trí: {contract_info['job_title']}
+            
+            Vui lòng xem xét gia hạn hoặc tạo hợp đồng mới.
+            """
+        
+        else:
+            logger.error(f"Loại sự kiện không hợp lệ: {event_type}")
+            return False
+        
+        # Gửi email đến admin HR
+        email_sent = False
+        if SENDGRID_API_KEY:
+            # Trong một hệ thống thực tế, bạn sẽ lấy email của HR manager từ db
+            email_sent = send_email_notification(
+                to_email="hr@example.com",  # Thay bằng email thực tế của HR manager
+                subject=subject,
+                html_content=html_content
+            )
         
         # Gửi thông báo Telegram
-        import asyncio
-        asyncio.run(send_telegram_message(telegram_message))
-
-def send_contract_notification(contract_id, notification_type):
-    """
-    Gửi thông báo khi có sự kiện xảy ra với hợp đồng
+        telegram_sent = False
+        if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID:
+            telegram_sent = send_telegram_notification(telegram_message)
+        
+        return email_sent or telegram_sent
     
-    notification_type có thể là:
-    - 'new': Hợp đồng mới được tạo
-    - 'updated': Hợp đồng được cập nhật
-    - 'terminated': Hợp đồng bị chấm dứt
-    """
-    contract = Contract.query.get(contract_id)
-    if not contract:
-        logger.error(f"Không tìm thấy hợp đồng với ID {contract_id}")
+    except Exception as e:
+        logger.error(f"Lỗi khi gửi thông báo hợp đồng: {e}")
         return False
-    
-    employee = contract.employee
-    if not employee:
-        logger.warning(f"Không tìm thấy nhân viên cho hợp đồng {contract.contract_number}")
-        return False
-    
-    # Lấy thông tin người quản lý
-    managers = User.query.filter_by(role="admin").all()
-    manager_emails = [manager.email for manager in managers]
-    
-    # Xác định thông tin thông báo dựa trên loại
-    if notification_type == 'new':
-        subject = f"Hợp đồng mới đã được tạo: {contract.contract_number}"
-        action = "tạo mới"
-        icon = "🆕"
-    elif notification_type == 'updated':
-        subject = f"Hợp đồng đã được cập nhật: {contract.contract_number}"
-        action = "cập nhật"
-        icon = "🔄"
-    elif notification_type == 'terminated':
-        subject = f"Hợp đồng đã bị chấm dứt: {contract.contract_number}"
-        action = "chấm dứt"
-        icon = "❌"
-    else:
-        logger.error(f"Loại thông báo không hợp lệ: {notification_type}")
-        return False
-    
-    # Tạo nội dung email
-    html_content = f"""
-    <h2>Thông báo hợp đồng</h2>
-    <p>Kính gửi Ban Quản lý,</p>
-    <p>Hợp đồng sau đây đã được {action}:</p>
-    <h3>Chi tiết hợp đồng:</h3>
-    <ul>
-        <li><strong>Mã hợp đồng:</strong> {contract.contract_number}</li>
-        <li><strong>Nhân viên:</strong> {employee.full_name} (Mã: {employee.employee_code})</li>
-        <li><strong>Phòng ban:</strong> {employee.department.name if employee.department else 'N/A'}</li>
-        <li><strong>Vị trí:</strong> {contract.job_title}</li>
-        <li><strong>Ngày bắt đầu:</strong> {contract.start_date.strftime('%d/%m/%Y')}</li>
-        <li><strong>Ngày kết thúc:</strong> {contract.end_date.strftime('%d/%m/%Y') if contract.end_date else 'Không xác định'}</li>
-        <li><strong>Trạng thái:</strong> {contract.status}</li>
-    </ul>
-    <p>Trân trọng,<br>Hệ thống Quản lý Nhân sự</p>
-    """
-    
-    # Tạo nội dung telegram
-    telegram_message = f"""
-<b>{icon} Thông báo: Hợp đồng đã được {action}</b>
 
-<b>Chi tiết:</b>
-• Mã hợp đồng: {contract.contract_number}
-• Nhân viên: {employee.full_name} (Mã: {employee.employee_code})
-• Phòng ban: {employee.department.name if employee.department else 'N/A'}
-• Vị trí: {contract.job_title}
-• Ngày bắt đầu: {contract.start_date.strftime('%d/%m/%Y')}
-• Ngày kết thúc: {contract.end_date.strftime('%d/%m/%Y') if contract.end_date else 'Không xác định'}
-• Trạng thái: {contract.status}
-    """
-    
-    # Gửi email đến tất cả quản lý
-    for email in manager_emails:
-        send_email(email, subject, html_content=html_content)
-    
-    # Gửi thông báo Telegram
-    import asyncio
-    asyncio.run(send_telegram_message(telegram_message))
-    
-    return True
 
-# Hàm kiểm tra hợp đồng sắp hết hạn có thể được gọi từ lịch trình cron hoặc thủ công
-if __name__ == "__main__":
-    with app.app_context():
-        # Nếu được chạy từ dòng lệnh, kiểm tra các hợp đồng sắp hết hạn
-        check_expiring_contracts()
+def check_expiring_contracts(days_threshold=30):
+    """
+    Kiểm tra các hợp đồng sắp hết hạn và gửi thông báo
+    
+    Args:
+        days_threshold (int): Ngưỡng ngày (số ngày trước khi hết hạn)
+    
+    Returns:
+        int: Số hợp đồng sắp hết hạn được thông báo
+    """
+    try:
+        today = date.today()
+        expiry_date = today + timedelta(days=days_threshold)
+        
+        # Tìm các hợp đồng sắp hết hạn
+        expiring_contracts = Contract.query.filter(
+            Contract.end_date.isnot(None),  # Không bao gồm hợp đồng không xác định thời hạn
+            Contract.end_date <= expiry_date,
+            Contract.end_date > today,
+            Contract.status == ContractStatus.ACTIVE.name
+        ).all()
+        
+        notification_count = 0
+        for contract in expiring_contracts:
+            # Gửi thông báo cho mỗi hợp đồng
+            if send_contract_notification(contract.id, 'expiring'):
+                notification_count += 1
+                logger.info(f"Đã gửi thông báo hợp đồng sắp hết hạn: {contract.contract_number}")
+        
+        return notification_count
+    
+    except Exception as e:
+        logger.error(f"Lỗi khi kiểm tra hợp đồng sắp hết hạn: {e}")
+        return 0

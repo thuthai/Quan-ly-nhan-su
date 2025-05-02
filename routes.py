@@ -17,11 +17,13 @@ from app import app, db
 from routes_asset import asset_bp
 from routes_recruitment import recruitment_bp
 from routes_contract import contract_bp
+from routes_notification import notification_bp
 
 # Register blueprints
 app.register_blueprint(asset_bp, url_prefix='/assets')
 app.register_blueprint(recruitment_bp, url_prefix='/recruitment')
 app.register_blueprint(contract_bp, url_prefix='/contracts')
+app.register_blueprint(notification_bp)
 from models import (User, Department, Employee, Attendance, LeaveRequest, CareerPath, Gender, 
                    EmployeeStatus, UserRole, LeaveStatus, LeaveType, Award, AwardType, 
                    SalaryGrade, EmployeeSalary, PerformanceEvaluationCriteria, PerformanceEvaluation, 
