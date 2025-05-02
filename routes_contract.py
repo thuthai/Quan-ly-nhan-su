@@ -11,10 +11,10 @@ from werkzeug.utils import secure_filename
 from datetime import datetime, date
 import os
 
-contract_bp = Blueprint('contract', __name__)
+contract_bp = Blueprint('contract', __name__, url_prefix='/contract')
 
 
-@contract_bp.route('/contracts')
+@contract_bp.route('/')
 @login_required
 def index():
     form = ContractFilterForm(request.args)

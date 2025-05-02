@@ -7,10 +7,10 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 import os
 
-asset_bp = Blueprint('asset', __name__)
+asset_bp = Blueprint('asset', __name__, url_prefix='/asset')
 
 
-@asset_bp.route('/assets')
+@asset_bp.route('/')
 @login_required
 def index():
     form = AssetFilterForm(request.args)
@@ -55,7 +55,7 @@ def index():
                           title='Quản lý tài sản')
 
 
-@asset_bp.route('/assets/create', methods=['GET', 'POST'])
+@asset_bp.route('/create', methods=['GET', 'POST'])
 @login_required
 def create():
     form = AssetForm()
@@ -99,7 +99,7 @@ def create():
                           title='Thêm tài sản mới')
 
 
-@asset_bp.route('/assets/<int:id>/edit', methods=['GET', 'POST'])
+@asset_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit(id):
     asset = Asset.query.get_or_404(id)
@@ -149,7 +149,7 @@ def edit(id):
                           title='Chỉnh sửa tài sản')
 
 
-@asset_bp.route('/assets/<int:id>')
+@asset_bp.route('/<int:id>')
 @login_required
 def view(id):
     asset = Asset.query.get_or_404(id)

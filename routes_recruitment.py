@@ -18,10 +18,10 @@ from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 import os
 
-recruitment_bp = Blueprint('recruitment', __name__)
+recruitment_bp = Blueprint('recruitment', __name__, url_prefix='/recruitment')
 
 
-@recruitment_bp.route('/recruitment')
+@recruitment_bp.route('/')
 @login_required
 def index():
     # Số liệu tổng quan
