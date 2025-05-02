@@ -114,7 +114,7 @@
                         <div class="col-md-4 fw-bold">Người đang sử dụng:</div>
                         <div class="col-md-8">
                             {% if asset.assignee %}
-                            <a href="{{ url_for('employee.view', id=asset.assignee.id) }}">{{ asset.assignee.fullname }}</a>
+                            <a href="{{ url_for('view_employee', id=asset.assignee.id) }}">{{ asset.assignee.fullname }}</a>
                             {% else %}
                             <span class="text-muted">Chưa gán</span>
                             {% endif %}
