@@ -95,21 +95,15 @@
                                 {% endif %}
                             </td>
                             <td>
-                                {% if contract.status == 'DRAFT' %}
-                                <span class="badge bg-secondary">Bản nháp</span>
-                                {% elif contract.status == 'PENDING' %}
-                                <span class="badge bg-warning">Chờ phê duyệt</span>
-                                {% elif contract.status == 'ACTIVE' %}
-                                <span class="badge bg-success">Có hiệu lực</span>
-                                {% elif contract.status == 'EXPIRED' %}
-                                <span class="badge bg-danger">Hết hạn</span>
-                                {% elif contract.status == 'TERMINATED' %}
-                                <span class="badge bg-danger">Chấm dứt</span>
-                                {% elif contract.status == 'COMPLETED' %}
-                                <span class="badge bg-info">Hoàn thành</span>
-                                {% else %}
-                                <span class="badge bg-light text-dark">{{ contract.status }}</span>
-                                {% endif %}
+                                <span class="badge {% if contract.status.name == 'DRAFT' %}bg-secondary
+                                      {% elif contract.status.name == 'ACTIVE' %}bg-success
+                                      {% elif contract.status.name == 'EXPIRED' %}bg-danger
+                                      {% elif contract.status.name == 'TERMINATED' %}bg-danger
+                                      {% elif contract.status.name == 'PENDING' %}bg-warning
+                                      {% elif contract.status.name == 'COMPLETED' %}bg-info
+                                      {% else %}bg-light text-dark{% endif %}">
+                                    {{ contract.status.value }}
+                                </span>
                             </td>
                             <td>
                                 <div class="btn-group">
