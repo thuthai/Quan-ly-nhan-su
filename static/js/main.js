@@ -1,5 +1,45 @@
 // main.js - General JavaScript functions for the application
 
+// Initialize modern datepicker
+function initializeModernDatepickers() {
+  console.log("Initializing modern datepicker...");
+  
+  const datepickerElements = document.querySelectorAll('.datepicker-input');
+  if (!datepickerElements.length) return;
+  
+  if (typeof Litepicker !== 'function') {
+    console.log("Litepicker chưa được load. Đang sử dụng datepicker mặc định.");
+    return;
+  }
+  
+  datepickerElements.forEach(input => {
+    try {
+      new Litepicker({
+        element: input,
+        format: 'DD/MM/YYYY',
+        language: 'vi-VN',
+        dropdowns: {
+          minYear: 1950,
+          maxYear: new Date().getFullYear() + 5,
+          months: true,
+          years: true
+        },
+        tooltipText: {
+          one: 'ngày',
+          other: 'ngày'
+        },
+        buttonText: {
+          apply: 'Áp dụng',
+          cancel: 'Hủy',
+          reset: 'Đặt lại'
+        }
+      });
+    } catch(e) {
+      console.error("Lỗi khởi tạo Litepicker:", e);
+    }
+  });
+}
+
 // Enable tooltips and popovers
 document.addEventListener('DOMContentLoaded', function() {
   // Initialize all tooltips
@@ -23,7 +63,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }, 5000);
   
-  // Initialize date pickers
+  // Initialize modern datepickers
+  initializeModernDatepickers();
+  
+  // Initialize date pickers (fallback)
   const datepickers = document.querySelectorAll('.datepicker');
   if (datepickers.length > 0) {
     datepickers.forEach(function(element) {

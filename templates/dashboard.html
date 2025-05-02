@@ -14,50 +14,8 @@
     border: none;
     border-radius: 10px;
     overflow: hidden;
-    background: linear-gradient(145deg, #ffffff, #f5f6fa);
+    background: #ffffff;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
-  }
-  .gradient-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  }
-  .stat-icon-circle {
-    width: 68px;
-    height: 68px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    margin-bottom: 15px;
-    background: rgba(var(--bs-primary-rgb), 0.1);
-    transition: all 0.3s ease;
-  }
-  .stat-icon-circle i {
-    font-size: 1.8rem;
-    color: var(--bs-primary);
-  }
-  .stats-card:hover .stat-icon-circle {
-    transform: scale(1.1);
-  }
-  .trend-indicator {
-    font-size: 12px;
-    padding: 3px 8px;
-    border-radius: 20px;
-    margin-left: 8px;
-  }
-  .trend-up {
-    background-color: rgba(25, 135, 84, 0.1);
-    color: #198754;
-  }
-  .trend-down {
-    background-color: rgba(220, 53, 69, 0.1);
-    color: #dc3545;
-  }
-  .dashboard-title {
-    position: relative;
-    padding-bottom: 10px;
-    margin-bottom: 20px;
   }
   .dashboard-title::after {
     content: '';
@@ -68,52 +26,7 @@
     width: 50px;
     background: var(--bs-primary);
   }
-  .activity-item {
-    position: relative;
-    padding-left: 30px;
-    margin-bottom: 15px;
-  }
-  .activity-item::before {
-    content: '';
-    position: absolute;
-    left: 8px;
-    top: 0;
-    height: 100%;
-    width: 2px;
-    background-color: #dee2e6;
-  }
-  .activity-item:last-child::before {
-    height: 15px;
-  }
-  .activity-dot {
-    position: absolute;
-    left: 0;
-    top: 5px;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background-color: var(--bs-primary);
-    border: 3px solid #fff;
-    z-index: 1;
-  }
-  .premium-banner {
-    background: linear-gradient(to right, #4b6cb7, #182848);
-    color: white;
-    border-radius: 10px;
-    padding: 20px 25px;
-    position: relative;
-    overflow: hidden;
-  }
-  .premium-banner::before {
-    content: '';
-    position: absolute;
-    top: -30px;
-    right: -30px;
-    width: 150px;
-    height: 150px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-  }
+
 </style>
 {% endblock %}
 
