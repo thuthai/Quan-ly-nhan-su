@@ -1,0 +1,212 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('recruitment.index') }}">Tuyển dụng</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('recruitment.candidate_list') }}">Ứng viên</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Thêm ứng viên mới</li>
+        </ol>
+    </nav>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Thêm ứng viên mới</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('recruitment.candidate_create') }}" method="post" enctype="multipart/form-data">
+                {{ form.csrf_token }}
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="full_name" class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                            {{ form.full_name(class="form-control" + (" is-invalid" if form.full_name.errors else ""), placeholder="Nhập họ và tên") }}
+                            {% if form.full_name.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.full_name.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), placeholder="Nhập địa chỉ email") }}
+                            {% if form.email.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.email.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="phone" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                            {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else ""), placeholder="Nhập số điện thoại") }}
+                            {% if form.phone.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.phone.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="opening_id" class="form-label">Vị trí ứng tuyển <span class="text-danger">*</span></label>
+                            {{ form.opening_id(class="form-select" + (" is-invalid" if form.opening_id.errors else "")) }}
+                            {% if form.opening_id.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.opening_id.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="years_of_experience" class="form-label">Số năm kinh nghiệm</label>
+                            {{ form.years_of_experience(class="form-control" + (" is-invalid" if form.years_of_experience.errors else ""), placeholder="Nhập số năm kinh nghiệm") }}
+                            {% if form.years_of_experience.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.years_of_experience.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="application_date" class="form-label">Ngày ứng tuyển <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                {{ form.application_date(class="form-control datepicker" + (" is-invalid" if form.application_date.errors else ""), placeholder="DD/MM/YYYY") }}
+                                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                {% if form.application_date.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.application_date.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="status" class="form-label">Trạng thái <span class="text-danger">*</span></label>
+                            {{ form.status(class="form-select" + (" is-invalid" if form.status.errors else "")) }}
+                            {% if form.status.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.status.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="resume" class="form-label">CV / Sơ yếu lý lịch</label>
+                            {{ form.resume(class="form-control" + (" is-invalid" if form.resume.errors else "")) }}
+                            <div class="form-text">Định dạng hỗ trợ: PDF, DOC, DOCX (tối đa 5MB)</div>
+                            {% if form.resume.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.resume.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <div class="form-group mb-3">
+                            <label for="skills" class="form-label">Kỹ năng</label>
+                            {{ form.skills(class="form-control" + (" is-invalid" if form.skills.errors else ""), placeholder="Nhập các kỹ năng, phân cách bằng dấu phẩy") }}
+                            <div class="form-text">Nhập các kỹ năng, phân cách bằng dấu phẩy. Ví dụ: Java, Python, SQL</div>
+                            {% if form.skills.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.skills.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="summary" class="form-label">Giới thiệu bản thân</label>
+                    {{ form.summary(class="form-control" + (" is-invalid" if form.summary.errors else ""), rows=3, placeholder="Nhập giới thiệu bản thân") }}
+                    {% if form.summary.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.summary.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="notes" class="form-label">Ghi chú</label>
+                    {{ form.notes(class="form-control" + (" is-invalid" if form.notes.errors else ""), rows=3, placeholder="Nhập ghi chú về ứng viên") }}
+                    {% if form.notes.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.notes.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group text-end">
+                    <a href="{{ url_for('recruitment.candidate_list') }}" class="btn btn-secondary">Hủy</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Lưu ứng viên
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const datepickers = document.querySelectorAll('.datepicker');
+        datepickers.forEach(function(input) {
+            new Litepicker({
+                element: input,
+                format: 'DD/MM/YYYY',
+                lang: 'vi-VN',
+                autoRefresh: true
+            });
+        });
+    } catch (error) {
+        console.error("Litepicker chưa được load. Đang sử dụng datepicker mặc định.");
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,418 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('contract.index') }}">Quản lý hợp đồng</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ contract.contract_number }}</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-5">Hợp đồng: {{ contract.contract_number }}</h1>
+        <div>
+            <a href="{{ url_for('contract.edit', id=contract.id) }}" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Chỉnh sửa
+            </a>
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-gear"></i> Thao tác
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="{{ url_for('contract.amendment_create') }}?contract_id={{ contract.id }}">
+                        <i class="bi bi-file-earmark-plus"></i> Thêm phụ lục
+                    </a></li>
+                    {% if contract.status != 'TERMINATED' %}
+                    <li><a class="dropdown-item" href="{{ url_for('contract.terminate', id=contract.id) }}">
+                        <i class="bi bi-x-circle"></i> Chấm dứt hợp đồng
+                    </a></li>
+                    {% endif %}
+                    <li><a class="dropdown-item" href="{{ url_for('contract.document_create') }}?employee_id={{ contract.employee_id }}">
+                        <i class="bi bi-file-earmark-arrow-up"></i> Thêm tài liệu liên quan
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Thông tin hợp đồng</h5>
+                    <span class="badge 
+                        {% if contract.status == 'ACTIVE' %}bg-success
+                        {% elif contract.status == 'PENDING' %}bg-warning
+                        {% elif contract.status == 'DRAFT' %}bg-secondary
+                        {% elif contract.status == 'EXPIRED' %}bg-danger
+                        {% elif contract.status == 'TERMINATED' %}bg-danger
+                        {% elif contract.status == 'COMPLETED' %}bg-info
+                        {% endif %}">
+                        {% if contract.status == 'ACTIVE' %}Có hiệu lực
+                        {% elif contract.status == 'PENDING' %}Chờ phê duyệt
+                        {% elif contract.status == 'DRAFT' %}Bản nháp
+                        {% elif contract.status == 'EXPIRED' %}Hết hạn
+                        {% elif contract.status == 'TERMINATED' %}Chấm dứt
+                        {% elif contract.status == 'COMPLETED' %}Hoàn thành
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Nhân viên:</div>
+                        <div class="col-md-8">
+                            {% if contract.employee %}
+                            <a href="{{ url_for('employee.view', id=contract.employee.id) }}">{{ contract.employee.fullname }}</a>
+                            {% else %}
+                            <span class="text-muted">Không xác định</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Loại hợp đồng:</div>
+                        <div class="col-md-8">
+                            {% if contract.contract_type == 'LABOR' %}
+                            <span class="badge bg-primary">Hợp đồng lao động</span>
+                            {% elif contract.contract_type == 'PROBATION' %}
+                            <span class="badge bg-info">Hợp đồng thử việc</span>
+                            {% elif contract.contract_type == 'SERVICE' %}
+                            <span class="badge bg-secondary">Hợp đồng dịch vụ</span>
+                            {% elif contract.contract_type == 'CONSULTANT' %}
+                            <span class="badge bg-secondary">Hợp đồng tư vấn</span>
+                            {% else %}
+                            <span class="badge bg-light text-dark">Khác</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Chức danh:</div>
+                        <div class="col-md-8">{{ contract.job_title }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Phòng ban:</div>
+                        <div class="col-md-8">
+                            {% if contract.department %}
+                            {{ contract.department.name }}
+                            {% else %}
+                            <span class="text-muted">Không xác định</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Ngày bắt đầu:</div>
+                        <div class="col-md-8">{{ contract.start_date.strftime('%d/%m/%Y') }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Ngày kết thúc:</div>
+                        <div class="col-md-8">
+                            {% if contract.end_date %}
+                            {{ contract.end_date.strftime('%d/%m/%Y') }}
+                            {% else %}
+                            <span class="text-muted">Không giới hạn</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Lương cơ bản:</div>
+                        <div class="col-md-8">{{ '{:,.0f}'.format(contract.base_salary) }} VND</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Số giờ làm việc:</div>
+                        <div class="col-md-8">{{ contract.working_hours }} giờ/tuần</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Ngày ký:</div>
+                        <div class="col-md-8">{{ contract.signed_date.strftime('%d/%m/%Y') }}</div>
+                    </div>
+                    {% if contract.terminated_date %}
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Ngày chấm dứt:</div>
+                        <div class="col-md-8">{{ contract.terminated_date.strftime('%d/%m/%Y') }}</div>
+                    </div>
+                    {% endif %}
+                    {% if contract.termination_reason %}
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Lý do chấm dứt:</div>
+                        <div class="col-md-8">{{ contract.termination_reason }}</div>
+                    </div>
+                    {% endif %}
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Người tạo:</div>
+                        <div class="col-md-8">
+                            {% if contract.created_by %}
+                            {{ contract.created_by.username }}
+                            {% else %}
+                            <span class="text-muted">Không xác định</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Ghi chú:</div>
+                        <div class="col-md-8">
+                            {% if contract.notes %}
+                            {{ contract.notes }}
+                            {% else %}
+                            <span class="text-muted">Không có ghi chú</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Phụ lục hợp đồng</h5>
+                    <a href="{{ url_for('contract.amendment_create') }}?contract_id={{ contract.id }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-lg"></i> Thêm phụ lục
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if amendments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="px-4">Mã phụ lục</th>
+                                    <th>Ngày phụ lục</th>
+                                    <th>Ngày có hiệu lực</th>
+                                    <th>Mô tả</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for amendment in amendments %}
+                                <tr>
+                                    <td class="px-4">{{ amendment.amendment_number }}</td>
+                                    <td>{{ amendment.amendment_date.strftime('%d/%m/%Y') }}</td>
+                                    <td>{{ amendment.effective_date.strftime('%d/%m/%Y') }}</td>
+                                    <td>{{ amendment.description|truncate(50) }}</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{{ url_for('contract.amendment_view', id=amendment.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('contract.amendment_edit', id=amendment.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            {% if amendment.amendment_file %}
+                                            <a href="{{ url_for('static', filename=amendment.amendment_file) }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-file-pdf"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted mb-2">Chưa có phụ lục nào</p>
+                        <a href="{{ url_for('contract.amendment_create') }}?contract_id={{ contract.id }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-lg"></i> Thêm phụ lục
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Tài liệu liên quan</h5>
+                    <a href="{{ url_for('contract.document_create') }}?employee_id={{ contract.employee_id }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-lg"></i> Thêm tài liệu
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if documents %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="px-4">Tên tài liệu</th>
+                                    <th>Loại tài liệu</th>
+                                    <th>Ngày tải lên</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for document in documents %}
+                                <tr>
+                                    <td class="px-4">{{ document.name }}</td>
+                                    <td>
+                                        {% if document.document_type == 'CONTRACT' %}
+                                        <span class="badge bg-primary">Hợp đồng</span>
+                                        {% elif document.document_type == 'AMENDMENT' %}
+                                        <span class="badge bg-info">Phụ lục</span>
+                                        {% elif document.document_type == 'ID_CARD' %}
+                                        <span class="badge bg-secondary">CMND/CCCD</span>
+                                        {% elif document.document_type == 'CERTIFICATE' %}
+                                        <span class="badge bg-success">Chứng chỉ</span>
+                                        {% elif document.document_type == 'DEGREE' %}
+                                        <span class="badge bg-warning">Bằng cấp</span>
+                                        {% else %}
+                                        <span class="badge bg-light text-dark">Khác</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ document.uploaded_at.strftime('%d/%m/%Y') }}</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            {% if document.file_path %}
+                                            <a href="{{ url_for('static', filename=document.file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-file-earmark"></i> Xem
+                                            </a>
+                                            {% endif %}
+                                            <a href="{{ url_for('contract.document_edit', id=document.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted mb-2">Chưa có tài liệu nào</p>
+                        <a href="{{ url_for('contract.document_create') }}?employee_id={{ contract.employee_id }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-lg"></i> Thêm tài liệu
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Tài liệu hợp đồng</h5>
+                </div>
+                <div class="card-body text-center">
+                    {% if contract.contract_file %}
+                    <div class="mb-3">
+                        <a href="{{ url_for('static', filename=contract.contract_file) }}" target="_blank" class="btn btn-primary w-100">
+                            <i class="bi bi-file-earmark-pdf"></i> Xem hợp đồng PDF
+                        </a>
+                    </div>
+                    <div class="embed-responsive embed-responsive-1by1 bg-light mb-3" style="height: 300px;">
+                        <iframe class="embed-responsive-item" src="{{ url_for('static', filename=contract.contract_file) }}" style="width: 100%; height: 100%;" frameborder="0"></iframe>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5 bg-light mb-3">
+                        <i class="bi bi-file-earmark-text text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">Chưa có file hợp đồng</p>
+                    </div>
+                    <a href="{{ url_for('contract.edit', id=contract.id) }}" class="btn btn-outline-primary">
+                        <i class="bi bi-upload"></i> Tải lên file hợp đồng
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Thông tin nhân viên -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Thông tin nhân viên</h5>
+                </div>
+                <div class="card-body">
+                    {% if contract.employee %}
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            {% if contract.employee.avatar %}
+                            <img src="{{ url_for('static', filename=contract.employee.avatar) }}" alt="{{ contract.employee.fullname }}" class="rounded-circle" width="60" height="60">
+                            {% else %}
+                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 60px; height: 60px;">
+                                {{ contract.employee.fullname[0] }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-0">{{ contract.employee.fullname }}</h5>
+                            <p class="text-muted mb-0">{{ contract.job_title }}</p>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="border rounded p-2 text-center">
+                                <small class="text-muted d-block">Mã nhân viên</small>
+                                <span class="fw-bold">{{ contract.employee.employee_code }}</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border rounded p-2 text-center">
+                                <small class="text-muted d-block">Phòng ban</small>
+                                <span class="fw-bold">
+                                    {% if contract.department %}
+                                    {{ contract.department.name }}
+                                    {% else %}
+                                    N/A
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <a href="{{ url_for('employee.view', id=contract.employee.id) }}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-person"></i> Xem hồ sơ nhân viên
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <p class="text-muted mb-0">Không có thông tin nhân viên</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Thời hạn hợp đồng -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Thời hạn hợp đồng</h5>
+                </div>
+                <div class="card-body">
+                    {% if contract.end_date %}
+                        {% set remaining_days = (contract.end_date - now).days %}
+                        {% if remaining_days > 0 %}
+                            <div class="progress mb-3" style="height: 10px;">
+                                {% set progress = ((now - contract.start_date).days / (contract.end_date - contract.start_date).days * 100)|round|int %}
+                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ progress }}%;" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <p class="text-center">
+                                <span class="badge bg-success">Còn {{ remaining_days }} ngày</span> 
+                                đến ngày kết thúc hợp đồng
+                            </p>
+                        {% elif remaining_days == 0 %}
+                            <div class="alert alert-warning text-center">
+                                <i class="bi bi-exclamation-triangle"></i> Hợp đồng hết hạn <strong>hôm nay</strong>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-danger text-center">
+                                <i class="bi bi-exclamation-triangle"></i> Hợp đồng đã hết hạn <strong>{{ remaining_days|abs }} ngày</strong> trước
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-info text-center">
+                            <i class="bi bi-info-circle"></i> Hợp đồng không thời hạn
+                        </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between mt-3">
+                        <div class="text-center">
+                            <small class="text-muted d-block">Ngày bắt đầu</small>
+                            <span class="fw-bold">{{ contract.start_date.strftime('%d/%m/%Y') }}</span>
+                        </div>
+                        <div class="text-center">
+                            <small class="text-muted d-block">Ngày kết thúc</small>
+                            <span class="fw-bold">{{ contract.end_date.strftime('%d/%m/%Y') if contract.end_date else 'Không thời hạn' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

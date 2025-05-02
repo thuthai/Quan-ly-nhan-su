@@ -1,0 +1,373 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('asset.index') }}">Quản lý tài sản</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ asset.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-5">{{ asset.name }}</h1>
+        <div>
+            <a href="{{ url_for('asset.edit', id=asset.id) }}" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Chỉnh sửa
+            </a>
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-gear"></i> Thao tác
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="{{ url_for('asset.assign') }}?asset_id={{ asset.id }}">
+                        <i class="bi bi-person-add"></i> Bàn giao tài sản
+                    </a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('asset.maintenance') }}?asset_id={{ asset.id }}">
+                        <i class="bi bi-tools"></i> Thêm bảo trì
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><button class="dropdown-item text-danger" type="button" data-bs-toggle="modal" data-bs-target="#deleteAssetModal">
+                        <i class="bi bi-trash"></i> Xóa tài sản
+                    </button></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Thông tin tài sản</h5>
+                    <span class="badge
+                        {% if asset.status == 'AVAILABLE' %}bg-success
+                        {% elif asset.status == 'ASSIGNED' %}bg-primary
+                        {% elif asset.status == 'UNDER_MAINTENANCE' %}bg-warning
+                        {% elif asset.status == 'RETIRED' %}bg-danger
+                        {% endif %}">
+                        {% if asset.status == 'AVAILABLE' %}Sẵn sàng
+                        {% elif asset.status == 'ASSIGNED' %}Đã giao
+                        {% elif asset.status == 'UNDER_MAINTENANCE' %}Đang bảo trì
+                        {% elif asset.status == 'RETIRED' %}Ngừng sử dụng
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Mã tài sản:</div>
+                        <div class="col-md-8">{{ asset.asset_code }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Danh mục:</div>
+                        <div class="col-md-8">
+                            {% if asset.category == 'COMPUTER' %}
+                            <span class="badge bg-primary">Máy tính</span>
+                            {% elif asset.category == 'LAPTOP' %}
+                            <span class="badge bg-primary">Laptop</span>
+                            {% elif asset.category == 'PHONE' %}
+                            <span class="badge bg-info">Điện thoại</span>
+                            {% elif asset.category == 'FURNITURE' %}
+                            <span class="badge bg-secondary">Nội thất</span>
+                            {% elif asset.category == 'OFFICE' %}
+                            <span class="badge bg-secondary">Thiết bị văn phòng</span>
+                            {% elif asset.category == 'VEHICLE' %}
+                            <span class="badge bg-warning">Phương tiện</span>
+                            {% else %}
+                            <span class="badge bg-light text-dark">Khác</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Số serial:</div>
+                        <div class="col-md-8">{{ asset.serial_number }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Ngày mua:</div>
+                        <div class="col-md-8">{{ asset.purchase_date.strftime('%d/%m/%Y') }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Giá mua:</div>
+                        <div class="col-md-8">{{ '{:,.0f}'.format(asset.purchase_price) }} VND</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Hết hạn bảo hành:</div>
+                        <div class="col-md-8">
+                            {% if asset.warranty_expiry %}
+                            {{ asset.warranty_expiry.strftime('%d/%m/%Y') }}
+                            {% else %}
+                            <span class="text-muted">Không có</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Mô tả:</div>
+                        <div class="col-md-8">
+                            {% if asset.description %}
+                            {{ asset.description }}
+                            {% else %}
+                            <span class="text-muted">Không có mô tả</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Người đang sử dụng:</div>
+                        <div class="col-md-8">
+                            {% if asset.assignee %}
+                            <a href="{{ url_for('employee.view', id=asset.assignee.id) }}">{{ asset.assignee.fullname }}</a>
+                            {% else %}
+                            <span class="text-muted">Chưa gán</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Ghi chú:</div>
+                        <div class="col-md-8">
+                            {% if asset.notes %}
+                            {{ asset.notes }}
+                            {% else %}
+                            <span class="text-muted">Không có ghi chú</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Lịch sử bàn giao</h5>
+                    <a href="{{ url_for('asset.assign') }}?asset_id={{ asset.id }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-lg"></i> Bàn giao mới
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if assignments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="px-4">Ngày bàn giao</th>
+                                    <th>Người nhận</th>
+                                    <th>Tình trạng lúc giao</th>
+                                    <th>Ngày trả</th>
+                                    <th>Tình trạng lúc trả</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for assignment in assignments %}
+                                <tr>
+                                    <td class="px-4">{{ assignment.assigned_date.strftime('%d/%m/%Y') }}</td>
+                                    <td>
+                                        <a href="{{ url_for('employee.view', id=assignment.employee.id) }}">{{ assignment.employee.fullname }}</a>
+                                    </td>
+                                    <td>{{ assignment.condition_on_assignment }}</td>
+                                    <td>
+                                        {% if assignment.is_returned %}
+                                        {{ assignment.return_date.strftime('%d/%m/%Y') }}
+                                        {% else %}
+                                        <span class="badge bg-info">Đang sử dụng</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if assignment.is_returned %}
+                                        {{ assignment.condition_on_return }}
+                                        {% else %}
+                                        <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if not assignment.is_returned %}
+                                        <a href="{{ url_for('asset.return_asset', id=assignment.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-arrow-return-left"></i> Trả lại
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted mb-2">Chưa có lịch sử bàn giao nào</p>
+                        <a href="{{ url_for('asset.assign') }}?asset_id={{ asset.id }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-lg"></i> Bàn giao mới
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Lịch sử bảo trì</h5>
+                    <a href="{{ url_for('asset.maintenance') }}?asset_id={{ asset.id }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-lg"></i> Thêm bảo trì
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if maintenance_records %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="px-4">Ngày bảo trì</th>
+                                    <th>Loại bảo trì</th>
+                                    <th>Người thực hiện</th>
+                                    <th>Chi phí</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in maintenance_records %}
+                                <tr>
+                                    <td class="px-4">{{ record.maintenance_date.strftime('%d/%m/%Y') }}</td>
+                                    <td>
+                                        {% if record.maintenance_type == 'PREVENTIVE' %}
+                                        <span class="badge bg-info">Bảo trì định kỳ</span>
+                                        {% elif record.maintenance_type == 'CORRECTIVE' %}
+                                        <span class="badge bg-warning">Sửa chữa</span>
+                                        {% elif record.maintenance_type == 'UPGRADE' %}
+                                        <span class="badge bg-success">Nâng cấp</span>
+                                        {% else %}
+                                        <span class="badge bg-light text-dark">{{ record.maintenance_type }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ record.performed_by }}</td>
+                                    <td>{{ '{:,.0f}'.format(record.cost) }} VND</td>
+                                    <td>
+                                        {% if record.status == 'IN_PROGRESS' %}
+                                        <span class="badge bg-warning">Đang thực hiện</span>
+                                        {% elif record.status == 'COMPLETED' %}
+                                        <span class="badge bg-success">Hoàn thành</span>
+                                        {% else %}
+                                        <span class="badge bg-light text-dark">{{ record.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if record.status == 'IN_PROGRESS' %}
+                                        <form action="{{ url_for('asset.complete_maintenance', id=record.id) }}" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-success">
+                                                <i class="bi bi-check-lg"></i> Hoàn thành
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted mb-2">Chưa có lịch sử bảo trì nào</p>
+                        <a href="{{ url_for('asset.maintenance') }}?asset_id={{ asset.id }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-lg"></i> Thêm bảo trì
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Hình ảnh tài sản</h5>
+                </div>
+                <div class="card-body text-center">
+                    {% if asset.image_path %}
+                    <img src="{{ url_for('static', filename=asset.image_path) }}" alt="{{ asset.name }}" class="img-fluid mb-3" style="max-height: 300px;">
+                    {% else %}
+                    <div class="text-center py-5 bg-light mb-3">
+                        <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">Không có hình ảnh</p>
+                    </div>
+                    {% endif %}
+                    <a href="{{ url_for('asset.edit', id=asset.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-pencil"></i> Cập nhật hình ảnh
+                    </a>
+                </div>
+            </div>
+
+            <!-- Mã QR -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Mã QR</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="bg-light p-3 mb-3">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ url_for('asset.view', id=asset.id, _external=True) }}" alt="QR Code" class="img-fluid">
+                    </div>
+                    <p class="text-muted small">Quét mã QR để xem thông tin tài sản</p>
+                    <a href="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ url_for('asset.view', id=asset.id, _external=True) }}" class="btn btn-sm btn-outline-primary" download="QR_{{ asset.asset_code }}.png">
+                        <i class="bi bi-download"></i> Tải mã QR
+                    </a>
+                </div>
+            </div>
+
+            <!-- Thống kê nhanh -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Thống kê nhanh</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <h2 class="text-primary">{{ assignments|length }}</h2>
+                            <p class="text-muted small">Lần bàn giao</p>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h2 class="text-warning">{{ maintenance_records|length }}</h2>
+                            <p class="text-muted small">Lần bảo trì</p>
+                        </div>
+                        <div class="col-6">
+                            <h2 class="text-success">{{ '{:,.0f}'.format(maintenance_records|sum(attribute='cost')) }}</h2>
+                            <p class="text-muted small">Chi phí bảo trì (VND)</p>
+                        </div>
+                        <div class="col-6">
+                            <h2 class="text-info">
+                                {% set days = ((now - asset.purchase_date).days) %}
+                                {{ days }}
+                            </h2>
+                            <p class="text-muted small">Ngày sử dụng</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xóa tài sản -->
+<div class="modal fade" id="deleteAssetModal" tabindex="-1" aria-labelledby="deleteAssetModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteAssetModalLabel">Xác nhận xóa tài sản</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa tài sản <strong>{{ asset.name }}</strong>?</p>
+                <p class="text-danger"><i class="bi bi-exclamation-triangle"></i> Lưu ý: Hành động này không thể hoàn tác. Tất cả thông tin liên quan đến tài sản, bao gồm lịch sử bàn giao và bảo trì, sẽ bị xóa vĩnh viễn.</p>
+                
+                {% if asset.status == 'ASSIGNED' %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> Tài sản đang được bàn giao cho nhân viên. Vui lòng thu hồi tài sản trước khi xóa.
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form action="{{ url_for('asset.delete', id=asset.id) }}" method="post">
+                    <button type="submit" class="btn btn-danger" {% if asset.status == 'ASSIGNED' %}disabled{% endif %}>
+                        <i class="bi bi-trash"></i> Xóa tài sản
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

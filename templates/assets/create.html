@@ -1,0 +1,212 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('asset.index') }}">Quản lý tài sản</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Thêm tài sản mới</li>
+        </ol>
+    </nav>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Thêm tài sản mới</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('asset.create') }}" method="post" enctype="multipart/form-data">
+                {{ form.csrf_token }}
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="asset_code" class="form-label">Mã tài sản <span class="text-danger">*</span></label>
+                            {{ form.asset_code(class="form-control" + (" is-invalid" if form.asset_code.errors else ""), placeholder="Nhập mã tài sản") }}
+                            {% if form.asset_code.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.asset_code.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="name" class="form-label">Tên tài sản <span class="text-danger">*</span></label>
+                            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), placeholder="Nhập tên tài sản") }}
+                            {% if form.name.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.name.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="category" class="form-label">Danh mục <span class="text-danger">*</span></label>
+                            {{ form.category(class="form-select" + (" is-invalid" if form.category.errors else "")) }}
+                            {% if form.category.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.category.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="status" class="form-label">Trạng thái <span class="text-danger">*</span></label>
+                            {{ form.status(class="form-select" + (" is-invalid" if form.status.errors else "")) }}
+                            {% if form.status.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.status.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="serial_number" class="form-label">Số serial</label>
+                            {{ form.serial_number(class="form-control" + (" is-invalid" if form.serial_number.errors else ""), placeholder="Nhập số serial") }}
+                            {% if form.serial_number.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.serial_number.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="purchase_date" class="form-label">Ngày mua <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                {{ form.purchase_date(class="form-control datepicker" + (" is-invalid" if form.purchase_date.errors else ""), placeholder="DD/MM/YYYY") }}
+                                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                {% if form.purchase_date.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.purchase_date.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="purchase_price" class="form-label">Giá mua <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                {{ form.purchase_price(class="form-control" + (" is-invalid" if form.purchase_price.errors else ""), placeholder="Nhập giá mua") }}
+                                <span class="input-group-text">VND</span>
+                                {% if form.purchase_price.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.purchase_price.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="warranty_expiry" class="form-label">Ngày hết hạn bảo hành</label>
+                            <div class="input-group">
+                                {{ form.warranty_expiry(class="form-control datepicker" + (" is-invalid" if form.warranty_expiry.errors else ""), placeholder="DD/MM/YYYY") }}
+                                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                {% if form.warranty_expiry.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.warranty_expiry.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="image" class="form-label">Hình ảnh tài sản</label>
+                    {{ form.image(class="form-control" + (" is-invalid" if form.image.errors else "")) }}
+                    <div class="form-text">Định dạng hỗ trợ: JPG, JPEG, PNG (tối đa 5MB)</div>
+                    {% if form.image.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.image.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="description" class="form-label">Mô tả</label>
+                    {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=3, placeholder="Nhập mô tả tài sản") }}
+                    {% if form.description.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.description.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="notes" class="form-label">Ghi chú</label>
+                    {{ form.notes(class="form-control" + (" is-invalid" if form.notes.errors else ""), rows=3, placeholder="Nhập ghi chú về tài sản") }}
+                    {% if form.notes.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.notes.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group text-end">
+                    <a href="{{ url_for('asset.index') }}" class="btn btn-secondary">Hủy</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Lưu tài sản
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const datepickers = document.querySelectorAll('.datepicker');
+        datepickers.forEach(function(input) {
+            new Litepicker({
+                element: input,
+                format: 'DD/MM/YYYY',
+                lang: 'vi-VN',
+                autoRefresh: true
+            });
+        });
+    } catch (error) {
+        console.error("Litepicker chưa được load. Đang sử dụng datepicker mặc định.");
+    }
+});
+</script>
+{% endblock %}

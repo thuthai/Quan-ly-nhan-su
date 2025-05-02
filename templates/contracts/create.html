@@ -1,0 +1,281 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('contract.index') }}">Quản lý hợp đồng</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Thêm hợp đồng mới</li>
+        </ol>
+    </nav>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Thêm hợp đồng mới</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('contract.create') }}" method="post" enctype="multipart/form-data">
+                {{ form.csrf_token }}
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="contract_number" class="form-label">Mã hợp đồng <span class="text-danger">*</span></label>
+                            {{ form.contract_number(class="form-control" + (" is-invalid" if form.contract_number.errors else ""), placeholder="Nhập mã hợp đồng") }}
+                            {% if form.contract_number.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.contract_number.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="contract_type" class="form-label">Loại hợp đồng <span class="text-danger">*</span></label>
+                            {{ form.contract_type(class="form-select" + (" is-invalid" if form.contract_type.errors else "")) }}
+                            {% if form.contract_type.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.contract_type.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="employee_id" class="form-label">Nhân viên <span class="text-danger">*</span></label>
+                            {{ form.employee_id(class="form-select" + (" is-invalid" if form.employee_id.errors else "")) }}
+                            {% if form.employee_id.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.employee_id.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="status" class="form-label">Trạng thái <span class="text-danger">*</span></label>
+                            {{ form.status(class="form-select" + (" is-invalid" if form.status.errors else "")) }}
+                            {% if form.status.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.status.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="start_date" class="form-label">Ngày bắt đầu <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                {{ form.start_date(class="form-control datepicker" + (" is-invalid" if form.start_date.errors else ""), placeholder="DD/MM/YYYY") }}
+                                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                {% if form.start_date.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.start_date.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="end_date" class="form-label">Ngày kết thúc</label>
+                            <div class="input-group">
+                                {{ form.end_date(class="form-control datepicker" + (" is-invalid" if form.end_date.errors else ""), placeholder="DD/MM/YYYY") }}
+                                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                {% if form.end_date.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.end_date.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="form-text">Để trống nếu là hợp đồng không thời hạn</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="job_title" class="form-label">Chức danh công việc <span class="text-danger">*</span></label>
+                            {{ form.job_title(class="form-control" + (" is-invalid" if form.job_title.errors else ""), placeholder="Nhập chức danh") }}
+                            {% if form.job_title.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.job_title.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="department_id" class="form-label">Phòng ban <span class="text-danger">*</span></label>
+                            {{ form.department_id(class="form-select" + (" is-invalid" if form.department_id.errors else "")) }}
+                            {% if form.department_id.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.department_id.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="base_salary" class="form-label">Lương cơ bản <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                {{ form.base_salary(class="form-control" + (" is-invalid" if form.base_salary.errors else ""), placeholder="Nhập lương cơ bản") }}
+                                <span class="input-group-text">VND</span>
+                                {% if form.base_salary.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.base_salary.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="working_hours" class="form-label">Số giờ làm việc <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                {{ form.working_hours(class="form-control" + (" is-invalid" if form.working_hours.errors else ""), placeholder="Nhập số giờ làm việc") }}
+                                <span class="input-group-text">giờ/tuần</span>
+                                {% if form.working_hours.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.working_hours.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="signed_date" class="form-label">Ngày ký <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                {{ form.signed_date(class="form-control datepicker" + (" is-invalid" if form.signed_date.errors else ""), placeholder="DD/MM/YYYY") }}
+                                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                {% if form.signed_date.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.signed_date.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="contract_file" class="form-label">File hợp đồng</label>
+                            {{ form.contract_file(class="form-control" + (" is-invalid" if form.contract_file.errors else "")) }}
+                            <div class="form-text">Định dạng hỗ trợ: PDF (tối đa 10MB)</div>
+                            {% if form.contract_file.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.contract_file.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="notes" class="form-label">Ghi chú</label>
+                    {{ form.notes(class="form-control" + (" is-invalid" if form.notes.errors else ""), rows=3, placeholder="Nhập ghi chú về hợp đồng") }}
+                    {% if form.notes.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.notes.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group text-end">
+                    <a href="{{ url_for('contract.index') }}" class="btn btn-secondary">Hủy</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Lưu hợp đồng
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const datepickers = document.querySelectorAll('.datepicker');
+        datepickers.forEach(function(input) {
+            new Litepicker({
+                element: input,
+                format: 'DD/MM/YYYY',
+                lang: 'vi-VN',
+                autoRefresh: true
+            });
+        });
+        
+        // Cập nhật thông tin nhân viên khi chọn nhân viên
+        const employeeSelect = document.getElementById('employee_id');
+        if (employeeSelect) {
+            employeeSelect.addEventListener('change', function() {
+                const employeeId = this.value;
+                if (employeeId) {
+                    fetch('/api/employees/' + employeeId)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data) {
+                                // Cập nhật chức danh
+                                const jobTitleInput = document.getElementById('job_title');
+                                if (jobTitleInput && data.position) {
+                                    jobTitleInput.value = data.position;
+                                }
+                                
+                                // Cập nhật phòng ban
+                                const departmentSelect = document.getElementById('department_id');
+                                if (departmentSelect && data.department_id) {
+                                    departmentSelect.value = data.department_id;
+                                }
+                            }
+                        })
+                        .catch(error => console.error('Error fetching employee data:', error));
+                }
+            });
+        }
+    } catch (error) {
+        console.error("Litepicker chưa được load. Đang sử dụng datepicker mặc định.");
+    }
+});
+</script>
+{% endblock %}
