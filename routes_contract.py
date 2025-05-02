@@ -64,7 +64,7 @@ def index():
                           title='Quản lý hợp đồng')
 
 
-@contract_bp.route('/contracts/create', methods=['GET', 'POST'])
+@contract_bp.route('/create', methods=['GET', 'POST'])
 @login_required
 def create():
     form = ContractForm()
@@ -132,7 +132,7 @@ def create():
                           title='Thêm hợp đồng mới')
 
 
-@contract_bp.route('/contracts/<int:id>/edit', methods=['GET', 'POST'])
+@contract_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit(id):
     contract = Contract.query.get_or_404(id)

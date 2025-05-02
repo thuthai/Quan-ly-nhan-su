@@ -163,7 +163,7 @@ def view(id):
                           title=f'Chi tiết tài sản: {asset.name}')
 
 
-@asset_bp.route('/assets/<int:id>/delete', methods=['POST'])
+@asset_bp.route('/<int:id>/delete', methods=['POST'])
 @login_required
 def delete(id):
     asset = Asset.query.get_or_404(id)
@@ -190,7 +190,7 @@ def delete(id):
     return redirect(url_for('asset.index'))
 
 
-@asset_bp.route('/assets/assign', methods=['GET', 'POST'])
+@asset_bp.route('/assign', methods=['GET', 'POST'])
 @login_required
 def assign():
     form = AssetAssignmentForm()
@@ -226,7 +226,7 @@ def assign():
                           title='Bàn giao tài sản')
 
 
-@asset_bp.route('/assets/assignments/<int:id>/return', methods=['GET', 'POST'])
+@asset_bp.route('/assignments/<int:id>/return', methods=['GET', 'POST'])
 @login_required
 def return_asset(id):
     assignment = AssetAssignment.query.get_or_404(id)
@@ -259,7 +259,7 @@ def return_asset(id):
                           title='Trả tài sản')
 
 
-@asset_bp.route('/assets/maintenance', methods=['GET', 'POST'])
+@asset_bp.route('/maintenance', methods=['GET', 'POST'])
 @login_required
 def maintenance():
     form = AssetMaintenanceForm()
@@ -291,7 +291,7 @@ def maintenance():
                           title='Thêm bảo trì tài sản')
 
 
-@asset_bp.route('/assets/maintenance/<int:id>/complete', methods=['POST'])
+@asset_bp.route('/maintenance/<int:id>/complete', methods=['POST'])
 @login_required
 def complete_maintenance(id):
     maintenance = AssetMaintenance.query.get_or_404(id)
@@ -329,7 +329,7 @@ def complete_maintenance(id):
     return redirect(url_for('asset.view', id=maintenance.asset_id))
 
 
-@asset_bp.route('/assets/assignments')
+@asset_bp.route('/assignments')
 @login_required
 def assignment_list():
     page = request.args.get('page', 1, type=int)
@@ -360,7 +360,7 @@ def assignment_list():
                           title='Danh sách bàn giao tài sản')
 
 
-@asset_bp.route('/assets/maintenance-list')
+@asset_bp.route('/maintenance-list')
 @login_required
 def maintenance_list():
     page = request.args.get('page', 1, type=int)
