@@ -635,6 +635,22 @@ class AssetCategory(enum.Enum):
     SCANNER = "Máy quét"
     FURNITURE = "Nội thất văn phòng"
     OTHER = "Khác"
+    
+class MaintenanceType(enum.Enum):
+    """Loại bảo trì"""
+    PREVENTIVE = "Bảo trì định kỳ"
+    CORRECTIVE = "Sửa chữa"
+    UPGRADE = "Nâng cấp"
+    INSPECTION = "Kiểm tra"
+    OTHER = "Khác"
+
+
+class MaintenanceStatus(enum.Enum):
+    """Trạng thái bảo trì"""
+    SCHEDULED = "Đã lên lịch"
+    IN_PROGRESS = "Đang thực hiện"
+    COMPLETED = "Hoàn thành"
+    CANCELLED = "Đã hủy"
 
 
 class AssetStatus(enum.Enum):
@@ -717,9 +733,9 @@ class AssetMaintenance(db.Model):
 
 
 # Recruitment Management Models
-class RecruitmentStatus(enum.Enum):
-    OPEN = "Đang tuyển"
-    INTERVIEWING = "Đang phỏng vấn"
+class JobOpeningStatus(enum.Enum):
+    DRAFT = "Nháp"
+    OPEN = "Đang mở"
     CLOSED = "Đã đóng"
     ON_HOLD = "Tạm hoãn"
 
@@ -753,7 +769,7 @@ class JobOpening(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     position_id = db.Column(db.Integer, db.ForeignKey('job_positions.id'), nullable=False)
     number_of_openings = db.Column(db.Integer, default=1, nullable=False)
-    status = db.Column(db.Enum(RecruitmentStatus), default=RecruitmentStatus.OPEN, nullable=False)
+    status = db.Column(db.Enum(JobOpeningStatus), default=JobOpeningStatus.OPEN, nullable=False)
     start_date = db.Column(db.Date, nullable=False, default=date.today)
     end_date = db.Column(db.Date, nullable=True)
     salary_range = db.Column(db.String(100), nullable=True)
@@ -807,6 +823,14 @@ class Candidate(db.Model):
         return f'<Candidate {self.full_name} for {self.job_opening.position.title}>'
 
 
+class InterviewType(enum.Enum):
+    PHONE = "Phỏng vấn điện thoại"
+    VIDEO = "Phỏng vấn video"
+    IN_PERSON = "Phỏng vấn trực tiếp"
+    TECHNICAL = "Phỏng vấn kỹ thuật"
+    GROUP = "Phỏng vấn nhóm"
+
+
 class InterviewStatus(enum.Enum):
     SCHEDULED = "Đã lên lịch"
     COMPLETED = "Đã hoàn thành"
@@ -820,7 +844,7 @@ class Interview(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     candidate_id = db.Column(db.Integer, db.ForeignKey('candidates.id'), nullable=False)
     scheduled_date = db.Column(db.DateTime, nullable=False)
-    interview_type = db.Column(db.String(50), nullable=False)  # Phone, Video, In-person
+    interview_type = db.Column(db.Enum(InterviewType), nullable=False)
     interviewers = db.Column(db.String(255), nullable=True)
     location = db.Column(db.String(100), nullable=True)
     status = db.Column(db.Enum(InterviewStatus), default=InterviewStatus.SCHEDULED, nullable=False)
