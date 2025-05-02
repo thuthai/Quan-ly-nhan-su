@@ -92,7 +92,7 @@ def position_list():
                           title='Vị trí công việc')
 
 
-@recruitment_bp.route('/recruitment/positions/create', methods=['GET', 'POST'])
+@recruitment_bp.route('/positions/create', methods=['GET', 'POST'])
 @login_required
 def position_create():
     form = JobPositionForm()
@@ -120,7 +120,7 @@ def position_create():
                           title='Thêm vị trí công việc')
 
 
-@recruitment_bp.route('/recruitment/positions/<int:id>/edit', methods=['GET', 'POST'])
+@recruitment_bp.route('/positions/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def position_edit(id):
     position = JobPosition.query.get_or_404(id)
@@ -152,7 +152,7 @@ def position_edit(id):
                           title='Chỉnh sửa vị trí công việc')
 
 
-@recruitment_bp.route('/recruitment/positions/<int:id>')
+@recruitment_bp.route('/positions/<int:id>')
 @login_required
 def position_view(id):
     position = JobPosition.query.get_or_404(id)
@@ -164,7 +164,7 @@ def position_view(id):
                           title=f'Chi tiết vị trí: {position.title}')
 
 
-@recruitment_bp.route('/recruitment/positions/<int:id>/delete', methods=['POST'])
+@recruitment_bp.route('/positions/<int:id>/delete', methods=['POST'])
 @login_required
 def position_delete(id):
     position = JobPosition.query.get_or_404(id)
@@ -183,7 +183,7 @@ def position_delete(id):
 
 
 # Job Openings
-@recruitment_bp.route('/recruitment/openings')
+@recruitment_bp.route('/openings')
 @login_required
 def opening_list():
     form = RecruitmentFilterForm(request.args)
@@ -219,7 +219,7 @@ def opening_list():
                           title='Tin tuyển dụng')
 
 
-@recruitment_bp.route('/recruitment/openings/create', methods=['GET', 'POST'])
+@recruitment_bp.route('/openings/create', methods=['GET', 'POST'])
 @login_required
 def opening_create():
     form = JobOpeningForm()
