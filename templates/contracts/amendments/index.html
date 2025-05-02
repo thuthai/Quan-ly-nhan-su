@@ -1,0 +1,152 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-files"></i> {{ title }}
+            </h5>
+            <div>
+                <a href="{{ url_for('contract.amendment_create') }}" class="btn btn-sm btn-light">
+                    <i class="bi bi-plus-circle"></i> Thêm phụ lục mới
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Filters -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label class="form-label">Lọc theo hợp đồng</label>
+                    <select class="form-select" id="contract-filter">
+                        <option value="">Tất cả hợp đồng</option>
+                        {% for contract in contracts %}
+                        <option value="{{ contract.id }}" {% if request.args.get('contract_id')|int == contract.id %}selected{% endif %}>
+                            {{ contract.contract_number }} - {{ contract.employee.full_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            {% if not amendments %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Chưa có phụ lục hợp đồng nào.
+            </div>
+            {% else %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th width="5%">STT</th>
+                            <th width="15%">Số phụ lục</th>
+                            <th width="20%">Hợp đồng</th>
+                            <th width="20%">Nhân viên</th>
+                            <th width="15%">Ngày phụ lục</th>
+                            <th width="15%">Ngày hiệu lực</th>
+                            <th width="10%">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for amendment in amendments %}
+                        <tr>
+                            <td class="text-center">{{ loop.index + (pagination.page - 1) * pagination.per_page }}</td>
+                            <td>{{ amendment.amendment_number }}</td>
+                            <td>
+                                <a href="{{ url_for('contract.view', id=amendment.contract_id) }}">
+                                    {{ amendment.contract.contract_number }}
+                                </a>
+                            </td>
+                            <td>{{ amendment.contract.employee.full_name }}</td>
+                            <td>{{ amendment.amendment_date.strftime('%d/%m/%Y') }}</td>
+                            <td>{{ amendment.effective_date.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('contract.amendment_view', id=amendment.id) }}" class="btn btn-outline-primary" title="Xem chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('contract.amendment_edit', id=amendment.id) }}" class="btn btn-outline-success" title="Chỉnh sửa">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if pagination.pages > 1 %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if pagination.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('contract.amendment_list', page=pagination.prev_num, contract_id=request.args.get('contract_id')) }}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page in pagination.iter_pages() %}
+                    {% if page %}
+                    <li class="page-item {% if page == pagination.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('contract.amendment_list', page=page, contract_id=request.args.get('contract_id')) }}">
+                            {{ page }}
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                    
+                    {% if pagination.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('contract.amendment_list', page=pagination.next_num, contract_id=request.args.get('contract_id')) }}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Contract filter
+        const contractFilter = document.getElementById('contract-filter');
+        if (contractFilter) {
+            contractFilter.addEventListener('change', function() {
+                const contractId = this.value;
+                let url = new URL(window.location.href);
+                
+                if (contractId) {
+                    url.searchParams.set('contract_id', contractId);
+                } else {
+                    url.searchParams.delete('contract_id');
+                }
+                
+                url.searchParams.set('page', 1);
+                window.location.href = url.toString();
+            });
+        }
+    });
+</script>
+{% endblock %}

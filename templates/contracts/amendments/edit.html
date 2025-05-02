@@ -1,0 +1,138 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-pencil-square"></i> {{ title }}
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('contract.amendment_edit', id=amendment.id) }}" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}
+                {{ form.amendment_id }}
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="contract_id" class="form-label">Hợp đồng</label>
+                        {{ form.contract_id(class="form-control" + (" is-invalid" if form.contract_id.errors else "")) }}
+                        {% if form.contract_id.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.contract_id.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="amendment_number" class="form-label">Số phụ lục</label>
+                        {{ form.amendment_number(class="form-control" + (" is-invalid" if form.amendment_number.errors else ""), placeholder="Nhập số phụ lục") }}
+                        {% if form.amendment_number.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.amendment_number.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="amendment_date" class="form-label">Ngày phụ lục</label>
+                        {{ form.amendment_date(class="form-control datepicker" + (" is-invalid" if form.amendment_date.errors else ""), placeholder="Chọn ngày") }}
+                        {% if form.amendment_date.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.amendment_date.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="effective_date" class="form-label">Ngày có hiệu lực</label>
+                        {{ form.effective_date(class="form-control datepicker" + (" is-invalid" if form.effective_date.errors else ""), placeholder="Chọn ngày") }}
+                        {% if form.effective_date.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.effective_date.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="description" class="form-label">Mô tả</label>
+                    {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=3, placeholder="Nhập mô tả phụ lục") }}
+                    {% if form.description.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.description.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <label for="changes" class="form-label">Nội dung thay đổi</label>
+                    {{ form.changes(class="form-control" + (" is-invalid" if form.changes.errors else ""), rows=5, placeholder="Nhập nội dung thay đổi so với hợp đồng gốc") }}
+                    {% if form.changes.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.changes.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <label for="amendment_file" class="form-label">File phụ lục</label>
+                    {{ form.amendment_file(class="form-control" + (" is-invalid" if form.amendment_file.errors else "")) }}
+                    {% if form.amendment_file.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.amendment_file.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">Để trống nếu không muốn thay đổi file hiện tại.</div>
+                    {% if amendment.amendment_file %}
+                    <div class="mt-2 d-flex gap-2">
+                        <a href="{{ url_for('static', filename=amendment.amendment_file) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-file-earmark-text"></i> Xem file hiện tại
+                        </a>
+                        <form action="{{ url_for('contract.delete_amendment_file', id=amendment.id) }}" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa file này?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i> Xóa file
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('contract.amendment_view', id=amendment.id) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Quay lại
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        initDatepickers('.datepicker');
+    });
+</script>
+{% endblock %}

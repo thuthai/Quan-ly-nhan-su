@@ -1,0 +1,107 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-files"></i> {{ title }}
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Thông tin phụ lục</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span class="fw-bold">Số phụ lục:</span>
+                                    <span>{{ amendment.amendment_number }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span class="fw-bold">Hợp đồng:</span>
+                                    <span>{{ amendment.contract.contract_number }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span class="fw-bold">Nhân viên:</span>
+                                    <span>{{ amendment.contract.employee.full_name }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span class="fw-bold">Ngày phụ lục:</span>
+                                    <span>{{ amendment.amendment_date.strftime('%d/%m/%Y') }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span class="fw-bold">Ngày có hiệu lực:</span>
+                                    <span>{{ amendment.effective_date.strftime('%d/%m/%Y') }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span class="fw-bold">Người tạo:</span>
+                                    <span>{{ amendment.created_by.username if amendment.created_by else 'Không có thông tin' }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span class="fw-bold">Ngày tạo:</span>
+                                    <span>{{ amendment.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Mô tả phụ lục</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">{{ amendment.description or 'Không có mô tả' }}</p>
+                        </div>
+                    </div>
+
+                    {% if amendment.amendment_file %}
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">File đính kèm</h6>
+                        </div>
+                        <div class="card-body">
+                            <a href="{{ url_for('static', filename=amendment.amendment_file) }}" target="_blank" class="btn btn-outline-primary">
+                                <i class="bi bi-file-earmark-text"></i> Xem file phụ lục
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">Nội dung thay đổi</h6>
+                </div>
+                <div class="card-body">
+                    <div class="p-3 bg-light rounded">
+                        <pre class="mb-0" style="white-space: pre-wrap;">{{ amendment.changes or 'Không có thông tin về nội dung thay đổi' }}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <div>
+                    <a href="{{ url_for('contract.amendment_list') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Danh sách phụ lục
+                    </a>
+                    <a href="{{ url_for('contract.view', id=amendment.contract_id) }}" class="btn btn-outline-info ms-2">
+                        <i class="bi bi-file-earmark-text"></i> Xem hợp đồng
+                    </a>
+                </div>
+                <div>
+                    <a href="{{ url_for('contract.amendment_edit', id=amendment.id) }}" class="btn btn-primary">
+                        <i class="bi bi-pencil-square"></i> Chỉnh sửa
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
