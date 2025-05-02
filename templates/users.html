@@ -56,13 +56,13 @@
                                 </td>
                                 <td>
                                     <div class="d-flex">
-                                        <!-- Edit user button (not implemented yet) -->
-                                        <button class="btn btn-sm btn-outline-warning me-1" disabled>
+                                        <!-- Edit user button -->
+                                        <a href="{{ url_for('edit_user', id=user.id) }}" class="btn btn-sm btn-outline-warning me-1">
                                             <i class="bi bi-pencil"></i>
-                                        </button>
+                                        </a>
                                         
-                                        <!-- Delete user button (not implemented yet) -->
-                                        <button class="btn btn-sm btn-outline-danger" disabled>
+                                        <!-- Delete user button -->
+                                        <button class="btn btn-sm btn-outline-danger delete-user" data-id="{{ user.id }}" data-username="{{ user.username }}">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
@@ -118,6 +118,18 @@
             },
             order: [[0, 'asc']], // Sort by ID asc
             pageLength: 10
+        });
+        
+        // Xử lý xóa người dùng
+        document.querySelectorAll('.delete-user').forEach(button => {
+            button.addEventListener('click', function() {
+                const userId = this.getAttribute('data-id');
+                const username = this.getAttribute('data-username');
+                
+                if (confirm(`Bạn có chắc chắn muốn xóa người dùng "${username}" không? Hành động này không thể hoàn tác.`)) {
+                    window.location.href = `/delete_user/${userId}`;
+                }
+            });
         });
     });
 </script>
