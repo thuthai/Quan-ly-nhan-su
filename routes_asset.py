@@ -86,7 +86,7 @@ def create():
                 
             image_path = os.path.join(uploads_dir, new_filename)
             form.image.data.save(image_path)
-            asset.image_path = f"uploads/assets/{new_filename}"
+            asset.image = f"uploads/assets/{new_filename}"
         
         db.session.add(asset)
         db.session.commit()
@@ -177,8 +177,8 @@ def delete(id):
         return redirect(url_for('asset.view', id=id))
     
     # Xóa ảnh nếu có
-    if asset.image_path:
-        image_path = os.path.join(current_app.root_path, 'static', asset.image_path)
+    if hasattr(asset, 'image') and asset.image:
+        image_path = os.path.join(current_app.root_path, 'static', asset.image)
         if os.path.exists(image_path):
             os.remove(image_path)
     
