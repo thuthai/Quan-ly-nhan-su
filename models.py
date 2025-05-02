@@ -95,6 +95,70 @@ class User(UserMixin, db.Model):
     def is_admin(self):
         return self.role == UserRole.ADMIN
     
+    def has_permission(self, permission_code):
+        """
+        Kiểm tra xem người dùng có quyền cụ thể hay không
+        
+        Args:
+            permission_code (str): Mã quyền cần kiểm tra
+        
+        Returns:
+            bool: True nếu người dùng có quyền, False nếu không
+        """
+        # Admin luôn có tất cả các quyền
+        if self.is_admin():
+            return True
+        
+        # Kiểm tra trong các vai trò tùy chỉnh của người dùng
+        for role in self.custom_roles:
+            if not role.is_active:
+                continue
+                
+            for permission in role.permissions:
+                if permission.code == permission_code:
+                    return True
+        
+        return False
+    
+    def has_role(self, role_name):
+        """
+        Kiểm tra xem người dùng có vai trò cụ thể hay không
+        
+        Args:
+            role_name (str): Tên vai trò cần kiểm tra
+        
+        Returns:
+            bool: True nếu người dùng có vai trò, False nếu không
+        """
+        # Admin được coi là có tất cả các vai trò
+        if self.is_admin():
+            return True
+            
+        for role in self.custom_roles:
+            if role.name == role_name and role.is_active:
+                return True
+                
+        return False
+    
+    def get_all_permissions(self):
+        """
+        Lấy danh sách tất cả các quyền của người dùng
+        
+        Returns:
+            list: Danh sách các đối tượng Permission
+        """
+        if self.is_admin():
+            return Permission.query.all()
+            
+        permissions = []
+        for role in self.custom_roles:
+            if role.is_active:
+                permissions.extend(role.permissions)
+                
+        # Loại bỏ các quyền trùng lặp
+        unique_permissions = list({p.id: p for p in permissions}.values())
+        return unique_permissions
+    
     def __repr__(self):
         return f'<User {self.username}>'
 
@@ -993,4 +1057,54 @@ class NotificationEmail(db.Model):
     
     def __repr__(self):
         return f'<NotificationEmail {self.email}>'
+
+
+# Bảng quan hệ nhiều-nhiều giữa vai trò và quyền
+role_permissions = db.Table('role_permissions',
+    db.Column('role_id', db.Integer, db.ForeignKey('roles.id'), primary_key=True),
+    db.Column('permission_id', db.Integer, db.ForeignKey('permissions.id'), primary_key=True)
+)
+
+# Bảng quan hệ nhiều-nhiều giữa người dùng và vai trò
+user_roles = db.Table('user_roles',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('role_id', db.Integer, db.ForeignKey('roles.id'), primary_key=True)
+)
+
+
+class Permission(db.Model):
+    """Mô hình lưu trữ quyền hạn trong hệ thống"""
+    __tablename__ = 'permissions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    code = db.Column(db.String(100), unique=True, nullable=False)
+    description = db.Column(db.String(255), nullable=True)
+    module = db.Column(db.String(100), nullable=False)  # Phân loại theo module
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<Permission {self.name}>'
+
+
+class Role(db.Model):
+    """Mô hình lưu trữ vai trò trong hệ thống"""
+    __tablename__ = 'roles'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    description = db.Column(db.String(255), nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    
+    # Relationships
+    permissions = db.relationship('Permission', secondary=role_permissions, 
+                                 backref=db.backref('roles', lazy='dynamic'))
+    created_by = db.relationship('User', foreign_keys=[created_by_id])
+    users = db.relationship('User', secondary=user_roles, 
+                           backref=db.backref('custom_roles', lazy='dynamic'))
+    
+    def __repr__(self):
+        return f'<Role {self.name}>'
 

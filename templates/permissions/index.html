@@ -1,0 +1,151 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h1 class="h3 mb-0">Quản lý phân quyền</h1>
+                    <div>
+                        <form action="{{ url_for('permission.setup') }}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-light">
+                                <i class="bi bi-gear-fill"></i> Thiết lập quyền mặc định
+                            </button>
+                        </form>
+                        <a href="{{ url_for('index') }}" class="btn btn-light ml-2">
+                            <i class="bi bi-house-fill"></i> Trang chủ
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Giới thiệu</h5>
+                        <p>Hệ thống phân quyền cho phép bạn quản lý quyền truy cập của người dùng vào các tính năng của hệ thống. Bạn có thể tạo các vai trò, gán quyền cho vai trò và phân quyền cho người dùng.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h2 class="h5 mb-0"><i class="bi bi-people-fill"></i> Vai trò</h2>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div class="display-1 text-info">{{ total_roles }}</div>
+                        <p class="text-muted">Vai trò đã định nghĩa</p>
+                    </div>
+                    <div class="d-grid">
+                        <a href="{{ url_for('permission.role_list') }}" class="btn btn-info text-white">
+                            <i class="bi bi-list"></i> Danh sách vai trò
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h2 class="h5 mb-0"><i class="bi bi-shield-lock-fill"></i> Quyền hạn</h2>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div class="display-1 text-success">{{ total_perms }}</div>
+                        <p class="text-muted">Quyền hạn đã định nghĩa</p>
+                    </div>
+                    <div class="d-grid">
+                        <a href="{{ url_for('permission.permission_list') }}" class="btn btn-success">
+                            <i class="bi bi-list"></i> Danh sách quyền
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-warning text-white">
+                    <h2 class="h5 mb-0"><i class="bi bi-person-lock"></i> Phân quyền người dùng</h2>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div class="display-1 text-warning">{{ total_users }}</div>
+                        <p class="text-muted">Người dùng trong hệ thống</p>
+                    </div>
+                    <div class="d-grid">
+                        <a href="{{ url_for('permission.user_list') }}" class="btn btn-warning text-white">
+                            <i class="bi bi-person-check"></i> Phân quyền người dùng
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Phân loại quyền theo module -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-dark text-white">
+            <h2 class="h5 mb-0"><i class="bi bi-grid-3x3-gap-fill"></i> Quyền theo module</h2>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for module, count in modules.items() %}
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <h3 class="h5">{{ module|capitalize }}</h3>
+                            <div class="display-5 my-2">{{ count }}</div>
+                            <p class="text-muted">quyền</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bảng điều khiển nhanh -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h2 class="h5 mb-0"><i class="bi bi-lightning-charge-fill"></i> Bảng điều khiển nhanh</h2>
+        </div>
+        <div class="card-body">
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+                <div class="col">
+                    <div class="d-grid">
+                        <a href="{{ url_for('permission.create_role') }}" class="btn btn-outline-primary py-3">
+                            <i class="bi bi-plus-lg"></i> Thêm vai trò mới
+                        </a>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="d-grid">
+                        <a href="{{ url_for('permission.create_permission') }}" class="btn btn-outline-success py-3">
+                            <i class="bi bi-plus-lg"></i> Thêm quyền mới
+                        </a>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="d-grid">
+                        <a href="{{ url_for('permission.role_list') }}" class="btn btn-outline-info py-3">
+                            <i class="bi bi-gear-fill"></i> Quản lý vai trò
+                        </a>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="d-grid">
+                        <a href="{{ url_for('permission.user_list') }}" class="btn btn-outline-warning py-3">
+                            <i class="bi bi-person-fill-gear"></i> Phân quyền người dùng
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
