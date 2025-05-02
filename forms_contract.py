@@ -48,11 +48,20 @@ class ContractForm(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         super(ContractForm, self).__init__(*args, **kwargs)
-        # Lấy danh sách nhân viên đang làm việc
-        self.employee_id.choices = [(e.id, f"{e.employee_code} - {e.full_name}") for e in 
-                                  Employee.query.filter_by(status=EmployeeStatus.ACTIVE).all()]
-        # Lấy danh sách phòng ban
-        self.department_id.choices = [(d.id, d.name) for d in Department.query.all()]
+        
+        # Lấy danh sách nhân viên đang làm việc (chỉ khi có dữ liệu)
+        employees = Employee.query.filter_by(status=EmployeeStatus.ACTIVE).all()
+        if employees:
+            self.employee_id.choices = [(e.id, f"{e.employee_code} - {e.full_name}") for e in employees]
+        else:
+            self.employee_id.choices = [(0, '-- Chưa có nhân viên --')]
+            
+        # Lấy danh sách phòng ban (chỉ khi có dữ liệu)
+        departments = Department.query.all()
+        if departments:
+            self.department_id.choices = [(d.id, d.name) for d in departments]
+        else:
+            self.department_id.choices = [(0, '-- Chưa có phòng ban --')]
 
     def validate_contract_number(self, contract_number):
         contract = Contract.query.filter_by(contract_number=contract_number.data).first()
@@ -117,9 +126,13 @@ class ContractAmendmentForm(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         super(ContractAmendmentForm, self).__init__(*args, **kwargs)
-        # Lấy danh sách hợp đồng đang có hiệu lực
-        self.contract_id.choices = [(c.id, f"{c.contract_number} - {c.employee.full_name}") for c in 
-                                  Contract.query.filter_by(status=ContractStatus.ACTIVE).all()]
+        
+        # Lấy danh sách hợp đồng đang có hiệu lực (chỉ khi có dữ liệu)
+        contracts = Contract.query.filter_by(status=ContractStatus.ACTIVE).all()
+        if contracts:
+            self.contract_id.choices = [(c.id, f"{c.contract_number} - {c.employee.full_name}") for c in contracts]
+        else:
+            self.contract_id.choices = [(0, '-- Chưa có hợp đồng hiệu lực --')]
 
     def validate_dates(self):
         if self.amendment_date.data and self.effective_date.data:
@@ -158,8 +171,13 @@ class DocumentForm(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         super(DocumentForm, self).__init__(*args, **kwargs)
-        # Lấy tất cả nhân viên
-        self.employee_id.choices = [(e.id, f"{e.employee_code} - {e.full_name}") for e in Employee.query.all()]
+        
+        # Lấy tất cả nhân viên (chỉ khi có dữ liệu)
+        employees = Employee.query.all()
+        if employees:
+            self.employee_id.choices = [(e.id, f"{e.employee_code} - {e.full_name}") for e in employees]
+        else:
+            self.employee_id.choices = [(0, '-- Chưa có nhân viên --')]
 
     def validate_dates(self):
         if self.issue_date.data and self.expiry_date.data:

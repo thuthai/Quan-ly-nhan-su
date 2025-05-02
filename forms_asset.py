@@ -45,10 +45,20 @@ class AssetForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super(AssetForm, self).__init__(*args, **kwargs)
         from models import Department, Employee
-        # Lấy danh sách phòng ban
-        self.department_id.choices = [(d.id, d.name) for d in Department.query.all()]
-        # Lấy danh sách nhân viên
-        self.assignee_id.choices = [(0, '-- Không có người sử dụng --')] + [(e.id, f"{e.employee_code} - {e.full_name}") for e in Employee.query.all()]
+        
+        # Lấy danh sách phòng ban (chỉ khi có dữ liệu)
+        departments = Department.query.all()
+        if departments:
+            self.department_id.choices = [(d.id, d.name) for d in departments]
+        else:
+            self.department_id.choices = [(0, '-- Không có phòng ban --')]
+            
+        # Lấy danh sách nhân viên (chỉ khi có dữ liệu)
+        employees = Employee.query.all()
+        if employees:
+            self.assignee_id.choices = [(0, '-- Không có người sử dụng --')] + [(e.id, f"{e.employee_code} - {e.full_name}") for e in employees]
+        else:
+            self.assignee_id.choices = [(0, '-- Không có người sử dụng --')]
 
 
 class AssetEditForm(AssetForm):
