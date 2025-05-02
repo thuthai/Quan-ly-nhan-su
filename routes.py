@@ -1,5 +1,8 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify, send_from_directory, abort, Response
 from flask_login import login_user, logout_user, login_required, current_user
+import logging
+import os
+from notifications import check_expiring_contracts, send_contract_notification
 from urllib.parse import urlparse
 from datetime import datetime, date, timedelta
 import os

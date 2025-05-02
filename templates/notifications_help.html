@@ -1,0 +1,126 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h1 class="display-6 mb-0">Hướng dẫn sử dụng tính năng thông báo</h1>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-5">
+                        <h3 class="text-primary">1. Tổng quan tính năng thông báo</h3>
+                        <p>
+                            Hệ thống quản lý nhân sự đã được tích hợp các tính năng thông báo tự động qua email và 
+                            Telegram để cập nhật thông tin về hoạt động liên quan đến hợp đồng. Các thông báo này 
+                            giúp người quản lý luôn cập nhật thông tin và xử lý kịp thời các vấn đề liên quan đến 
+                            hợp đồng nhân viên.
+                        </p>
+                    </div>
+
+                    <div class="mb-5">
+                        <h3 class="text-primary">2. Các loại thông báo</h3>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>Loại thông báo</th>
+                                        <th>Mô tả</th>
+                                        <th>Người nhận</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><span class="badge bg-info">Hợp đồng mới</span></td>
+                                        <td>Gửi khi một hợp đồng mới được tạo</td>
+                                        <td>Quản lý nhân sự</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge bg-success">Cập nhật hợp đồng</span></td>
+                                        <td>Gửi khi một hợp đồng được cập nhật thông tin</td>
+                                        <td>Quản lý nhân sự</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge bg-danger">Chấm dứt hợp đồng</span></td>
+                                        <td>Gửi khi một hợp đồng bị chấm dứt</td>
+                                        <td>Quản lý nhân sự</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge bg-warning">Hợp đồng sắp hết hạn</span></td>
+                                        <td>Gửi khi một hợp đồng sắp hết hạn (còn 30 ngày)</td>
+                                        <td>Quản lý nhân sự</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <h3 class="text-primary">3. Cấu hình thông báo</h3>
+                        <p>
+                            Để sử dụng tính năng thông báo, bạn cần cung cấp các API key sau trong biến môi trường:
+                        </p>
+                        <div class="card bg-light p-3 mb-3">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item bg-light">
+                                    <strong>SENDGRID_API_KEY:</strong> API key của SendGrid để gửi email
+                                </li>
+                                <li class="list-group-item bg-light">
+                                    <strong>TELEGRAM_BOT_TOKEN:</strong> Token của Telegram Bot
+                                </li>
+                                <li class="list-group-item bg-light">
+                                    <strong>TELEGRAM_CHAT_ID:</strong> ID của chat hoặc nhóm Telegram để nhận thông báo
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            Liên hệ với quản trị viên hệ thống để cấu hình các API key này.
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <h3 class="text-primary">4. Hướng dẫn thiết lập Telegram Bot</h3>
+                        <p>Để thiết lập Telegram Bot:</p>
+                        <ol>
+                            <li>Mở ứng dụng Telegram và tìm <strong>@BotFather</strong></li>
+                            <li>Gửi lệnh <code>/newbot</code> và làm theo hướng dẫn để tạo bot mới</li>
+                            <li>Lưu lại <strong>Token</strong> được cung cấp bởi BotFather</li>
+                            <li>Thêm bot vào nhóm chat hoặc bắt đầu chat với bot</li>
+                            <li>Gửi một tin nhắn đến bot</li>
+                            <li>Truy cập <code>https://api.telegram.org/bot[YOUR_BOT_TOKEN]/getUpdates</code> để lấy <strong>chat_id</strong></li>
+                        </ol>
+                    </div>
+
+                    <div class="mb-5">
+                        <h3 class="text-primary">5. Kiểm tra hợp đồng sắp hết hạn thủ công</h3>
+                        <p>
+                            Hệ thống sẽ tự động kiểm tra các hợp đồng sắp hết hạn mỗi 24 giờ. Tuy nhiên, bạn có 
+                            thể chạy kiểm tra thủ công bằng cách chạy script sau:
+                        </p>
+                        <div class="card bg-dark text-light p-3">
+                            <code>python check_contracts.py</code>
+                        </div>
+                        <p class="mt-2">
+                            Bạn cũng có thể chỉ định ngưỡng ngày để kiểm tra (mặc định là 30 ngày):
+                        </p>
+                        <div class="card bg-dark text-light p-3">
+                            <code>python check_contracts.py 60</code>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-success">
+                        <h4 class="alert-heading"><i class="bi bi-check-circle-fill me-2"></i> Kết luận</h4>
+                        <p>
+                            Tính năng thông báo giúp đảm bảo quản lý hợp đồng hiệu quả bằng cách gửi các 
+                            cảnh báo kịp thời về các sự kiện quan trọng. Điều này giúp giảm thiểu các rủi ro 
+                            liên quan đến việc quản lý hợp đồng và nâng cao hiệu quả làm việc.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -10,6 +10,9 @@ from forms_contract import (
 from werkzeug.utils import secure_filename
 from datetime import datetime, date
 import os
+import logging
+# Import module thông báo
+from notifications import send_contract_notification
 
 contract_bp = Blueprint('contract', __name__, url_prefix='/contract')
 
@@ -127,6 +130,13 @@ def create():
             employee.contract_end_date = form.end_date.data
             db.session.commit()
         
+        # Gửi thông báo về hợp đồng mới
+        try:
+            send_contract_notification(contract.id, 'new')
+            logging.info(f"Đã gửi thông báo cho hợp đồng mới {contract.contract_number}")
+        except Exception as e:
+            logging.error(f"Lỗi khi gửi thông báo: {e}")
+        
         flash('Hợp đồng mới đã được tạo thành công!', 'success')
         return redirect(url_for('contract.view', id=contract.id))
     
@@ -190,6 +200,13 @@ def edit(id):
             employee.contract_start_date = form.start_date.data
             employee.contract_end_date = form.end_date.data
             db.session.commit()
+        
+        # Gửi thông báo về cập nhật hợp đồng
+        try:
+            send_contract_notification(contract.id, 'updated')
+            logging.info(f"Đã gửi thông báo cập nhật hợp đồng {contract.contract_number}")
+        except Exception as e:
+            logging.error(f"Lỗi khi gửi thông báo: {e}")
         
         flash('Hợp đồng đã được cập nhật thành công!', 'success')
         return redirect(url_for('contract.view', id=contract.id))
@@ -265,6 +282,13 @@ def terminate(id):
             employee.contract_end_date = form.terminated_date.data
         
         db.session.commit()
+        
+        # Gửi thông báo về việc chấm dứt hợp đồng
+        try:
+            send_contract_notification(contract.id, 'terminated')
+            logging.info(f"Đã gửi thông báo chấm dứt hợp đồng {contract.contract_number}")
+        except Exception as e:
+            logging.error(f"Lỗi khi gửi thông báo: {e}")
         
         flash('Hợp đồng đã được chấm dứt thành công!', 'success')
         return redirect(url_for('contract.view', id=id))
