@@ -61,20 +61,12 @@
                     <div class="row mb-3">
                         <div class="col-md-4 fw-bold">Danh mục:</div>
                         <div class="col-md-8">
-                            {% if asset.category == 'COMPUTER' %}
-                            <span class="badge bg-primary">Máy tính</span>
-                            {% elif asset.category == 'LAPTOP' %}
-                            <span class="badge bg-primary">Laptop</span>
-                            {% elif asset.category == 'PHONE' %}
-                            <span class="badge bg-info">Điện thoại</span>
-                            {% elif asset.category == 'FURNITURE' %}
-                            <span class="badge bg-secondary">Nội thất</span>
-                            {% elif asset.category == 'OFFICE' %}
-                            <span class="badge bg-secondary">Thiết bị văn phòng</span>
-                            {% elif asset.category == 'VEHICLE' %}
-                            <span class="badge bg-warning">Phương tiện</span>
+                            {% if asset.asset_category %}
+                            <span class="badge bg-primary">{{ asset.asset_category.name }}</span>
+                            {% elif asset.category %}
+                            <span class="badge bg-secondary">{{ asset.category.value }}</span>
                             {% else %}
-                            <span class="badge bg-light text-dark">Khác</span>
+                            <span class="badge bg-light text-dark">Không xác định</span>
                             {% endif %}
                         </div>
                     </div>
