@@ -1,13 +1,119 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, current_app
 from flask_login import login_required, current_user
 from app import db
-from models import Asset, AssetAssignment, AssetMaintenance, AssetStatus, AssetCategory, MaintenanceType, MaintenanceStatus, Employee
-from forms_asset import AssetForm, AssetEditForm, AssetAssignmentForm, AssetReturnForm, AssetMaintenanceForm, AssetFilterForm
+from models import Asset, AssetAssignment, AssetMaintenance, AssetStatus, AssetCategory, MaintenanceType, MaintenanceStatus, Employee, AssetCategoryModel
+from forms_asset import AssetForm, AssetEditForm, AssetAssignmentForm, AssetReturnForm, AssetMaintenanceForm, AssetFilterForm, AssetCategoryForm, AssetCategoryEditForm
 from werkzeug.utils import secure_filename
 from datetime import datetime
 import os
 
 asset_bp = Blueprint('asset', __name__, url_prefix='/asset')
+
+
+# Các route quản lý danh mục tài sản
+@asset_bp.route('/categories')
+@login_required
+def categories():
+    """Danh sách danh mục tài sản"""
+    if not current_user.is_admin():
+        flash('Bạn không có quyền truy cập trang này.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    categories = AssetCategoryModel.query.order_by(AssetCategoryModel.name).all()
+    return render_template('assets/categories/index.html', 
+                          categories=categories,
+                          title='Quản lý danh mục tài sản')
+
+
+@asset_bp.route('/categories/create', methods=['GET', 'POST'])
+@login_required
+def create_category():
+    """Tạo mới danh mục tài sản"""
+    if not current_user.is_admin():
+        flash('Bạn không có quyền truy cập trang này.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    form = AssetCategoryForm()
+    
+    if form.validate_on_submit():
+        # Kiểm tra tên danh mục đã tồn tại chưa
+        existing_category = AssetCategoryModel.query.filter_by(name=form.name.data).first()
+        if existing_category:
+            flash('Tên danh mục này đã tồn tại trong hệ thống.', 'danger')
+            return render_template('assets/categories/create.html', form=form, title='Thêm danh mục tài sản')
+        
+        category = AssetCategoryModel(
+            name=form.name.data,
+            description=form.description.data,
+            is_active=form.is_active.data
+        )
+        
+        db.session.add(category)
+        db.session.commit()
+        
+        flash('Đã tạo danh mục tài sản mới thành công!', 'success')
+        return redirect(url_for('asset.categories'))
+    
+    return render_template('assets/categories/create.html', 
+                          form=form, 
+                          title='Thêm danh mục tài sản')
+
+
+@asset_bp.route('/categories/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_category(id):
+    """Chỉnh sửa danh mục tài sản"""
+    if not current_user.is_admin():
+        flash('Bạn không có quyền truy cập trang này.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    category = AssetCategoryModel.query.get_or_404(id)
+    form = AssetCategoryEditForm(obj=category)
+    
+    if form.validate_on_submit():
+        # Kiểm tra tên danh mục đã tồn tại chưa (nếu đã thay đổi tên)
+        if form.name.data != category.name:
+            existing_category = AssetCategoryModel.query.filter_by(name=form.name.data).first()
+            if existing_category:
+                flash('Tên danh mục này đã tồn tại trong hệ thống.', 'danger')
+                return render_template('assets/categories/edit.html', form=form, category=category, title='Chỉnh sửa danh mục tài sản')
+        
+        category.name = form.name.data
+        category.description = form.description.data
+        category.is_active = form.is_active.data
+        
+        db.session.commit()
+        
+        flash('Đã cập nhật danh mục tài sản thành công!', 'success')
+        return redirect(url_for('asset.categories'))
+    
+    return render_template('assets/categories/edit.html', 
+                          form=form, 
+                          category=category,
+                          title='Chỉnh sửa danh mục tài sản')
+
+
+@asset_bp.route('/categories/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_category(id):
+    """Xóa danh mục tài sản"""
+    if not current_user.is_admin():
+        flash('Bạn không có quyền thực hiện thao tác này.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    category = AssetCategoryModel.query.get_or_404(id)
+    
+    # Kiểm tra xem có tài sản nào thuộc danh mục này không
+    # assets_in_category = Asset.query.filter_by(category_id=id).first()
+    # if assets_in_category:
+    #     flash('Không thể xóa danh mục này vì đã có tài sản được phân loại vào danh mục.', 'danger')
+    #     return redirect(url_for('asset.categories'))
+    
+    db.session.delete(category)
+    db.session.commit()
+    
+    flash('Đã xóa danh mục tài sản thành công!', 'success')
+    return redirect(url_for('asset.categories'))
 
 
 @asset_bp.route('/')

@@ -1,0 +1,115 @@
+{% extends 'layout.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-tags me-2"></i>Quản lý danh mục tài sản</h2>
+        <a href="{{ url_for('asset.create_category') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Thêm danh mục mới
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Danh sách danh mục</h5>
+            <div>
+                <a href="{{ url_for('asset.index') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-box me-1"></i>Quản lý tài sản
+                </a>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="5%">#</th>
+                            <th width="25%">Tên danh mục</th>
+                            <th width="45%">Mô tả</th>
+                            <th width="10%" class="text-center">Trạng thái</th>
+                            <th width="15%" class="text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if categories %}
+                            {% for category in categories %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td class="fw-bold">{{ category.name }}</td>
+                                    <td>{{ category.description or 'Không có mô tả' }}</td>
+                                    <td class="text-center">
+                                        {% if category.is_active %}
+                                            <span class="badge bg-success">Đang kích hoạt</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Vô hiệu hóa</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('asset.edit_category', id=category.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ category.id }}">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Modal xóa danh mục -->
+                                        <div class="modal fade" id="deleteModal{{ category.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ category.id }}" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="deleteModalLabel{{ category.id }}">Xác nhận xóa</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>Bạn có chắc chắn muốn xóa danh mục <strong>{{ category.name }}</strong>?</p>
+                                                        <p class="text-danger"><strong>Lưu ý:</strong> Thao tác này không thể hoàn tác.</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                                        <form action="{{ url_for('asset.delete_category', id=category.id) }}" method="POST">
+                                                            <button type="submit" class="btn btn-danger">Xóa</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4">
+                                    <p class="text-muted mb-0">Chưa có danh mục tài sản nào. Hãy thêm danh mục mới bằng nút "Thêm danh mục mới".</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+                <p class="mb-0 text-muted small">Tổng số: {{ categories|length }} danh mục</p>
+                <a href="{{ url_for('asset.index') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Quay lại quản lý tài sản
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

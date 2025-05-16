@@ -692,6 +692,9 @@ class TaskDependency(db.Model):
 
 # Asset Management Models
 class AssetCategory(enum.Enum):
+    """
+    Danh mục tài sản (Enum cũ, giữ lại để tương thích)
+    """
     COMPUTER = "Máy tính"
     LAPTOP = "Laptop"
     SMARTPHONE = "Điện thoại"
@@ -700,6 +703,24 @@ class AssetCategory(enum.Enum):
     SCANNER = "Máy quét"
     FURNITURE = "Nội thất văn phòng"
     OTHER = "Khác"
+    
+class AssetCategoryModel(db.Model):
+    """
+    Mô hình danh mục tài sản (thay thế Enum)
+    """
+    __tablename__ = 'asset_categories'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.Text, nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Các tài sản sẽ được liên kết sau khi mô hình Asset được cập nhật
+    
+    def __repr__(self):
+        return f'<AssetCategory {self.name}>'
     
 class MaintenanceType(enum.Enum):
     """Loại bảo trì"""

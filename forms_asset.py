@@ -1,12 +1,28 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, DateField, FloatField, TextAreaField, FileField, HiddenField
+from wtforms import StringField, SelectField, DateField, FloatField, TextAreaField, FileField, HiddenField, BooleanField
 from wtforms.validators import DataRequired, Optional, NumberRange, Length
 from flask_wtf.file import FileAllowed
 from datetime import date
 from models import (
     AssetCategory, AssetStatus, MaintenanceType, 
-    MaintenanceStatus, Asset, Employee, EmployeeStatus
+    MaintenanceStatus, Asset, Employee, EmployeeStatus,
+    AssetCategoryModel
 )
+
+
+class AssetCategoryForm(FlaskForm):
+    """Form để tạo hoặc cập nhật danh mục tài sản"""
+    name = StringField('Tên danh mục', validators=[
+        DataRequired(message='Vui lòng nhập tên danh mục'),
+        Length(min=2, max=100, message='Tên danh mục phải có độ dài từ 2-100 ký tự')
+    ])
+    description = TextAreaField('Mô tả', validators=[Optional()])
+    is_active = BooleanField('Kích hoạt', default=True)
+
+
+class AssetCategoryEditForm(AssetCategoryForm):
+    """Form để chỉnh sửa danh mục tài sản"""
+    id = HiddenField('ID')
 
 
 class AssetForm(FlaskForm):
