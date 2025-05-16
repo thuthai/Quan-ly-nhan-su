@@ -65,16 +65,12 @@ class AssetForm(FlaskForm):
         # Lấy danh sách phòng ban (chỉ khi có dữ liệu)
         departments = Department.query.all()
         if departments:
-            self.department_id.choices = [(d.id, d.name) for d in departments]
+            self.department_id.choices = [(0, '-- Chọn phòng ban --')] + [(d.id, d.name) for d in departments]
         else:
             self.department_id.choices = [(0, '-- Không có phòng ban --')]
             
-        # Lấy danh sách nhân viên (chỉ khi có dữ liệu)
-        employees = Employee.query.all()
-        if employees:
-            self.assignee_id.choices = [(0, '-- Không có người sử dụng --')] + [(e.id, f"{e.employee_code} - {e.full_name}") for e in employees]
-        else:
-            self.assignee_id.choices = [(0, '-- Không có người sử dụng --')]
+        # Khởi tạo danh sách nhân viên rỗng ban đầu
+        self.assignee_id.choices = [(0, '-- Chọn phòng ban trước --')]
 
 
 class AssetEditForm(AssetForm):

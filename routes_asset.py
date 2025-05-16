@@ -537,3 +537,29 @@ def get_assets():
         'status': asset.status.value,
         'serial_number': asset.serial_number
     } for asset in assets])
+
+
+# API để lấy danh sách nhân viên theo phòng ban
+@asset_bp.route('/api/employees-by-department')
+@login_required
+def get_employees_by_department():
+    """Lấy danh sách nhân viên theo phòng ban"""
+    department_id = request.args.get('department_id', type=int)
+    
+    if not department_id or department_id == 0:
+        return jsonify([{'id': 0, 'name': '-- Không có người sử dụng --'}])
+    
+    from models import Employee, EmployeeStatus
+    
+    employees = Employee.query.filter_by(
+        department_id=department_id,
+        status=EmployeeStatus.ACTIVE
+    ).all()
+    
+    result = [{'id': 0, 'name': '-- Không có người sử dụng --'}]
+    result.extend([{
+        'id': employee.id,
+        'name': f"{employee.employee_code} - {employee.full_name}"
+    } for employee in employees])
+    
+    return jsonify(result)

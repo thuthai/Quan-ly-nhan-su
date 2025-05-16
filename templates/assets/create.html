@@ -248,6 +248,46 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch (error) {
         console.error("Litepicker chưa được load. Đang sử dụng datepicker mặc định.");
     }
+    
+    // Xử lý thay đổi phòng ban - cập nhật danh sách người dùng
+    const departmentSelect = document.getElementById('department_id');
+    const assigneeSelect = document.getElementById('assignee_id');
+    
+    if (departmentSelect && assigneeSelect) {
+        departmentSelect.addEventListener('change', function() {
+            const departmentId = this.value;
+            
+            // Nếu không chọn phòng ban hoặc chọn mặc định (0)
+            if (!departmentId || departmentId === '0') {
+                // Xóa tất cả option trừ option đầu tiên
+                assigneeSelect.innerHTML = '<option value="0">-- Chọn phòng ban trước --</option>';
+                return;
+            }
+            
+            // Hiển thị loading
+            assigneeSelect.innerHTML = '<option value="0">Đang tải...</option>';
+            
+            // Gọi API để lấy danh sách nhân viên theo phòng ban
+            fetch(`/assets/api/employees-by-department?department_id=${departmentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Xóa tất cả option hiện tại
+                    assigneeSelect.innerHTML = '';
+                    
+                    // Thêm các option mới từ API
+                    data.forEach(function(employee) {
+                        const option = document.createElement('option');
+                        option.value = employee.id;
+                        option.textContent = employee.name;
+                        assigneeSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Lỗi khi tải danh sách nhân viên:', error);
+                    assigneeSelect.innerHTML = '<option value="0">-- Lỗi khi tải dữ liệu --</option>';
+                });
+        });
+    }
 });
 </script>
 {% endblock %}
