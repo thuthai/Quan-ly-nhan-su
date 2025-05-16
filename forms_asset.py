@@ -35,9 +35,9 @@ class AssetForm(FlaskForm):
         DataRequired(message='Vui lòng nhập tên tài sản'),
         Length(min=3, max=100, message='Tên tài sản phải có độ dài từ 3-100 ký tự')
     ])
-    category = SelectField('Danh mục', choices=[
-        (c.name, c.value) for c in AssetCategory
-    ], validators=[DataRequired(message='Vui lòng chọn danh mục')])
+    category = SelectField('Danh mục', coerce=int, validators=[
+        DataRequired(message='Vui lòng chọn danh mục')
+    ])
     status = SelectField('Trạng thái', choices=[
         (s.name, s.value) for s in AssetStatus
     ], validators=[DataRequired(message='Vui lòng chọn trạng thái')])
@@ -60,7 +60,14 @@ class AssetForm(FlaskForm):
     
     def __init__(self, *args, **kwargs):
         super(AssetForm, self).__init__(*args, **kwargs)
-        from models import Department, Employee
+        from models import Department, Employee, AssetCategoryModel
+        
+        # Lấy danh sách danh mục tài sản từ database
+        categories = AssetCategoryModel.query.filter_by(is_active=True).all()
+        if categories:
+            self.category.choices = [(0, '-- Chọn danh mục --')] + [(c.id, c.name) for c in categories]
+        else:
+            self.category.choices = [(0, '-- Không có danh mục --')]
         
         # Lấy danh sách phòng ban (chỉ khi có dữ liệu)
         departments = Department.query.all()

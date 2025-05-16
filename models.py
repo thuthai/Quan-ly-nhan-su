@@ -753,7 +753,8 @@ class Asset(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     asset_code = db.Column(db.String(20), unique=True, nullable=False)
     name = db.Column(db.String(100), nullable=False)
-    category = db.Column(db.Enum(AssetCategory), nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('asset_categories.id'), nullable=True)
+    category = db.Column(db.Enum(AssetCategory), nullable=True)  # Giữ lại để tương thích với dữ liệu cũ
     status = db.Column(db.Enum(AssetStatus), default=AssetStatus.AVAILABLE, nullable=False)
     serial_number = db.Column(db.String(50), nullable=True)
     purchase_date = db.Column(db.Date, nullable=True)
