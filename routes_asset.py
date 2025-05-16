@@ -170,7 +170,7 @@ def create():
         asset = Asset(
             asset_code=form.asset_code.data,
             name=form.name.data,
-            category=form.category.data,
+            category_id=form.category.data if form.category.data != 0 else None,
             status=form.status.data,
             serial_number=form.serial_number.data,
             purchase_date=form.purchase_date.data,
@@ -218,7 +218,7 @@ def edit(id):
     if form.validate_on_submit():
         asset.asset_code = form.asset_code.data
         asset.name = form.name.data
-        asset.category = form.category.data
+        asset.category_id = form.category.data if form.category.data != 0 else None
         asset.status = form.status.data
         asset.serial_number = form.serial_number.data
         asset.purchase_date = form.purchase_date.data

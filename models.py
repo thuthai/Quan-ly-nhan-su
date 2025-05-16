@@ -774,6 +774,7 @@ class Asset(db.Model):
     maintenance_records = db.relationship('AssetMaintenance', back_populates='asset', lazy='dynamic')
     department = db.relationship('Department', backref=db.backref('assets', lazy='dynamic'))
     assignee = db.relationship('Employee', backref=db.backref('assigned_assets', lazy='dynamic'))
+    asset_category = db.relationship('AssetCategoryModel', foreign_keys=[category_id])
     
     def __repr__(self):
         return f'<Asset {self.asset_code}: {self.name}>'
